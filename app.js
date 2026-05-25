@@ -106,6 +106,10 @@ function isAdminUser() {
     return currentUser && currentUser.email === ADMIN_EMAIL;
 }
 
+function hasBusinessUnlimited() {
+    return isAdminUser() || currentProfile.plan === "Business Unlimited";
+}
+
 function seedTestAccount() {
     saveLocalAccount({
         email: ADMIN_EMAIL,
@@ -367,7 +371,7 @@ async function setupAuthenticatedUser(user) {
     document.getElementById("inv-tax-rate").value = currentProfile.default_tax_rate;
     if (document.getElementById("preferred-language")) {
         document.getElementById("preferred-language").value = currentProfile.preferred_language || "en";
-        document.getElementById("preferred-language").disabled = !currentProfile.is_pro;
+        document.getElementById("preferred-language").disabled = !hasBusinessUnlimited();
     }
     
     // Apply logo preview if exists
@@ -1439,6 +1443,7 @@ async function processMockPaymentUpgrade() {
     // Update DB status to PRO
     currentProfile.is_pro = true;
     const paymentModal = document.getElementById("payment-modal");
+    currentProfile.plan = paymentModal.dataset.plan || "Pro Unlimited Plan";
     recordPayment(
         paymentModal.dataset.plan || "Pro Unlimited Plan",
         paymentModal.dataset.price || 249,

@@ -124,6 +124,14 @@
                         Settings
                     </a>
                 </li>
+                <li class="nav-item" data-tab="offline-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 15.75 6.75 12m0 0L3 8.25M6.75 12H15m6 3.75L17.25 12m0 0L21 8.25M17.25 12H9" />
+                        </svg>
+                        Offline Mode
+                    </a>
+                </li>
                 <li class="nav-item" data-tab="admin-tab" id="admin-nav-item" style="display: none;">
                     <a class="nav-link">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -614,12 +622,12 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="preferred-language">Preferred Language (Premium)</label>
+                            <label for="preferred-language">Preferred Language (Business Unlimited)</label>
                             <select id="preferred-language">
                                 <option value="en">English</option>
                                 <option value="fil">Filipino</option>
                             </select>
-                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Default is English. Language preference is reserved for premium accounts.</p>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Default is English. Language preference is included in the Business Unlimited plan.</p>
                         </div>
 
                         <!-- Store Settings Invoice Color Accent Picker -->
@@ -682,6 +690,34 @@
                         </div>
 
                         <button class="btn btn-accent" id="save-wl-settings-btn" style="width: 100%;">Apply White-Label System Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== OFFLINE MODE TAB ==================== -->
+            <div id="offline-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Offline Mode</h1>
+                        <p>Create invoices and print PDFs even when internet is unstable.</p>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-title">How offline access works</div>
+                    <div class="feature-list" style="display: grid; gap: 14px;">
+                        <div>
+                            <strong>Local browser storage</strong>
+                            <p style="color: var(--text-muted); font-size: 14px;">Invoices, clients, business settings, logo, colors, and signature are saved in this browser so you can keep working on the same device.</p>
+                        </div>
+                        <div>
+                            <strong>Print / save as PDF</strong>
+                            <p style="color: var(--text-muted); font-size: 14px;">Open an invoice and use Print / Save PDF to create a copy you can send to customers.</p>
+                        </div>
+                        <div>
+                            <strong>Sync comes later</strong>
+                            <p style="color: var(--text-muted); font-size: 14px;">When Supabase is connected, accounts can sync across devices. Until then, data stays on the device/browser where it was created.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -869,7 +905,15 @@
                             </li>
                             <li>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Offline mode on the same device/browser
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                                 Custom business layout reports
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Preferred language settings
                             </li>
                         </ul>
                         <button class="btn btn-primary checkout-plan-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-price="249" style="width: 100%; margin-top: auto;">Upgrade to Pro</button>
