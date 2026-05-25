@@ -55,6 +55,7 @@ let paymentSettings = {
     paymongoSecretKey: "",
     stripePublishableKey: "",
     stripeSecretKey: "",
+    cardCheckoutUrl: "",
     gcashNumber: "0917-888-8888",
     payoutAccount: ""
 };
@@ -420,6 +421,7 @@ function savePaymentSettings() {
         paymongoSecretKey: document.getElementById("admin-paymongo-secret").value.trim(),
         stripePublishableKey: document.getElementById("admin-stripe-public").value.trim(),
         stripeSecretKey: document.getElementById("admin-stripe-secret").value.trim(),
+        cardCheckoutUrl: document.getElementById("admin-card-checkout-url").value.trim(),
         gcashNumber: document.getElementById("admin-gcash-number").value.trim(),
         payoutAccount: document.getElementById("admin-payout-account").value.trim()
     };
@@ -1391,6 +1393,7 @@ function renderAdminDashboard() {
     document.getElementById("admin-paymongo-secret").value = paymentSettings.paymongoSecretKey || "";
     document.getElementById("admin-stripe-public").value = paymentSettings.stripePublishableKey || "";
     document.getElementById("admin-stripe-secret").value = paymentSettings.stripeSecretKey || "";
+    document.getElementById("admin-card-checkout-url").value = paymentSettings.cardCheckoutUrl || "";
     document.getElementById("admin-gcash-number").value = paymentSettings.gcashNumber || "";
     document.getElementById("admin-payout-account").value = paymentSettings.payoutAccount || "";
 

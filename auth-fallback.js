@@ -70,14 +70,43 @@ function valoramAttachLocalAuthFallback() {
             event.stopImmediatePropagation();
             const loginForm = document.getElementById("login-form");
             const registerForm = document.getElementById("register-form");
+            const resetForm = document.getElementById("reset-password-form");
             const toggleLogin = document.getElementById("auth-toggle-login");
             const toggleRegister = document.getElementById("auth-toggle-register");
+            const toggleReset = document.getElementById("auth-toggle-reset");
+            const toggleResetBack = document.getElementById("auth-toggle-reset-back");
             const showingRegister = registerForm && registerForm.style.display !== "none";
 
             if (loginForm) loginForm.style.display = showingRegister ? "block" : "none";
             if (registerForm) registerForm.style.display = showingRegister ? "none" : "block";
+            if (resetForm) resetForm.style.display = "none";
             if (toggleLogin) toggleLogin.style.display = showingRegister ? "block" : "none";
             if (toggleRegister) toggleRegister.style.display = showingRegister ? "none" : "block";
+            if (toggleReset) toggleReset.style.display = showingRegister ? "block" : "none";
+            if (toggleResetBack) toggleResetBack.style.display = "none";
+        }, true);
+    });
+
+    document.querySelectorAll(".reset-auth-btn").forEach((button) => {
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const loginForm = document.getElementById("login-form");
+            const registerForm = document.getElementById("register-form");
+            const resetForm = document.getElementById("reset-password-form");
+            const toggleLogin = document.getElementById("auth-toggle-login");
+            const toggleRegister = document.getElementById("auth-toggle-register");
+            const toggleReset = document.getElementById("auth-toggle-reset");
+            const toggleResetBack = document.getElementById("auth-toggle-reset-back");
+            const showingReset = resetForm && resetForm.style.display !== "none";
+
+            if (loginForm) loginForm.style.display = showingReset ? "block" : "none";
+            if (registerForm) registerForm.style.display = "none";
+            if (resetForm) resetForm.style.display = showingReset ? "none" : "block";
+            if (toggleLogin) toggleLogin.style.display = showingReset ? "block" : "none";
+            if (toggleRegister) toggleRegister.style.display = "none";
+            if (toggleReset) toggleReset.style.display = showingReset ? "block" : "none";
+            if (toggleResetBack) toggleResetBack.style.display = showingReset ? "none" : "block";
         }, true);
     });
 
@@ -115,6 +144,46 @@ function valoramAttachLocalAuthFallback() {
             event.preventDefault();
             valoramSaveLocalAccount(email, password, company);
             valoramLoginLocal(email);
+        }, true);
+    }
+
+    const resetForm = document.getElementById("reset-password-form");
+    if (resetForm) {
+        resetForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const email = document.getElementById("reset-email")?.value.trim();
+            const password = document.getElementById("reset-password")?.value || "";
+            const saved = localStorage.getItem(`valoram_account_${email}`);
+            const account = saved ? JSON.parse(saved) : null;
+
+            if (!account && email !== VALORAM_TEST_EMAIL && email !== VALORAM_ADMIN_EMAIL) {
+                alert("No account exists for this email. Please sign up first.");
+                return;
+            }
+
+            if (password.length < 6) {
+                alert("Password must be at least 6 characters.");
+                return;
+            }
+
+            if (email === VALORAM_TEST_EMAIL || email === VALORAM_ADMIN_EMAIL) {
+                valoramEnsureTestAccount();
+            }
+
+            const latest = JSON.parse(localStorage.getItem(`valoram_account_${email}`));
+            latest.password = password;
+            localStorage.setItem(`valoram_account_${email}`, JSON.stringify(latest));
+            alert("Password updated. You can now sign in with your new password.");
+
+            document.getElementById("login-email").value = email;
+            document.getElementById("login-password").value = "";
+            document.getElementById("login-form").style.display = "block";
+            document.getElementById("reset-password-form").style.display = "none";
+            document.getElementById("auth-toggle-login").style.display = "block";
+            document.getElementById("auth-toggle-register").style.display = "none";
+            document.getElementById("auth-toggle-reset").style.display = "block";
+            document.getElementById("auth-toggle-reset-back").style.display = "none";
         }, true);
     }
 }
