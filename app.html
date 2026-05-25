@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="app-title-tag">Valora M - Professional Invoicing SaaS</title>
+    <meta name="description" content="Generate professional estimates and invoices with a fully custom white-labeled system. Build client lists, track earnings, and run your business.">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Supabase JS Client library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- ==================== AUTHENTICATION SECTION ==================== -->
+    <div id="auth-container" class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-icon" id="auth-logo-icon">V</div>
+                <h2 class="auth-title" id="auth-app-name">Valora M</h2>
+                <p style="color: var(--text-muted); font-size: 14px;">Professional Invoicing & Estimates</p>
+                <p style="color: var(--accent); font-size: 13px; font-weight: 700; margin-top: 6px;">Valuing every transaction.</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email Address</label>
+                    <input type="email" id="login-email" required placeholder="name@store.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required placeholder="Password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Sign In</button>
+            </form>
+
+            <!-- Register Form (Hidden by default) -->
+            <form id="register-form" style="display: none;">
+                <div class="form-group">
+                    <label for="register-company">Store/Company Name</label>
+                    <input type="text" id="register-company" required placeholder="e.g. My Sari-Sari Store">
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email Address</label>
+                    <input type="email" id="register-email" required placeholder="owner@store.com">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required placeholder="At least 6 characters">
+                </div>
+                <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 10px;">Create Account</button>
+            </form>
+
+            <div class="auth-toggle">
+                <p id="auth-toggle-login">Don't have an account? <span class="toggle-auth-btn">Sign Up</span></p>
+                <p id="auth-toggle-register" style="display: none;">Already have an account? <span class="toggle-auth-btn">Sign In</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APPLICATION ROOT ==================== -->
+    <div id="app-root" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <div class="logo-icon" id="sidebar-logo-icon">V</div>
+                <span class="logo-text" id="sidebar-app-name">Valora M</span>
+            </div>
+
+            <nav class="nav-menu">
+                <li class="nav-item active" data-tab="dashboard-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="creator-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Create Invoice
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="invoices-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                        Invoice History
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="clients-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.079-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                        </svg>
+                        Clients List
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="settings-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                        Settings
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="admin-tab" id="admin-nav-item" style="display: none;">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        Admin
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="billing-tab">
+                    <a class="nav-link" style="color: var(--accent);">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        Upgrade to Pro
+                    </a>
+                </li>
+            </nav>
+
+            <div class="user-widget">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar-char">M</div>
+                    <div class="user-meta">
+                        <div class="user-name" id="user-display-email">User Email</div>
+                        <div class="user-tier" id="user-display-tier">Free Tier</div>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logout-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                    </svg>
+                    Logout Account
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- ==================== DASHBOARD TAB ==================== -->
+            <div id="dashboard-tab" class="tab-content active">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>SaaS Dashboard</h1>
+                        <p>Track invoices, clients, and business income from one simple dashboard.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="switchTab('creator-tab')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        New Invoice/Estimate
+                    </button>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Revenue</span>
+                            <span class="metric-icon">💰</span>
+                        </div>
+                        <div class="metric-value" id="dash-total-revenue">₱0.00</div>
+                    </div>
+                    <div class="metric-card accent">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Paid</span>
+                            <span class="metric-icon">✅</span>
+                        </div>
+                        <div class="metric-value" id="dash-total-paid">₱0.00</div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <span class="metric-title">Unpaid Balance</span>
+                            <span class="metric-icon">⏳</span>
+                        </div>
+                        <div class="metric-value" id="dash-total-unpaid">₱0.00</div>
+                    </div>
+                    <div class="metric-card danger">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Invoices</span>
+                            <span class="metric-icon">📑</span>
+                        </div>
+                        <div class="metric-value" id="dash-total-count">0</div>
+                    </div>
+                </div>
+
+                <!-- Trial Notice Banner -->
+                <div class="subscription-card" id="trial-warning-banner">
+                    <div>
+                        <h3 style="font-family: var(--font-title); font-size: 18px; margin-bottom: 4px;">Standard Free Trial</h3>
+                        <p style="color: var(--text-medium); font-size: 14px;">Free accounts can create up to 5 invoices. Upgrade to Pro for unlimited invoices and custom branding.</p>
+                    </div>
+                    <button class="btn btn-accent btn-sm" onclick="switchTab('billing-tab')">Upgrade Now</button>
+                </div>
+
+                <!-- Recent Activity Table -->
+                <div class="panel-card" style="flex-grow: 1;">
+                    <div class="panel-title">Recent Invoices & Estimates</div>
+                    <div class="table-wrapper">
+                        <table class="custom-table" id="recent-invoices-table">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Client Name</th>
+                                    <th>Date Created</th>
+                                    <th>Status</th>
+                                    <th>Type</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No data yet. Create your first invoice to get started.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== INVOICE CREATOR TAB ==================== -->
+            <div id="creator-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1 id="creator-title">Estimate & Invoice Creator</h1>
+                        <p>Enter sales or service details and Valora M will calculate the invoice automatically.</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="resetCreatorForm()">Clear Form</button>
+                        <button class="btn btn-primary" id="save-invoice-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Save Invoice
+                        </button>
+                        <button class="btn btn-accent" id="print-invoice-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.821 12.075 19.177l5.355-5.356m-10.71 0a9.045 9.045 0 0 1-2.074-2.074m12.784 2.074A9.045 9.045 0 0 0 19.5 12c0-2.392-.93-4.57-2.457-6.179m-10.71 0a9.045 9.045 0 0 1 2.074-2.074m12.784 2.074A9.045 9.045 0 0 0 19.5 12c0-2.392-.93-4.57-2.457-6.179M9 19.5a2.25 2.25 0 0 0 2.25 2.25h1.5A2.25 2.25 0 0 0 15 19.5m-6 0v-3h6v3m-6-10.5h6" />
+                            </svg>
+                            Print / Save PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid-panels">
+                    <!-- Left Panel: Input Editor Form -->
+                    <div class="panel-card">
+                        <div class="panel-title">Invoice Details</div>
+
+                        <!-- Invoice Number & Status Row -->
+                        <div class="form-group row">
+                            <div class="form-group">
+                                <label for="inv-number">Invoice/Estimate Number</label>
+                                <input type="text" id="inv-number" value="INV-0001">
+                            </div>
+                            <div class="form-group">
+                                <label for="inv-type">Document Type</label>
+                                <select id="inv-type">
+                                    <option value="invoice">Invoice (Resibo)</option>
+                                    <option value="estimate">Estimate (Tantya)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Dates & Status Row -->
+                        <div class="form-group row">
+                            <div class="form-group">
+                                <label for="inv-date">Date Issued</label>
+                                <input type="date" id="inv-date">
+                            </div>
+                            <div class="form-group">
+                                <label for="inv-duedate">Due Date</label>
+                                <input type="date" id="inv-duedate">
+                            </div>
+                            <div class="form-group">
+                                <label for="inv-status">Payment Status</label>
+                                <select id="inv-status">
+                                    <option value="Unpaid">Unpaid / Sent</option>
+                                    <option value="Paid">Fully Paid</option>
+                                    <option value="Draft">Draft Only</option>
+                                    <option value="Overdue">Overdue</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Customer Selection Row -->
+                        <div class="form-group">
+                            <label for="inv-client-select">Select Customer / Client</label>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="inv-client-select" style="flex-grow: 1;">
+                                    <option value="">-- Select Client --</option>
+                                </select>
+                                <button class="btn btn-secondary btn-sm" onclick="switchTab('clients-tab')" style="white-space: nowrap;">+ New Client</button>
+                            </div>
+                        </div>
+
+                        <!-- Line Items Dynamic Adder Table -->
+                        <div style="margin-top: 10px;">
+                            <label style="font-weight: 700;">Line Items (Mga Ibinebenta/Serbisyo)</label>
+                            <table class="items-editor-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50%;">Description / Item Name</th>
+                                        <th style="width: 15%;">Qty</th>
+                                        <th style="width: 20%;">Price</th>
+                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoice-items-body">
+                                    <!-- Dynamic rows injected here -->
+                                </tbody>
+                            </table>
+                            <button class="btn btn-secondary btn-sm" id="add-line-item-btn" style="margin-top: 15px; width: 100%;">+ Add Line Item</button>
+                        </div>
+
+                        <!-- Taxes & Discounts Details -->
+                        <div class="form-group row" style="margin-top: 20px;">
+                            <div class="form-group">
+                                <label for="inv-tax-rate">Tax Rate (%)</label>
+                                <input type="number" id="inv-tax-rate" value="12" min="0" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="inv-discount">Discount Amount (PHP)</label>
+                                <input type="number" id="inv-discount" value="0" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inv-notes">Payment Terms / Bank Details / Notes</label>
+                            <textarea id="inv-notes" rows="3" placeholder="Thank you for your business. Payment may be sent to GCash 0912-345-6789."></textarea>
+                        </div>
+
+                        <!-- Signature Draw Pad Canvas Section -->
+                        <div class="signature-section">
+                            <label style="font-weight: 700;">Signature / Pirma ng Tindahan</label>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">Iguhit ang iyong pirma gamit ang mouse o touch screen sa ibaba:</p>
+                            <div class="signature-pad-wrapper">
+                                <canvas id="signature-canvas"></canvas>
+                            </div>
+                            <div class="signature-controls" style="margin-top: 8px;">
+                                <button class="btn btn-secondary btn-sm" type="button" id="clear-signature-btn">Clear Signature</button>
+                                <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: normal; cursor: pointer;">
+                                    <input type="checkbox" id="show-signature-checkbox" checked> Ipakita sa Resibo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Live Invoice Design Preview (White-Labeled) -->
+                    <div class="invoice-preview-container">
+                        <div class="invoice-paper" id="invoice-printable-area">
+                            <div class="preview-header">
+                                <div>
+                                    <div class="preview-logo-placeholder" id="preview-logo-box">
+                                        <!-- Store Logo -->
+                                        <span>LOGO</span>
+                                    </div>
+                                    <h3 id="preview-store-name" style="margin-top: 12px; font-weight: 700; font-size: 18px;">My Business</h3>
+                                    <p id="preview-store-details" style="font-size: 12px; color: #64748b; line-height: 1.4;">
+                                        Add address & contact details in Settings
+                                    </p>
+                                </div>
+                                <div class="preview-meta">
+                                    <h2 id="preview-doc-type-text">INVOICE</h2>
+                                    <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;" id="preview-inv-number">INV-0001</p>
+                                    <p style="font-size: 12px; color: #64748b;">Date: <span id="preview-inv-date">YYYY-MM-DD</span></p>
+                                    <p style="font-size: 12px; color: #64748b;">Due Date: <span id="preview-inv-duedate">YYYY-MM-DD</span></p>
+                                </div>
+                            </div>
+
+                            <div class="preview-details">
+                                <div class="preview-address-block">
+                                    <span class="title">Billed To</span>
+                                    <strong id="preview-client-name" style="font-size: 14px;">Walk-in Customer</strong>
+                                    <span id="preview-client-email">client@email.com</span>
+                                    <span id="preview-client-phone">0912-345-6789</span>
+                                    <span id="preview-client-address">Address</span>
+                                </div>
+                            </div>
+
+                            <div style="flex-grow: 1;">
+                                <table class="preview-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 50%;">Description</th>
+                                            <th style="width: 15%; text-align: center;">Qty</th>
+                                            <th style="width: 20%; text-align: right;">Unit Price</th>
+                                            <th style="width: 15%; text-align: right;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="preview-items-body">
+                                        <!-- Row lists -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="preview-math">
+                                <div class="preview-math-row">
+                                    <span>Subtotal</span>
+                                    <span id="preview-subtotal">₱0.00</span>
+                                </div>
+                                <div class="preview-math-row">
+                                    <span id="preview-tax-label">Tax (12%)</span>
+                                    <span id="preview-tax-amount">₱0.00</span>
+                                </div>
+                                <div class="preview-math-row">
+                                    <span>Discount</span>
+                                    <span id="preview-discount-val">₱0.00</span>
+                                </div>
+                                <div class="preview-math-row total">
+                                    <span>Grand Total</span>
+                                    <span id="preview-grand-total">₱0.00</span>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 12px; font-size: 11px; color: #64748b; line-height: 1.4;">
+                                <strong>Payment Notes:</strong>
+                                <p id="preview-notes-text">Enter notes here.</p>
+                            </div>
+
+                            <!-- Live Signature Preview Image box -->
+                            <div class="invoice-signature-preview-box" id="preview-signature-container">
+                                <img id="preview-signature-img" src="" alt="Authorized Signature" style="display: none;">
+                                <span id="preview-authorized-label">Authorized Signature</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== INVOICE HISTORY TAB ==================== -->
+            <div id="invoices-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Invoices & Estimates History</h1>
+                        <p>Manage, search, and edit all previous invoices and estimates.</p>
+                    </div>
+                </div>
+
+                <div class="panel-card" style="flex-grow: 1;">
+                    <div style="display: flex; gap: 15px; width: 100%;">
+                        <input type="text" id="invoice-search-input" placeholder="Search by Client Name or Invoice Number..." style="flex-grow: 1;">
+                        <select id="invoice-filter-status" style="width: 200px;">
+                            <option value="">-- Filter Status --</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Unpaid">Unpaid</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Overdue">Overdue</option>
+                        </select>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="custom-table" id="all-invoices-table">
+                            <thead>
+                                <tr>
+                                    <th>Doc Number</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Type</th>
+                                    <th>Total Amount</th>
+                                    <th style="width: 200px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Injected rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== CLIENTS LIST TAB ==================== -->
+            <div id="clients-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Clients Database</h1>
+                        <p>Manage your customer list for faster invoice creation.</p>
+                    </div>
+                </div>
+
+                <div class="grid-panels">
+                    <!-- New Client Form -->
+                    <div class="panel-card">
+                        <div class="panel-title">Add New Client</div>
+                        <form id="new-client-form">
+                            <div class="form-group">
+                                <label for="client-name">Full Name / Business Name</label>
+                                <input type="text" id="client-name" required placeholder="e.g. John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label for="client-email">Email Address</label>
+                                <input type="email" id="client-email" placeholder="e.g. client@website.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="client-phone">Phone Number</label>
+                                <input type="text" id="client-phone" placeholder="e.g. 0912-345-6789">
+                            </div>
+                            <div class="form-group">
+                                <label for="client-address">Billing Address</label>
+                                <textarea id="client-address" rows="3" placeholder="Street, Barangay, City, Province"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Save Client</button>
+                        </form>
+                    </div>
+
+                    <!-- Client Database Table -->
+                    <div class="panel-card">
+                        <div class="panel-title">Your Customer Directory</div>
+                        <input type="text" id="client-search-input" placeholder="Search clients by name or email..." style="margin-bottom: 15px;">
+                        
+                        <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+                            <table class="custom-table" id="clients-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Contact Details</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Injected clients -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== SETTINGS TAB (White-Labeled Settings) ==================== -->
+            <div id="settings-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Business & Software Config</h1>
+                        <p>Manage business settings, invoice branding, and app configuration.</p>
+                    </div>
+                </div>
+
+                <div class="grid-panels">
+                    <!-- Store Customizer Settings -->
+                    <div class="panel-card">
+                        <div class="panel-title">1. Your Business Details</div>
+                        
+                        <div class="form-group">
+                            <label>Business / Store Logo</label>
+                            <div class="logo-upload-wrapper">
+                                <div class="logo-preview-box" id="settings-logo-preview">
+                                    <span>LOGO</span>
+                                </div>
+                                <div>
+                                    <input type="file" id="store-logo-file" accept="image/*" style="display: none;">
+                                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('store-logo-file').click()">Select Logo Image</button>
+                                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Supports JPEG/PNG. Max size 2MB.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="store-name">Store/Company Name</label>
+                            <input type="text" id="store-name" value="My Business">
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="form-group">
+                                <label for="store-email">Email Address</label>
+                                <input type="email" id="store-email" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="store-phone">Phone Number</label>
+                                <input type="text" id="store-phone" value="">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="store-address">Physical Address</label>
+                            <textarea id="store-address" rows="2" placeholder="Address shown on invoice"></textarea>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="form-group">
+                                <label for="store-currency">Currency Code</label>
+                                <input type="text" id="store-currency" value="PHP">
+                            </div>
+                            <div class="form-group">
+                                <label for="store-currency-symbol">Currency Symbol</label>
+                                <input type="text" id="store-currency-symbol" value="₱">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferred-language">Preferred Language (Premium)</label>
+                            <select id="preferred-language">
+                                <option value="en">English</option>
+                                <option value="fil">Filipino</option>
+                            </select>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Default is English. Language preference is reserved for premium accounts.</p>
+                        </div>
+
+                        <!-- Store Settings Invoice Color Accent Picker -->
+                        <div class="form-group">
+                            <label>Invoice Theme Color Accent (Kulay ng Resibo)</label>
+                            <div class="preset-invoice-colors">
+                                <div class="invoice-color-preset active" data-color="#6366f1" style="background-color: #6366f1;" title="Indigo"></div>
+                                <div class="invoice-color-preset" data-color="#0d9488" style="background-color: #0d9488;" title="Teal"></div>
+                                <div class="invoice-color-preset" data-color="#f43f5e" style="background-color: #f43f5e;" title="Rose"></div>
+                                <div class="invoice-color-preset" data-color="#d97706" style="background-color: #d97706;" title="Amber"></div>
+                                <div class="invoice-color-preset" data-color="#1e293b" style="background-color: #1e293b;" title="Dark Slate"></div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" id="save-store-settings-btn" style="width: 100%;">Save Store Settings</button>
+                    </div>
+
+                    <!-- Developer White-Label Settings (Monetization Center) -->
+                    <div class="panel-card" style="border: 2px dashed var(--primary);">
+                        <div class="panel-title" style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                            🔧 White-Label & Branding Partner Center
+                        </div>
+                        
+                        <p style="font-size: 13px; color: var(--text-medium);">
+                            DEVELOPER ZONE: Update the app branding and selling configuration for your own software platform.
+                        </p>
+
+                        <div class="form-group">
+                            <label for="wl-app-name">SaaS Product Name</label>
+                            <input type="text" id="wl-app-name" value="Valora M">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Product Theme Accent Color</label>
+                            <div class="preset-color-container">
+                                <div class="color-preset indigo active" data-theme="indigo" title="Indigo UI"></div>
+                                <div class="color-preset teal" data-theme="teal" title="Teal UI"></div>
+                                <div class="color-preset rose" data-theme="rose" title="Rose UI"></div>
+                                <div class="color-preset amber" data-theme="amber" title="Amber UI"></div>
+                                <div class="color-preset purple" data-theme="purple" title="Purple UI"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Monetization Rules Dashboard</label>
+                            <div style="background-color: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 13px; display: flex; flex-direction: column; gap: 10px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Trial Limit:</span>
+                                    <strong>5 Invoices Maximum</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Payment Destination:</span>
+                                    <strong id="wl-gcash-num">Mock PayMongo/Stripe Integration</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>License Keys Generated:</span>
+                                    <strong style="color: var(--accent);">Crypto MD5 Algorithmic (Auto-Active)</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-accent" id="save-wl-settings-btn" style="width: 100%;">Apply White-Label System Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ADMIN TAB ==================== -->
+            <div id="admin-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Owner Admin Dashboard</h1>
+                        <p>Track app revenue, customer upgrades, and payment gateway settings.</p>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Total App Revenue</span>
+                            <span class="metric-icon">$</span>
+                        </div>
+                        <div class="metric-value" id="admin-total-revenue">PHP 0.00</div>
+                    </div>
+                    <div class="metric-card accent">
+                        <div class="metric-header">
+                            <span class="metric-title">This Month</span>
+                            <span class="metric-icon">$</span>
+                        </div>
+                        <div class="metric-value" id="admin-monthly-revenue">PHP 0.00</div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <span class="metric-title">Payments</span>
+                            <span class="metric-icon">#</span>
+                        </div>
+                        <div class="metric-value" id="admin-payment-count">0</div>
+                    </div>
+                    <div class="metric-card danger">
+                        <div class="metric-header">
+                            <span class="metric-title">Paying Customers</span>
+                            <span class="metric-icon">#</span>
+                        </div>
+                        <div class="metric-value" id="admin-customer-count">0</div>
+                    </div>
+                </div>
+
+                <div class="grid-panels">
+                    <div class="panel-card">
+                        <div class="panel-title">Payment Gateway Settings</div>
+                        <div class="form-group">
+                            <label for="admin-paymongo-public">PayMongo Public Key</label>
+                            <input type="text" id="admin-paymongo-public" placeholder="pk_test_...">
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-paymongo-secret">PayMongo Secret Key</label>
+                            <input type="password" id="admin-paymongo-secret" placeholder="sk_test_...">
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-stripe-public">Stripe Publishable Key</label>
+                            <input type="text" id="admin-stripe-public" placeholder="pk_live_...">
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-stripe-secret">Stripe Secret Key</label>
+                            <input type="password" id="admin-stripe-secret" placeholder="sk_live_...">
+                        </div>
+                        <div class="form-group row">
+                            <div class="form-group">
+                                <label for="admin-gcash-number">Fallback GCash Number</label>
+                                <input type="text" id="admin-gcash-number" placeholder="0917XXXXXXX">
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-payout-account">Payout Bank / Wallet</label>
+                                <input type="text" id="admin-payout-account" placeholder="Bank, Maya, or GCash account">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="save-admin-payment-settings-btn" style="width: 100%;">Save Admin Payment Settings</button>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-title">Recent App Payments</div>
+                        <div class="table-wrapper" style="max-height: 420px; overflow-y: auto;">
+                            <table class="custom-table" id="admin-payments-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Customer</th>
+                                        <th>Plan</th>
+                                        <th>Method</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: var(--text-muted);">No payments recorded yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== UPGRADE & BILLING TAB ==================== -->
+            <div id="billing-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>SaaS Pricing & Subscriptions</h1>
+                        <p>Choose the best plan to unlock the full system.</p>
+                    </div>
+                </div>
+
+                <div class="subscription-card" style="margin-bottom: 20px;">
+                    <div>
+                        <h3 style="font-family: var(--font-title); font-size: 18px; margin-bottom: 4px;">Current Package: <span id="current-tier-status" style="color: var(--accent);">Standard Free Tier</span></h3>
+                        <p style="color: var(--text-medium); font-size: 14px;">Invoices Used: <span id="billing-invoice-count">0</span> / 5 free limits.</p>
+                    </div>
+                </div>
+
+                <div class="pricing-plans">
+                    <!-- Standard Plan -->
+                    <div class="plan-card">
+                        <div class="plan-name">Standard Free Plan</div>
+                        <div class="plan-price">PHP 0<span> / Month</span></div>
+                        <ul class="plan-features">
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Limited to 5 invoices
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Estimates at Invoices Creator
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Standard Print Layout
+                            </li>
+                            <li style="color: var(--text-muted);">
+                                ❌ No custom logo upload
+                            </li>
+                        </ul>
+                        <button class="btn btn-secondary" style="width: 100%; margin-top: auto;" disabled>Active Plan</button>
+                    </div>
+
+                    <!-- Starter Unlimited Plan -->
+                    <div class="plan-card">
+                        <div class="plan-name">Starter Unlimited</div>
+                        <div class="plan-price">PHP 149<span> / Month</span></div>
+                        <ul class="plan-features">
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Unlimited invoice creation
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Client list at invoice history
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Print / save as PDF
+                            </li>
+                        </ul>
+                        <button class="btn btn-secondary checkout-plan-btn" data-plan="Starter Unlimited" data-price="149" style="width: 100%; margin-top: auto;">Choose Starter</button>
+                    </div>
+
+                    <!-- Pro Unlimited Plan -->
+                    <div class="plan-card popular">
+                        <div class="popular-badge">Most Popular</div>
+                        <div class="plan-name">Pro Unlimited Plan</div>
+                        <div class="plan-price">PHP 249<span> / Month</span></div>
+                        <ul class="plan-features">
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Unlimited invoice creation
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Upload your own store logo
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                PDF and offline printing support
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Custom business layout reports
+                            </li>
+                        </ul>
+                        <button class="btn btn-primary checkout-plan-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-price="249" style="width: 100%; margin-top: auto;">Upgrade to Pro</button>
+                    </div>
+
+                    <!-- Business Unlimited Plan -->
+                    <div class="plan-card">
+                        <div class="plan-name">Business Unlimited</div>
+                        <div class="plan-price">PHP 449<span> / Month</span></div>
+                        <ul class="plan-features">
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Unlimited invoice creation
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Upload your own store logo
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                PDF and offline printing support
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                Custom business layout reports
+                            </li>
+                        </ul>
+                        <button class="btn btn-accent checkout-plan-btn" data-plan="Business Unlimited" data-price="449" style="width: 100%; margin-top: auto;">Choose Business</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==================== AUTOMATED PAYMENT SIMULATOR MODAL ==================== -->
+    <div class="modal-overlay" id="payment-modal">
+        <div class="modal-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-family: var(--font-title); font-size: 18px;">Mock Payment Gateway</h3>
+                <span id="close-payment-btn" style="cursor: pointer; color: var(--text-muted); font-size: 20px;">&times;</span>
+            </div>
+            
+            <p style="font-size: 13px; color: var(--text-medium);">
+                Preview the checkout flow customers will see when they upgrade and pay.
+            </p>
+
+            <div class="form-group">
+                <label>Choose Payment Method</label>
+                <div class="payment-options">
+                    <div class="payment-btn active" id="pay-gcash-opt">
+                        <div class="payment-logo-gcash">GCash</div>
+                        <span style="font-size: 11px; margin-top: 4px;">GCash Transfer</span>
+                    </div>
+                    <div class="payment-btn" id="pay-card-opt">
+                        <div class="payment-logo-card">💳 CARD</div>
+                        <span style="font-size: 11px; margin-top: 4px;">Credit / Debit</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GCash Section -->
+            <div id="gcash-payment-details">
+                <div class="form-group" style="background-color: rgba(0, 92, 252, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(0, 92, 252, 0.2);">
+                    <p style="font-size: 13px; color: #60a5fa; line-height: 1.4;">
+                        <strong>GCash Checkout Number:</strong> 0917-888-8888 (Sample Merchant ID)<br>
+                        <strong>Selected Plan:</strong> <span id="payment-plan-name">Pro Unlimited Plan</span><br>
+                        <strong>Amount:</strong> <span id="payment-plan-amount">PHP 249.00</span>
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label for="payment-phone">Your GCash Registered Number</label>
+                    <input type="text" id="payment-phone" placeholder="0917XXXXXXX" value="09171234567">
+                </div>
+            </div>
+
+            <!-- Card Section (Hidden by default) -->
+            <div id="card-payment-details" style="display: none;">
+                <div class="form-group">
+                    <label for="card-num">Card Number</label>
+                    <input type="text" id="card-num" placeholder="4111 2222 3333 4444" value="4111 2222 3333 4444">
+                </div>
+                <div class="form-group row">
+                    <div class="form-group">
+                        <label for="card-expiry">Expiry Date</label>
+                        <input type="text" id="card-expiry" placeholder="MM/YY" value="12/28">
+                    </div>
+                    <div class="form-group">
+                        <label for="card-cvc">CVC</label>
+                        <input type="password" id="card-cvc" placeholder="***" value="123">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-accent" id="submit-mock-payment-btn" style="width: 100%;">Pay PHP 249.00 Now</button>
+
+            <!-- Loading overlay inside modal during processing -->
+            <div id="payment-processing-overlay" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 15px; background: rgba(11, 15, 25, 0.95); position: absolute; top:0; left:0; width:100%; height:100%; border-radius:24px; z-index:10;">
+                <div style="border: 4px solid var(--border-color); border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+                <p style="font-size: 14px; font-weight: 600; color: #fff;">Processing payment securely...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spin animation for loader -->
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script src="app.js"></script>
+    <script src="auth-fallback.js"></script>
+</body>
+</html>

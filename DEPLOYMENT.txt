@@ -1,0 +1,17 @@
+Valora M deployment notes
+
+Pages:
+- index.html is the public marketing website.
+- app.html is the customer app.
+- /app is configured to open app.html on Vercel or Netlify.
+
+Recommended first launch:
+1. Create a free Vercel account.
+2. Upload this project folder or connect a GitHub repository.
+3. Set the project root to this folder.
+4. Deploy as a static site.
+5. Your first web link will look like https://your-project-name.vercel.app.
+6. Add a custom domain in Vercel when you buy one, such as valoram.com or myvaloram.com.
+
+Important:
+The current app uses local browser storage for demo accounts and invoices. Before selling to real customers at scale, connect Supabase for real user accounts and a live payment provider such as PayMongo or Stripe.
