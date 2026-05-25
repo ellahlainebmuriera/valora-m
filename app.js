@@ -71,7 +71,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadWhiteLabelSettings();
     initAppEventListeners();
     initSignaturePad();
-    prefillDefaultEmail();
     checkAuthSession();
     
     // Set default dates in invoice form
@@ -82,15 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     document.getElementById("inv-duedate").value = nextMonth.toISOString().split('T')[0];
 });
-
-function prefillDefaultEmail() {
-    ["login-email", "register-email"].forEach((fieldId) => {
-        const field = document.getElementById(fieldId);
-        if (field && !field.value) {
-            field.value = DEFAULT_USER_EMAIL;
-        }
-    });
-}
 
 function getLocalAccount(email) {
     const saved = localStorage.getItem(`valoram_account_${email}`);
@@ -135,7 +125,8 @@ function seedTestAccount() {
             is_pro: true,
             invoice_count: 0,
             invoice_theme_color: "#0d9488",
-            preferred_language: "en"
+            preferred_language: "en",
+            plan: "Business Unlimited"
         }));
     }
 
@@ -492,7 +483,14 @@ function updateUserTierUI() {
     const currentTierStatus = document.getElementById("current-tier-status");
     const banner = document.getElementById("trial-warning-banner");
     
-    if (currentProfile.is_pro) {
+    if (isAdminUser()) {
+        tierDisplay.innerText = "BUSINESS UNLIMITED";
+        tierDisplay.style.color = "var(--accent)";
+        tierDisplay.style.backgroundColor = "var(--accent-glow)";
+        currentTierStatus.innerText = "BUSINESS UNLIMITED PLAN";
+        currentTierStatus.style.color = "var(--accent)";
+        if (banner) banner.style.display = "none";
+    } else if (currentProfile.is_pro) {
         tierDisplay.innerText = "PRO ACCOUNT";
         tierDisplay.style.color = "var(--accent)";
         tierDisplay.style.backgroundColor = "var(--accent-glow)";

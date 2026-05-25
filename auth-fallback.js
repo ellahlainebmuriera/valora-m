@@ -28,9 +28,11 @@ function valoramSaveLocalAccount(email, password, companyName) {
         currency: "PHP",
         currency_symbol: "PHP",
         default_tax_rate: 12.0,
-        is_pro: false,
+        is_pro: email === VALORAM_ADMIN_EMAIL,
         invoice_count: 0,
-        invoice_theme_color: "#6366f1"
+        invoice_theme_color: email === VALORAM_ADMIN_EMAIL ? "#0d9488" : "#6366f1",
+        preferred_language: "en",
+        plan: email === VALORAM_ADMIN_EMAIL ? "Business Unlimited" : "Standard Free"
     }));
 }
 
