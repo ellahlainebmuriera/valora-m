@@ -48,21 +48,22 @@
                     <label for="reset-email">Email Address</label>
                     <input type="email" id="reset-email" required placeholder="name@store.com">
                 </div>
-                <div class="form-group">
-                    <label for="reset-code">Email Verification Code</label>
+                <div class="form-group" id="reset-code-group">
+                    <label for="reset-code" id="reset-code-label">Email Verification Code</label>
                     <input type="text" id="reset-code" required placeholder="Enter code from your email">
-                    <button type="button" class="btn btn-secondary btn-sm" id="send-reset-code-btn" onclick="sendPasswordResetCode()">Send Reset Code</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="send-reset-code-btn">Send Reset Code</button>
                     <p id="reset-code-status" style="font-size: 12px; color: var(--accent); display: none;"></p>
-                    <p style="font-size: 11px; color: var(--text-muted);">Live email codes require Supabase Auth or another email/OTP provider. In local preview, use code 123456.</p>
+                    <p id="reset-code-note" style="font-size: 11px; color: var(--text-muted);">Live email codes require Supabase Auth or another email/OTP provider. In local preview, use code 123456.</p>
                 </div>
-                <div class="form-group">
+                <p id="reset-link-help" style="display: none; font-size: 12px; color: var(--text-muted); line-height: 1.5;"></p>
+                <div class="form-group" id="reset-new-password-group">
                     <label for="reset-password">New Password</label>
                     <div class="password-field">
                         <input type="password" id="reset-password" required placeholder="At least 6 characters">
                         <button type="button" class="password-toggle" data-target="reset-password">Show</button>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Reset Password</button>
+                <button type="submit" class="btn btn-primary" id="reset-submit-btn" style="width: 100%; margin-top: 10px;">Reset Password</button>
             </form>
 
             <!-- Register Form (Hidden by default) -->

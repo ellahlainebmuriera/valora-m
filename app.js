@@ -16,6 +16,7 @@ const ADMIN_PASSWORD = "ValoraEMAdmin181920!!@";
 
 let supabaseClient = null;
 let isCloudActive = false;
+let isPasswordRecoverySession = false;
 
 // Initialize Supabase. Kapag wala pang credentials, mag-fo-fallback sa LocalStorage automatically.
 try {
@@ -82,6 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadWhiteLabelSettings();
     initAppEventListeners();
     initSignaturePad();
+    initPasswordRecoveryFlow();
     checkAuthSession();
     
     // Set default dates in invoice form
@@ -128,22 +130,138 @@ function setResetCodeStatus(message, isError = false) {
     status.style.color = isError ? "var(--danger)" : "var(--accent)";
 }
 
+function getResetRedirectUrl() {
+    return `${window.location.origin}${window.location.pathname}`;
+}
+
+function showPasswordResetForm() {
+    const loginForm = document.getElementById("login-form");
+    const registerForm = document.getElementById("register-form");
+    const resetForm = document.getElementById("reset-password-form");
+    const toggleLogin = document.getElementById("auth-toggle-login");
+    const toggleRegister = document.getElementById("auth-toggle-register");
+    const toggleReset = document.getElementById("auth-toggle-reset");
+    const toggleResetBack = document.getElementById("auth-toggle-reset-back");
+
+    if (loginForm) loginForm.style.display = "none";
+    if (registerForm) registerForm.style.display = "none";
+    if (resetForm) resetForm.style.display = "block";
+    if (toggleLogin) toggleLogin.style.display = "block";
+    if (toggleRegister) toggleRegister.style.display = "none";
+    if (toggleReset) toggleReset.style.display = "none";
+    if (toggleResetBack) toggleResetBack.style.display = "block";
+
+    configurePasswordResetForm();
+}
+
+function configurePasswordResetForm() {
+    const codeGroup = document.getElementById("reset-code-group");
+    const codeInput = document.getElementById("reset-code");
+    const codeLabel = document.getElementById("reset-code-label");
+    const codeNote = document.getElementById("reset-code-note");
+    const sendButton = document.getElementById("send-reset-code-btn");
+    const help = document.getElementById("reset-link-help");
+    const submitButton = document.getElementById("reset-submit-btn");
+    const emailInput = document.getElementById("reset-email");
+
+    if (!codeGroup || !codeInput || !sendButton || !help || !submitButton) return;
+
+    if (isCloudActive) {
+        codeGroup.style.display = "block";
+        if (codeLabel) codeLabel.innerText = "Password Reset Email";
+        if (codeNote) codeNote.innerText = "For live Supabase accounts, use the password reset link from the latest email.";
+        codeInput.style.display = "none";
+        codeInput.required = false;
+        codeInput.disabled = true;
+        sendButton.innerText = "Send Reset Link";
+        help.style.display = "block";
+        help.innerText = isPasswordRecoverySession
+            ? "Reset link verified. Type your new password, then click Save New Password."
+            : "Click Send Reset Link, open the latest email from Supabase/Valora EM, then use the reset link before saving a new password.";
+        submitButton.innerText = isPasswordRecoverySession ? "Save New Password" : "Save New Password After Opening Link";
+        return;
+    }
+
+    codeGroup.style.display = "block";
+    if (codeLabel) codeLabel.innerText = "Email Verification Code";
+    if (codeNote) codeNote.innerText = "Live email codes require Supabase Auth or another email/OTP provider. In local preview, use code 123456.";
+    codeInput.style.display = "block";
+    codeInput.required = true;
+    codeInput.disabled = false;
+    sendButton.innerText = "Send Reset Code";
+    help.style.display = "none";
+    submitButton.innerText = "Reset Password";
+    if (emailInput && !emailInput.value) emailInput.placeholder = "name@store.com";
+}
+
+async function initPasswordRecoveryFlow() {
+    if (!isCloudActive || !supabaseClient?.auth) {
+        configurePasswordResetForm();
+        return;
+    }
+
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const queryParams = new URLSearchParams(window.location.search);
+    const authType = hashParams.get("type") || queryParams.get("type");
+
+    if (authType === "recovery") {
+        isPasswordRecoverySession = true;
+        showAuthScreen();
+        showPasswordResetForm();
+        setResetCodeStatus("Reset link verified. Enter your new password below.");
+    }
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event !== "PASSWORD_RECOVERY") return;
+        isPasswordRecoverySession = true;
+        showAuthScreen();
+        showPasswordResetForm();
+        if (session?.user?.email) {
+            const emailInput = document.getElementById("reset-email");
+            if (emailInput) emailInput.value = session.user.email;
+        }
+        setResetCodeStatus("Reset link verified. Enter your new password below.");
+    });
+
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (isPasswordRecoverySession && session?.user?.email) {
+            const emailInput = document.getElementById("reset-email");
+            if (emailInput) emailInput.value = session.user.email;
+        }
+    } catch (error) {
+        console.warn("Unable to read password recovery session.", error);
+    }
+}
+
 async function sendPasswordResetCode() {
     const email = document.getElementById("reset-email")?.value.trim();
+    const resetButton = document.getElementById("send-reset-code-btn");
     if (!email) {
         setResetCodeStatus("Please enter your email first.", true);
         return;
     }
 
     if (isCloudActive && supabaseClient?.auth?.resetPasswordForEmail) {
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.href
-        });
-        if (error) {
-            setResetCodeStatus(`Could not send reset email: ${error.message}`, true);
-            return;
+        if (resetButton) {
+            resetButton.disabled = true;
+            resetButton.innerText = "Sending...";
         }
-        setResetCodeStatus("Password reset email sent. If you do not see a numeric code, update the Supabase Recovery email template to show {{ .Token }}.");
+        try {
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: getResetRedirectUrl()
+            });
+            if (error) {
+                setResetCodeStatus(`Could not send reset email: ${error.message}`, true);
+                return;
+            }
+            setResetCodeStatus("Password reset link sent. Open the latest email, click the reset link, then enter your new password here.");
+        } finally {
+            if (resetButton) {
+                resetButton.disabled = false;
+                resetButton.innerText = "Send Reset Link";
+            }
+        }
         return;
     }
 
@@ -370,6 +488,12 @@ function applyWhiteLabel() {
 
 // Check user login session
 async function checkAuthSession() {
+    if (isPasswordRecoverySession) {
+        showAuthScreen();
+        showPasswordResetForm();
+        return;
+    }
+
     if (isCloudActive) {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
@@ -856,28 +980,42 @@ function initAppEventListeners() {
 
     document.getElementById("reset-password-form").addEventListener("submit", async (e) => {
         e.preventDefault();
-        const email = document.getElementById("reset-email").value.trim();
+        let email = document.getElementById("reset-email").value.trim();
         const code = document.getElementById("reset-code").value.trim();
         const password = document.getElementById("reset-password").value;
 
-        if (!email || !code) {
-            setResetCodeStatus("Please enter your email and reset code.", true);
-            return;
-        }
         if (password.length < 6) {
             setResetCodeStatus("Password must be at least 6 characters.", true);
             return;
         }
 
         if (isCloudActive) {
-            const { error: verifyError } = await supabaseClient.auth.verifyOtp({
-                email,
-                token: code,
-                type: "recovery"
-            });
-            if (verifyError) {
-                setResetCodeStatus(`Invalid or expired reset code: ${verifyError.message}`, true);
+            if (!email && isPasswordRecoverySession) {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                email = session?.user?.email || "";
+                if (email) document.getElementById("reset-email").value = email;
+            }
+            if (!email) {
+                setResetCodeStatus("Please enter your email first.", true);
                 return;
+            }
+
+            if (!isPasswordRecoverySession) {
+                if (!code) {
+                    setResetCodeStatus("Please open the latest password reset email and click the reset link first.", true);
+                    return;
+                }
+
+                const { error: verifyError } = await supabaseClient.auth.verifyOtp({
+                    email,
+                    token: code,
+                    type: "recovery"
+                });
+                if (verifyError) {
+                    setResetCodeStatus("That code was rejected by Supabase. Please use the reset link from the latest email instead.", true);
+                    return;
+                }
+                isPasswordRecoverySession = true;
             }
 
             const { error: updateError } = await supabaseClient.auth.updateUser({ password });
@@ -896,6 +1034,16 @@ function initAppEventListeners() {
             document.getElementById("auth-toggle-register").style.display = "none";
             document.getElementById("auth-toggle-reset").style.display = "block";
             document.getElementById("auth-toggle-reset-back").style.display = "none";
+            return;
+        }
+
+        if (!email) {
+            setResetCodeStatus("Please enter your email first.", true);
+            return;
+        }
+
+        if (!code) {
+            setResetCodeStatus("Please enter the reset code.", true);
             return;
         }
 
@@ -2207,5 +2355,7 @@ Object.assign(window, {
     renderAdminDashboard,
     savePaymentSettings,
     sendPasswordResetCode,
+    configurePasswordResetForm,
+    showPasswordResetForm,
     submitFeatureRequest
 });

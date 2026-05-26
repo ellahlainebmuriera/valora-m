@@ -133,6 +133,7 @@ function valoraemAttachLocalAuthFallback() {
             if (toggleRegister) toggleRegister.style.display = "none";
             if (toggleReset) toggleReset.style.display = showingReset ? "block" : "none";
             if (toggleResetBack) toggleResetBack.style.display = showingReset ? "none" : "block";
+            if (typeof configurePasswordResetForm === "function") configurePasswordResetForm();
         }, true);
     });
 
