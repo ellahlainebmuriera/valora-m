@@ -6,8 +6,8 @@
 
 // ==================== DATABASE CONFIGURATION ====================
 // TODO: Replace these with your own Supabase API credentials when cloud SaaS setup is ready.
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://bdpcrsonguvxxuxnhpyy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_4XOjRb8SC2Cw3vlKx5xukw_9OWGBA-_';
 const DEFAULT_USER_EMAIL = "testaccount@valoraem.com";
 const DEFAULT_TEST_PASSWORD = "ValoraEM181920!!@";
 const DEFAULT_TEST_COMPANY = "Valora EM Test Store";
