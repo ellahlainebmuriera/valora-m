@@ -1,4 +1,4 @@
-Valora M deployment notes
+Valora EM deployment notes
 
 Pages:
 - index.html is the public marketing website.
@@ -11,7 +11,7 @@ Recommended first launch:
 3. Set the project root to this folder.
 4. Deploy as a static site.
 5. Your first web link will look like https://your-project-name.vercel.app.
-6. Add a custom domain in Vercel when you buy one, such as valoram.com or myvaloram.com.
+6. Add a custom domain in Vercel when you buy one, such as valoraem.com or myvaloraem.com.
 
 Important:
 The current app uses local browser storage for demo accounts and invoices. Before selling to real customers at scale, connect Supabase for real user accounts and a live payment provider such as PayMongo or Stripe.

@@ -1,4 +1,4 @@
-/* Design System and Stylesheet for Valora M SaaS */
+/* Design System and Stylesheet for Valora EM SaaS */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -54,6 +54,17 @@ body.theme-purple {
     --primary: #8b5cf6;
     --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
     --primary-glow: rgba(139, 92, 246, 0.2);
+}
+body.theme-light {
+    --bg-primary: #f5f7fb;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.92);
+    --bg-card-hover: #ffffff;
+    --border-color: rgba(15, 23, 42, 0.12);
+    --text-main: #0f172a;
+    --text-medium: #334155;
+    --text-muted: #64748b;
+    --card-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
 }
 
 /* Global Reset */
@@ -540,6 +551,53 @@ textarea {
     font-size: 14px;
     outline: none;
     transition: all 0.2s ease;
+}
+
+select option {
+    background-color: #ffffff;
+    color: #111827;
+}
+
+body:not(.theme-light) select option {
+    background-color: #111827;
+    color: #f8fafc;
+}
+
+body.theme-light input[type="text"],
+body.theme-light input[type="email"],
+body.theme-light input[type="password"],
+body.theme-light input[type="number"],
+body.theme-light input[type="date"],
+body.theme-light select,
+body.theme-light textarea {
+    background-color: #ffffff;
+    color: #0f172a;
+}
+
+.password-field {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.password-field input {
+    flex: 1;
+}
+
+.password-toggle {
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-medium);
+    border-radius: 10px;
+    padding: 0 12px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.auth-methods {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
 }
 
 input:focus,
@@ -1186,11 +1244,43 @@ textarea:focus {
         white-space: nowrap;
     }
     .user-widget {
-        display: none; /* Hide on mobile to save space, or style separately */
+        display: flex;
+        padding-top: 12px;
+        margin-top: 12px;
     }
     .main-content {
         margin-left: 0;
-        padding: 20px;
+        padding: 16px;
+    }
+    .tab-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+    .tab-header > div:last-child {
+        flex-wrap: wrap;
+    }
+    .form-group.row {
+        flex-direction: column;
+    }
+    .items-editor-table,
+    .custom-table {
+        min-width: 640px;
+    }
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    .invoice-paper {
+        padding: 22px;
+        min-height: auto;
+    }
+    .preview-header,
+    .preview-details {
+        display: block;
+    }
+    .preview-meta {
+        text-align: left;
+        margin-top: 14px;
     }
 }
 
@@ -1254,6 +1344,27 @@ textarea:focus {
     text-transform: uppercase;
     font-weight: bold;
     letter-spacing: 0.5px;
+}
+
+.signature-line {
+    width: 180px;
+    border-bottom: 1px solid #94a3b8;
+    height: 34px;
+}
+
+.invoice-photo-preview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
+}
+
+.invoice-photo-preview img {
+    width: 100%;
+    max-height: 120px;
+    object-fit: cover;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
 }
 
 .preset-invoice-colors {

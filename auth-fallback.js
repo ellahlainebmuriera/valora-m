@@ -1,25 +1,25 @@
 /**
- * Local account fallback for Valora M.
+ * Local account fallback for Valora EM.
  * Keeps sign up and sign in working for the static hosted app.
  */
-const VALORAM_TEST_EMAIL = "testaccount@valoram.com";
-const VALORAM_TEST_PASSWORD = "ValoraM181920!!@";
-const VALORAM_TEST_COMPANY = "Valora M Test Store";
-const VALORAM_ADMIN_EMAIL = "ellahlaine.b.muriera@gmail.com";
-const VALORAM_ADMIN_PASSWORD = "ValoraMAdmin181920!!@";
+const valoraem_TEST_EMAIL = "testaccount@valoraem.com";
+const valoraem_TEST_PASSWORD = "ValoraEM181920!!@";
+const valoraem_TEST_COMPANY = "Valora EM Test Store";
+const valoraem_ADMIN_EMAIL = "ellahlaine.b.muriera@gmail.com";
+const valoraem_ADMIN_PASSWORD = "ValoraEMAdmin181920!!@";
 
-function valoramUserId(email) {
+function valoraemUserId(email) {
     return `mock-${email.replace(/[^a-zA-Z0-9]/g, "")}`;
 }
 
-function valoramSaveLocalAccount(email, password, companyName) {
-    localStorage.setItem(`valoram_account_${email}`, JSON.stringify({
+function valoraemSaveLocalAccount(email, password, companyName) {
+    localStorage.setItem(`valoraem_account_${email}`, JSON.stringify({
         email,
         password,
         company_name: companyName
     }));
 
-    localStorage.setItem(`valoram_profile_${email}`, JSON.stringify({
+    localStorage.setItem(`valoraem_profile_${email}`, JSON.stringify({
         email,
         company_name: companyName,
         phone: "",
@@ -28,17 +28,22 @@ function valoramSaveLocalAccount(email, password, companyName) {
         currency: "PHP",
         currency_symbol: "PHP",
         default_tax_rate: 12.0,
-        is_pro: email === VALORAM_ADMIN_EMAIL,
+        is_pro: email === valoraem_ADMIN_EMAIL,
         invoice_count: 0,
-        invoice_theme_color: email === VALORAM_ADMIN_EMAIL ? "#0d9488" : "#6366f1",
+        invoice_theme_color: email === valoraem_ADMIN_EMAIL ? "#0d9488" : "#6366f1",
         preferred_language: "en",
-        plan: email === VALORAM_ADMIN_EMAIL ? "Business Unlimited" : "Standard Free"
+        invoice_text_color: "#1e293b",
+        print_layout: "pdf",
+        app_appearance: "dark",
+        saved_signature_data_url: "",
+        save_signature_permission: false,
+        plan: email === valoraem_ADMIN_EMAIL ? "Business Unlimited" : "Standard Free"
     }));
 }
 
-function valoramLoginLocal(email) {
-    const user = { email, id: valoramUserId(email) };
-    localStorage.setItem("valoram_mock_user", JSON.stringify(user));
+function valoraemLoginLocal(email) {
+    const user = { email, id: valoraemUserId(email) };
+    localStorage.setItem("valoraem_mock_user", JSON.stringify(user));
 
     if (typeof setupAuthenticatedUser === "function") {
         setupAuthenticatedUser(user);
@@ -51,18 +56,18 @@ function valoramLoginLocal(email) {
     if (appRoot) appRoot.style.display = "flex";
 }
 
-function valoramEnsureTestAccount() {
-    valoramSaveLocalAccount(VALORAM_TEST_EMAIL, VALORAM_TEST_PASSWORD, VALORAM_TEST_COMPANY);
-    valoramSaveLocalAccount(VALORAM_ADMIN_EMAIL, VALORAM_ADMIN_PASSWORD, "Valora M Admin");
+function valoraemEnsureTestAccount() {
+    valoraemSaveLocalAccount(valoraem_TEST_EMAIL, valoraem_TEST_PASSWORD, valoraem_TEST_COMPANY);
+    valoraemSaveLocalAccount(valoraem_ADMIN_EMAIL, valoraem_ADMIN_PASSWORD, "Valora EM Admin");
 }
 
-function valoramSetDefaultAuthFields() {
+function valoraemSetDefaultAuthFields() {
     return;
 }
 
-function valoramAttachLocalAuthFallback() {
-    valoramEnsureTestAccount();
-    valoramSetDefaultAuthFields();
+function valoraemAttachLocalAuthFallback() {
+    valoraemEnsureTestAccount();
+    valoraemSetDefaultAuthFields();
 
     document.querySelectorAll(".toggle-auth-btn").forEach((button) => {
         button.addEventListener("click", (event) => {
@@ -116,16 +121,16 @@ function valoramAttachLocalAuthFallback() {
             event.stopImmediatePropagation();
             const email = document.getElementById("login-email")?.value.trim();
             const password = document.getElementById("login-password")?.value || "";
-            const saved = localStorage.getItem(`valoram_account_${email}`);
+            const saved = localStorage.getItem(`valoraem_account_${email}`);
             const account = saved ? JSON.parse(saved) : null;
 
-            if (!account && email !== VALORAM_TEST_EMAIL && email !== VALORAM_ADMIN_EMAIL) return;
+            if (!account && email !== valoraem_TEST_EMAIL && email !== valoraem_ADMIN_EMAIL) return;
             event.preventDefault();
 
-            if (email === VALORAM_TEST_EMAIL) valoramEnsureTestAccount();
-            if (email === VALORAM_ADMIN_EMAIL) valoramEnsureTestAccount();
-            if ((account && account.password === password) || (email === VALORAM_TEST_EMAIL && password === VALORAM_TEST_PASSWORD) || (email === VALORAM_ADMIN_EMAIL && password === VALORAM_ADMIN_PASSWORD)) {
-                valoramLoginLocal(email);
+            if (email === valoraem_TEST_EMAIL) valoraemEnsureTestAccount();
+            if (email === valoraem_ADMIN_EMAIL) valoraemEnsureTestAccount();
+            if ((account && account.password === password) || (email === valoraem_TEST_EMAIL && password === valoraem_TEST_PASSWORD) || (email === valoraem_ADMIN_EMAIL && password === valoraem_ADMIN_PASSWORD)) {
+                valoraemLoginLocal(email);
             } else {
                 alert("Incorrect email or password.");
             }
@@ -136,14 +141,14 @@ function valoramAttachLocalAuthFallback() {
     if (registerForm) {
         registerForm.addEventListener("submit", (event) => {
             event.stopImmediatePropagation();
-            const company = document.getElementById("register-company")?.value.trim() || VALORAM_TEST_COMPANY;
+            const company = document.getElementById("register-company")?.value.trim() || valoraem_TEST_COMPANY;
             const email = document.getElementById("register-email")?.value.trim();
             const password = document.getElementById("register-password")?.value || "";
             if (!email || password.length < 6) return;
 
             event.preventDefault();
-            valoramSaveLocalAccount(email, password, company);
-            valoramLoginLocal(email);
+            valoraemSaveLocalAccount(email, password, company);
+            valoraemLoginLocal(email);
         }, true);
     }
 
@@ -153,11 +158,12 @@ function valoramAttachLocalAuthFallback() {
             event.preventDefault();
             event.stopImmediatePropagation();
             const email = document.getElementById("reset-email")?.value.trim();
+            const code = document.getElementById("reset-code")?.value.trim();
             const password = document.getElementById("reset-password")?.value || "";
-            const saved = localStorage.getItem(`valoram_account_${email}`);
+            const saved = localStorage.getItem(`valoraem_account_${email}`);
             const account = saved ? JSON.parse(saved) : null;
 
-            if (!account && email !== VALORAM_TEST_EMAIL && email !== VALORAM_ADMIN_EMAIL) {
+            if (!account && email !== valoraem_TEST_EMAIL && email !== valoraem_ADMIN_EMAIL) {
                 alert("No account exists for this email. Please sign up first.");
                 return;
             }
@@ -167,13 +173,18 @@ function valoramAttachLocalAuthFallback() {
                 return;
             }
 
-            if (email === VALORAM_TEST_EMAIL || email === VALORAM_ADMIN_EMAIL) {
-                valoramEnsureTestAccount();
+            if (code !== "123456") {
+                alert("Please enter the verification code sent to your email. Local preview code: 123456.");
+                return;
             }
 
-            const latest = JSON.parse(localStorage.getItem(`valoram_account_${email}`));
+            if (email === valoraem_TEST_EMAIL || email === valoraem_ADMIN_EMAIL) {
+                valoraemEnsureTestAccount();
+            }
+
+            const latest = JSON.parse(localStorage.getItem(`valoraem_account_${email}`));
             latest.password = password;
-            localStorage.setItem(`valoram_account_${email}`, JSON.stringify(latest));
+            localStorage.setItem(`valoraem_account_${email}`, JSON.stringify(latest));
             alert("Password updated. You can now sign in with your new password.");
 
             document.getElementById("login-email").value = email;
@@ -189,7 +200,7 @@ function valoramAttachLocalAuthFallback() {
 }
 
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", valoramAttachLocalAuthFallback);
+    document.addEventListener("DOMContentLoaded", valoraemAttachLocalAuthFallback);
 } else {
-    valoramAttachLocalAuthFallback();
+    valoraemAttachLocalAuthFallback();
 }

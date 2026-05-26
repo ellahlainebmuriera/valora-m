@@ -1,5 +1,5 @@
 /**
- * Valora M - Main Application Controller
+ * Valora EM - Main Application Controller
  * Handles UI routing, dynamic calculations, Supabase Cloud synchronization,
  * LocalStorage data fallbacks, and the mock Payment / White-label systems.
  */
@@ -8,11 +8,11 @@
 // TODO: Replace these with your own Supabase API credentials when cloud SaaS setup is ready.
 const SUPABASE_URL = "YOUR_SUPABASE_URL";
 const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-const DEFAULT_USER_EMAIL = "testaccount@valoram.com";
-const DEFAULT_TEST_PASSWORD = "ValoraM181920!!@";
-const DEFAULT_TEST_COMPANY = "Valora M Test Store";
+const DEFAULT_USER_EMAIL = "testaccount@valoraem.com";
+const DEFAULT_TEST_PASSWORD = "ValoraEM181920!!@";
+const DEFAULT_TEST_COMPANY = "Valora EM Test Store";
 const ADMIN_EMAIL = "ellahlaine.b.muriera@gmail.com";
-const ADMIN_PASSWORD = "ValoraMAdmin181920!!@";
+const ADMIN_PASSWORD = "ValoraEMAdmin181920!!@";
 
 let supabaseClient = null;
 let isCloudActive = false;
@@ -47,12 +47,16 @@ let currentProfile = {
     invoice_text_color: "#1e293b",
     preferred_language: "en",
     custom_language_name: "",
-    print_layout: "pdf"
+    print_layout: "pdf",
+    app_appearance: "dark",
+    saved_signature_data_url: "",
+    save_signature_permission: false
 };
 
 let clients = [];
 let invoices = [];
 let currentInvoiceItems = []; // List of { id, description, quantity, unit_price }
+let currentDocumentPhotos = [];
 let activeEditingInvoiceId = null;
 let paymentSettings = {
     paymongoPublicKey: "",
@@ -66,7 +70,7 @@ let paymentSettings = {
 
 // Default White-Label Settings (Naka-save sa LocalStorage para sa developer branding)
 let whitelabelConfig = {
-    appName: "Valora M",
+    appName: "Valora EM",
     theme: "indigo"
 };
 
@@ -88,12 +92,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function getLocalAccount(email) {
-    const saved = localStorage.getItem(`valoram_account_${email}`);
+    const saved = localStorage.getItem(`valoraem_account_${email}`);
     return saved ? JSON.parse(saved) : null;
 }
 
 function saveLocalAccount(account) {
-    localStorage.setItem(`valoram_account_${account.email}`, JSON.stringify(account));
+    localStorage.setItem(`valoraem_account_${account.email}`, JSON.stringify(account));
 }
 
 function createLocalSession(email) {
@@ -102,7 +106,7 @@ function createLocalSession(email) {
         id: `mock-${email.replace(/[^a-zA-Z0-9]/g, '')}`,
         role: email === ADMIN_EMAIL ? "admin" : "customer"
     };
-    localStorage.setItem("valoram_mock_user", JSON.stringify(mockUser));
+    localStorage.setItem("valoraem_mock_user", JSON.stringify(mockUser));
     return mockUser;
 }
 
@@ -114,17 +118,90 @@ function hasBusinessUnlimited() {
     return isAdminUser() || currentProfile.plan === "Business Unlimited";
 }
 
+const receiptTranslations = {
+    en: {
+        date: "Date",
+        dueDate: "Due Date",
+        billedTo: "Billed To",
+        description: "Description",
+        qty: "Qty",
+        unitPrice: "Unit Price",
+        total: "Total",
+        subtotal: "Subtotal",
+        tax: "Tax",
+        discount: "Discount",
+        shipping: "Shipping",
+        grandTotal: "Grand Total",
+        notes: "Payment Notes:",
+        signature: "Authorized Signature",
+        clientSignature: "Client Signature",
+        walkIn: "Walk-in Customer"
+    },
+    fil: {
+        date: "Petsa",
+        dueDate: "Takdang Petsa",
+        billedTo: "Para Kay",
+        description: "Deskripsyon",
+        qty: "Dami",
+        unitPrice: "Presyo",
+        total: "Kabuuan",
+        subtotal: "Subtotal",
+        tax: "Buwis",
+        discount: "Diskwento",
+        shipping: "Shipping",
+        grandTotal: "Kabuuang Bayad",
+        notes: "Payment Notes:",
+        signature: "Pirma ng Awtorisado",
+        clientSignature: "Pirma ng Kliyente",
+        walkIn: "Walk-in Customer"
+    },
+    es: { date: "Fecha", dueDate: "Fecha de Vencimiento", billedTo: "Facturado A", description: "Descripcion", qty: "Cant.", unitPrice: "Precio Unitario", total: "Total", subtotal: "Subtotal", tax: "Impuesto", discount: "Descuento", shipping: "Envio", grandTotal: "Total General", notes: "Notas de Pago:", signature: "Firma Autorizada", clientSignature: "Firma del Cliente", walkIn: "Cliente" },
+    fr: { date: "Date", dueDate: "Date D'echeance", billedTo: "Facture A", description: "Description", qty: "Qte", unitPrice: "Prix Unitaire", total: "Total", subtotal: "Sous-total", tax: "Taxe", discount: "Remise", shipping: "Livraison", grandTotal: "Total General", notes: "Notes de Paiement:", signature: "Signature Autorisee", clientSignature: "Signature Client", walkIn: "Client" },
+    de: { date: "Datum", dueDate: "Falligkeitsdatum", billedTo: "Rechnung An", description: "Beschreibung", qty: "Menge", unitPrice: "Stuckpreis", total: "Gesamt", subtotal: "Zwischensumme", tax: "Steuer", discount: "Rabatt", shipping: "Versand", grandTotal: "Gesamtsumme", notes: "Zahlungshinweise:", signature: "Autorisierte Unterschrift", clientSignature: "Kundenunterschrift", walkIn: "Kunde" },
+    it: { date: "Data", dueDate: "Scadenza", billedTo: "Fatturato A", description: "Descrizione", qty: "Qta", unitPrice: "Prezzo Unitario", total: "Totale", subtotal: "Subtotale", tax: "Imposta", discount: "Sconto", shipping: "Spedizione", grandTotal: "Totale Generale", notes: "Note di Pagamento:", signature: "Firma Autorizzata", clientSignature: "Firma Cliente", walkIn: "Cliente" },
+    pt: { date: "Data", dueDate: "Vencimento", billedTo: "Faturado Para", description: "Descricao", qty: "Qtd", unitPrice: "Preco Unitario", total: "Total", subtotal: "Subtotal", tax: "Imposto", discount: "Desconto", shipping: "Envio", grandTotal: "Total Geral", notes: "Notas de Pagamento:", signature: "Assinatura Autorizada", clientSignature: "Assinatura do Cliente", walkIn: "Cliente" },
+    id: { date: "Tanggal", dueDate: "Jatuh Tempo", billedTo: "Ditagihkan Kepada", description: "Deskripsi", qty: "Jumlah", unitPrice: "Harga Satuan", total: "Total", subtotal: "Subtotal", tax: "Pajak", discount: "Diskon", shipping: "Pengiriman", grandTotal: "Total Akhir", notes: "Catatan Pembayaran:", signature: "Tanda Tangan Resmi", clientSignature: "Tanda Tangan Klien", walkIn: "Pelanggan" },
+    ms: { date: "Tarikh", dueDate: "Tarikh Akhir", billedTo: "Dibilkan Kepada", description: "Penerangan", qty: "Kuantiti", unitPrice: "Harga Unit", total: "Jumlah", subtotal: "Subtotal", tax: "Cukai", discount: "Diskaun", shipping: "Penghantaran", grandTotal: "Jumlah Besar", notes: "Nota Pembayaran:", signature: "Tandatangan Dibenarkan", clientSignature: "Tandatangan Pelanggan", walkIn: "Pelanggan" },
+    vi: { date: "Ngay", dueDate: "Ngay Den Han", billedTo: "Lap Hoa Don Cho", description: "Mo Ta", qty: "SL", unitPrice: "Don Gia", total: "Tong", subtotal: "Tam Tinh", tax: "Thue", discount: "Giam Gia", shipping: "Van Chuyen", grandTotal: "Tong Cong", notes: "Ghi Chu Thanh Toan:", signature: "Chu Ky Uy Quyen", clientSignature: "Chu Ky Khach Hang", walkIn: "Khach Hang" },
+    nl: { date: "Datum", dueDate: "Vervaldatum", billedTo: "Gefactureerd Aan", description: "Omschrijving", qty: "Aantal", unitPrice: "Eenheidsprijs", total: "Totaal", subtotal: "Subtotaal", tax: "Belasting", discount: "Korting", shipping: "Verzending", grandTotal: "Eindtotaal", notes: "Betalingsnotities:", signature: "Geautoriseerde Handtekening", clientSignature: "Klanthandtekening", walkIn: "Klant" },
+    sv: { date: "Datum", dueDate: "Forfallodatum", billedTo: "Faktureras Till", description: "Beskrivning", qty: "Antal", unitPrice: "Enhetspris", total: "Totalt", subtotal: "Delsumma", tax: "Skatt", discount: "Rabatt", shipping: "Frakt", grandTotal: "Totalsumma", notes: "Betalningsnoteringar:", signature: "Auktoriserad Signatur", clientSignature: "Kundsignatur", walkIn: "Kund" },
+    tr: { date: "Tarih", dueDate: "Vade Tarihi", billedTo: "Fatura Edilen", description: "Aciklama", qty: "Adet", unitPrice: "Birim Fiyat", total: "Toplam", subtotal: "Ara Toplam", tax: "Vergi", discount: "Indirim", shipping: "Kargo", grandTotal: "Genel Toplam", notes: "Odeme Notlari:", signature: "Yetkili Imza", clientSignature: "Musteri Imzasi", walkIn: "Musteri" },
+    ru: { date: "Data", dueDate: "Srok Oplaty", billedTo: "Poluchatel", description: "Opisanie", qty: "Kol-vo", unitPrice: "Cena", total: "Itogo", subtotal: "Promezhutochno", tax: "Nalog", discount: "Skidka", shipping: "Dostavka", grandTotal: "Obshchaya Summa", notes: "Primechaniya k Oplate:", signature: "Upolnomochennaya Podpis", clientSignature: "Podpis Klienta", walkIn: "Klient" },
+    ja: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
+    ko: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
+    zh: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
+    hi: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
+    ar: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
+    th: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
+    default: null
+};
+receiptTranslations.default = receiptTranslations.en;
+
+const documentTypeLabels = {
+    invoice: "Invoice",
+    estimate: "Estimate",
+    "credit-note": "Credit Note",
+    "delivery-note": "Delivery Note",
+    "purchase-order": "Purchase Order"
+};
+
+function getReceiptText(key) {
+    const lang = currentProfile.preferred_language || "en";
+    const source = receiptTranslations[lang] || receiptTranslations.default;
+    return source[key] || receiptTranslations.default[key] || key;
+}
+
 function seedTestAccount() {
     saveLocalAccount({
         email: ADMIN_EMAIL,
         password: ADMIN_PASSWORD,
-        company_name: "Valora M Admin"
+        company_name: "Valora EM Admin"
     });
 
-    if (!localStorage.getItem(`valoram_profile_${ADMIN_EMAIL}`)) {
-        localStorage.setItem(`valoram_profile_${ADMIN_EMAIL}`, JSON.stringify({
+    if (!localStorage.getItem(`valoraem_profile_${ADMIN_EMAIL}`)) {
+        localStorage.setItem(`valoraem_profile_${ADMIN_EMAIL}`, JSON.stringify({
             email: ADMIN_EMAIL,
-            company_name: "Valora M Admin",
+            company_name: "Valora EM Admin",
             phone: "",
             address: "",
             logo_url: "",
@@ -138,6 +215,9 @@ function seedTestAccount() {
             preferred_language: "en",
             custom_language_name: "",
             print_layout: "pdf",
+            app_appearance: "dark",
+            saved_signature_data_url: "",
+            save_signature_permission: false,
             plan: "Business Unlimited"
         }));
     }
@@ -148,8 +228,8 @@ function seedTestAccount() {
         company_name: DEFAULT_TEST_COMPANY
     });
 
-    if (!localStorage.getItem(`valoram_profile_${DEFAULT_USER_EMAIL}`)) {
-        localStorage.setItem(`valoram_profile_${DEFAULT_USER_EMAIL}`, JSON.stringify({
+    if (!localStorage.getItem(`valoraem_profile_${DEFAULT_USER_EMAIL}`)) {
+        localStorage.setItem(`valoraem_profile_${DEFAULT_USER_EMAIL}`, JSON.stringify({
             email: DEFAULT_USER_EMAIL,
             company_name: DEFAULT_TEST_COMPANY,
             phone: "0917-123-4567",
@@ -164,12 +244,15 @@ function seedTestAccount() {
             invoice_text_color: "#1e293b",
             preferred_language: "en",
             custom_language_name: "",
-            print_layout: "pdf"
+            print_layout: "pdf",
+            app_appearance: "dark",
+            saved_signature_data_url: "",
+            save_signature_permission: false
         }));
     }
 
-    if (!localStorage.getItem("valoram_payment_settings")) {
-        localStorage.setItem("valoram_payment_settings", JSON.stringify(paymentSettings));
+    if (!localStorage.getItem("valoraem_payment_settings")) {
+        localStorage.setItem("valoraem_payment_settings", JSON.stringify(paymentSettings));
     }
 
     const sampleClient = {
@@ -180,12 +263,12 @@ function seedTestAccount() {
         address: "Quezon City, Philippines"
     };
 
-    if (!localStorage.getItem(`valoram_clients_${DEFAULT_USER_EMAIL}`)) {
-        localStorage.setItem(`valoram_clients_${DEFAULT_USER_EMAIL}`, JSON.stringify([sampleClient]));
+    if (!localStorage.getItem(`valoraem_clients_${DEFAULT_USER_EMAIL}`)) {
+        localStorage.setItem(`valoraem_clients_${DEFAULT_USER_EMAIL}`, JSON.stringify([sampleClient]));
     }
 
-    if (!localStorage.getItem(`valoram_invoices_${DEFAULT_USER_EMAIL}`)) {
-        localStorage.setItem(`valoram_invoices_${DEFAULT_USER_EMAIL}`, JSON.stringify([{
+    if (!localStorage.getItem(`valoraem_invoices_${DEFAULT_USER_EMAIL}`)) {
+        localStorage.setItem(`valoraem_invoices_${DEFAULT_USER_EMAIL}`, JSON.stringify([{
         id: "inv-demo-001",
         invoice_number: "INV-0001",
         client_id: sampleClient.id,
@@ -210,13 +293,13 @@ function seedTestAccount() {
 
 // Load the developer branding variables
 function loadWhiteLabelSettings() {
-    const saved = localStorage.getItem("valoram_whitelabel") || localStorage.getItem("billflow_whitelabel");
+    const saved = localStorage.getItem("valoraem_whitelabel") || localStorage.getItem("billflow_whitelabel");
     if (saved) {
         whitelabelConfig = JSON.parse(saved);
         if (whitelabelConfig.appName && whitelabelConfig.appName.toLowerCase().startsWith("bill")) {
-            whitelabelConfig.appName = "Valora M";
+            whitelabelConfig.appName = "Valora EM";
         }
-        localStorage.setItem("valoram_whitelabel", JSON.stringify(whitelabelConfig));
+        localStorage.setItem("valoraem_whitelabel", JSON.stringify(whitelabelConfig));
         localStorage.removeItem("billflow_whitelabel");
     }
     applyWhiteLabel();
@@ -237,7 +320,8 @@ function applyWhiteLabel() {
     document.getElementById("sidebar-logo-icon").innerText = initial;
     
     // Apply theme CSS class
-    document.body.className = ""; // Reset
+    const appearanceClass = document.body.classList.contains("theme-light") ? "theme-light" : "";
+    document.body.className = appearanceClass;
     document.body.classList.add(`theme-${whitelabelConfig.theme}`);
     
     // Update selected class in Settings panel
@@ -260,7 +344,7 @@ async function checkAuthSession() {
         }
     } else {
         // Localstorage mock authentication session check
-        const savedSession = localStorage.getItem("valoram_mock_user");
+        const savedSession = localStorage.getItem("valoraem_mock_user");
         if (savedSession) {
             setupAuthenticatedUser(JSON.parse(savedSession));
         } else {
@@ -278,7 +362,7 @@ function switchTab(tabId) {
 
     // Don't show premium features if user is on Free Tier and trying to write too many invoices
     if (tabId === "creator-tab" && !currentProfile.is_pro && invoices.length >= 5) {
-        alert("Trial limit reached: Free accounts can create up to 5 invoices. Upgrade to Pro to continue.");
+        alert("Trial limit reached: Free accounts can create up to 5 invoices. Please subscribe to continue.");
         switchTab("billing-tab");
         return;
     }
@@ -332,6 +416,15 @@ function showAppScreen() {
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-root").style.display = "flex";
     switchTab("dashboard-tab");
+}
+
+async function logoutCurrentUser() {
+    if (isCloudActive) {
+        await supabaseClient.auth.signOut();
+    }
+    localStorage.removeItem("valoraem_mock_user");
+    currentUser = null;
+    showAuthScreen();
 }
 
 // Setup User Profile and Details
@@ -393,6 +486,15 @@ async function setupAuthenticatedUser(user) {
     if (document.getElementById("print-layout")) {
         document.getElementById("print-layout").value = currentProfile.print_layout || "pdf";
     }
+    if (document.getElementById("creator-print-layout")) {
+        document.getElementById("creator-print-layout").value = currentProfile.print_layout || "pdf";
+    }
+    if (document.getElementById("app-appearance")) {
+        document.getElementById("app-appearance").value = currentProfile.app_appearance || "dark";
+    }
+    if (document.getElementById("save-signature-permission-checkbox")) {
+        document.getElementById("save-signature-permission-checkbox").checked = !!currentProfile.save_signature_permission;
+    }
     
     // Apply logo preview if exists
     if (currentProfile.logo_url) {
@@ -400,6 +502,7 @@ async function setupAuthenticatedUser(user) {
         document.getElementById("preview-logo-box").innerHTML = `<img src="${currentProfile.logo_url}" alt="Store logo">`;
     }
     
+    applyAppearance();
     applyInvoiceThemeColor();
     updateUserTierUI();
     updateAdminVisibility();
@@ -407,7 +510,7 @@ async function setupAuthenticatedUser(user) {
 }
 
 function getLocalStorageProfile(email) {
-    const key = `valoram_profile_${email}`;
+    const key = `valoraem_profile_${email}`;
     const saved = localStorage.getItem(key);
     if (saved) {
         return JSON.parse(saved);
@@ -429,17 +532,27 @@ function getLocalStorageProfile(email) {
         invoice_text_color: "#1e293b",
         preferred_language: "en",
         custom_language_name: "",
-        print_layout: "pdf"
+        print_layout: "pdf",
+        app_appearance: "dark",
+        saved_signature_data_url: "",
+        save_signature_permission: false
     };
 }
 
+function applyAppearance() {
+    const mode = currentProfile.app_appearance || "dark";
+    document.body.classList.toggle("theme-light", mode === "light");
+    const appearanceSelect = document.getElementById("app-appearance");
+    if (appearanceSelect) appearanceSelect.value = mode;
+}
+
 function saveLocalStorageProfile() {
-    const key = `valoram_profile_${currentUser.email}`;
+    const key = `valoraem_profile_${currentUser.email}`;
     localStorage.setItem(key, JSON.stringify(currentProfile));
 }
 
 function loadPaymentSettings() {
-    const saved = localStorage.getItem("valoram_payment_settings");
+    const saved = localStorage.getItem("valoraem_payment_settings");
     paymentSettings = saved ? { ...paymentSettings, ...JSON.parse(saved) } : paymentSettings;
 }
 
@@ -453,16 +566,16 @@ function savePaymentSettings() {
         gcashNumber: document.getElementById("admin-gcash-number").value.trim(),
         payoutAccount: document.getElementById("admin-payout-account").value.trim()
     };
-    localStorage.setItem("valoram_payment_settings", JSON.stringify(paymentSettings));
+    localStorage.setItem("valoraem_payment_settings", JSON.stringify(paymentSettings));
     alert("Admin payment settings saved. Connect these keys to the live checkout when the payment integration is ready.");
 }
 
 function getPaymentRecords() {
-    return JSON.parse(localStorage.getItem("valoram_payment_records")) || [];
+    return JSON.parse(localStorage.getItem("valoraem_payment_records")) || [];
 }
 
 function savePaymentRecords(records) {
-    localStorage.setItem("valoram_payment_records", JSON.stringify(records));
+    localStorage.setItem("valoraem_payment_records", JSON.stringify(records));
 }
 
 function recordPayment(plan, price, method) {
@@ -476,6 +589,85 @@ function recordPayment(plan, price, method) {
         created_at: new Date().toISOString()
     });
     savePaymentRecords(records);
+}
+
+function getFeatureRequests() {
+    return JSON.parse(localStorage.getItem("valoraem_feature_requests")) || [];
+}
+
+function saveFeatureRequests(requests) {
+    localStorage.setItem("valoraem_feature_requests", JSON.stringify(requests));
+}
+
+async function submitFeatureRequest() {
+    const textarea = document.getElementById("feature-request-text");
+    const text = textarea.value.trim();
+    if (!text) {
+        alert("Please type your feature request first.");
+        return;
+    }
+
+    const request = {
+        id: `req-${Date.now()}`,
+        customer_email: currentUser?.email || "local-customer",
+        text,
+        created_at: new Date().toISOString()
+    };
+
+    if (isCloudActive) {
+        await supabaseClient.from("feature_requests").insert({
+            user_id: currentUser.id,
+            customer_email: currentUser.email,
+            request_text: text
+        });
+    }
+
+    const requests = getFeatureRequests();
+    requests.push(request);
+    saveFeatureRequests(requests);
+    textarea.value = "";
+    alert("Feature request sent to the admin dashboard.");
+}
+
+function handleDocumentPhotos(event) {
+    const files = Array.from(event.target.files || []).slice(0, 4);
+    if (!files.length) return;
+    currentDocumentPhotos = [];
+
+    let loaded = 0;
+    files.forEach((file) => {
+        if (!file.type.startsWith("image/")) return;
+        if (file.size > 2 * 1024 * 1024) {
+            alert(`${file.name} is too large. Maximum image size is 2MB.`);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+            currentDocumentPhotos.push(loadEvent.target.result);
+            loaded += 1;
+            if (loaded === files.length || currentDocumentPhotos.length === files.length) {
+                renderDocumentPhotos();
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderDocumentPhotos() {
+    const container = document.getElementById("preview-photo-container");
+    if (!container) return;
+
+    if (!currentDocumentPhotos.length) {
+        container.style.display = "none";
+        container.innerHTML = "";
+        return;
+    }
+
+    container.style.display = "grid";
+    container.innerHTML = currentDocumentPhotos
+        .map((src) => `<img src="${src}" alt="Attached document photo">`)
+        .join("");
 }
 
 // Fetch database records from Supabase
@@ -496,15 +688,15 @@ async function fetchCloudData() {
 // Fetch database records from LocalStorage
 function loadLocalData() {
     const suffix = currentUser.email;
-    clients = JSON.parse(localStorage.getItem(`valoram_clients_${suffix}`)) || [];
-    invoices = JSON.parse(localStorage.getItem(`valoram_invoices_${suffix}`)) || [];
+    clients = JSON.parse(localStorage.getItem(`valoraem_clients_${suffix}`)) || [];
+    invoices = JSON.parse(localStorage.getItem(`valoraem_invoices_${suffix}`)) || [];
 }
 
 // Save database records to LocalStorage
 function saveLocalData() {
     const suffix = currentUser.email;
-    localStorage.setItem(`valoram_clients_${suffix}`, JSON.stringify(clients));
-    localStorage.setItem(`valoram_invoices_${suffix}`, JSON.stringify(invoices));
+    localStorage.setItem(`valoraem_clients_${suffix}`, JSON.stringify(clients));
+    localStorage.setItem(`valoraem_invoices_${suffix}`, JSON.stringify(invoices));
 }
 
 // Update UI headers depending on Pro Status
@@ -541,6 +733,26 @@ function updateUserTierUI() {
 
 // ==================== EVENT HANDLERS ====================
 function initAppEventListeners() {
+    document.querySelectorAll(".password-toggle").forEach((button) => {
+        button.addEventListener("click", () => {
+            const input = document.getElementById(button.dataset.target);
+            if (!input) return;
+            input.type = input.type === "password" ? "text" : "password";
+            button.innerText = input.type === "password" ? "Show" : "Hide";
+        });
+    });
+
+    document.querySelectorAll(".auth-provider-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const provider = button.dataset.provider === "google" ? "Google login" : "Phone OTP login";
+            alert(`${provider} needs Supabase Auth/Firebase/Auth0 connected before it can send real OTP or sign users in.`);
+        });
+    });
+
+    document.getElementById("send-reset-code-btn").addEventListener("click", () => {
+        alert("Reset code sent in local preview: 123456. Live email codes need Supabase Auth or an email OTP provider.");
+    });
+
     // Auth Toggles
     document.querySelectorAll(".toggle-auth-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -634,13 +846,17 @@ function initAppEventListeners() {
             const newProfile = {
                 email: email,
                 company_name: company,
+                phone: document.getElementById("register-phone").value.trim(),
                 is_pro: false,
                 currency: "PHP",
                 currency_symbol: "PHP",
-                default_tax_rate: 12.0
+                default_tax_rate: 12.0,
+                app_appearance: "dark",
+                preferred_language: "en",
+                print_layout: "pdf"
             };
-            localStorage.setItem(`valoram_profile_${email}`, JSON.stringify(newProfile));
-            alert("Account created. Welcome to Valora M.");
+            localStorage.setItem(`valoraem_profile_${email}`, JSON.stringify(newProfile));
+            alert("Account created. Confirmation email will be sent automatically after live email integration is connected.");
             setupAuthenticatedUser(createLocalSession(email));
             return;
             if (password.length >= 6) {
@@ -654,8 +870,8 @@ function initAppEventListeners() {
                     currency_symbol: "₱",
                     default_tax_rate: 12.0
                 };
-                localStorage.setItem(`valoram_profile_${email}`, JSON.stringify(newProfile));
-                localStorage.setItem("valoram_mock_user", JSON.stringify(mockUser));
+                localStorage.setItem(`valoraem_profile_${email}`, JSON.stringify(newProfile));
+                localStorage.setItem("valoraem_mock_user", JSON.stringify(mockUser));
                 setupAuthenticatedUser(mockUser);
             } else {
                 alert("Password must be at least 6 characters.");
@@ -665,13 +881,9 @@ function initAppEventListeners() {
 
     // Logout
     document.getElementById("logout-btn").addEventListener("click", async () => {
-        if (isCloudActive) {
-            await supabaseClient.auth.signOut();
-        }
-        localStorage.removeItem("valoram_mock_user");
-        currentUser = null;
-        showAuthScreen();
+        await logoutCurrentUser();
     });
+    document.getElementById("mobile-logout-nav").addEventListener("click", logoutCurrentUser);
 
     // Navigation item click links
     document.querySelectorAll(".nav-item").forEach(item => {
@@ -692,6 +904,7 @@ function initAppEventListeners() {
         currentProfile.custom_language_name = document.getElementById("custom-language-name").value.trim();
         currentProfile.invoice_text_color = document.getElementById("invoice-text-color").value || "#1e293b";
         currentProfile.print_layout = document.getElementById("print-layout").value || "pdf";
+        currentProfile.app_appearance = document.getElementById("app-appearance").value || "dark";
         
         if (isCloudActive) {
             const { error } = await supabaseClient.from("profiles")
@@ -705,7 +918,8 @@ function initAppEventListeners() {
                     custom_language_name: currentProfile.custom_language_name,
                     invoice_theme_color: currentProfile.invoice_theme_color,
                     invoice_text_color: currentProfile.invoice_text_color,
-                    print_layout: currentProfile.print_layout
+                    print_layout: currentProfile.print_layout,
+                    app_appearance: currentProfile.app_appearance
                 })
                 .eq("id", currentUser.id);
             if (error) alert("Error updating settings: " + error.message);
@@ -717,6 +931,7 @@ function initAppEventListeners() {
         
         // Refresh logos/previews
         document.getElementById("user-avatar-char").innerText = currentProfile.company_name.charAt(0).toUpperCase();
+        applyAppearance();
         applyInvoiceThemeColor();
         updateInvoicePreview();
     });
@@ -755,7 +970,7 @@ function initAppEventListeners() {
         const customName = document.getElementById("wl-app-name").value.trim();
         if (customName) {
             whitelabelConfig.appName = customName;
-            localStorage.setItem("valoram_whitelabel", JSON.stringify(whitelabelConfig));
+            localStorage.setItem("valoraem_whitelabel", JSON.stringify(whitelabelConfig));
             applyWhiteLabel();
             alert("Branding settings applied to the software successfully!");
         }
@@ -812,8 +1027,9 @@ function initAppEventListeners() {
     });
     document.getElementById("inv-type").addEventListener("change", (e) => {
         const type = e.target.value;
-        document.getElementById("preview-doc-type-text").innerText = type === "invoice" ? "INVOICE" : "ESTIMATE";
-        document.getElementById("creator-title").innerText = type === "invoice" ? "Invoice Creator" : "Estimate Creator";
+        const label = documentTypeLabels[type] || "Invoice";
+        document.getElementById("preview-doc-type-text").innerText = label.toUpperCase();
+        document.getElementById("creator-title").innerText = `${label} Creator`;
     });
     document.getElementById("inv-date").addEventListener("change", (e) => {
         document.getElementById("preview-inv-date").innerText = e.target.value;
@@ -838,9 +1054,18 @@ function initAppEventListeners() {
     });
     document.getElementById("inv-tax-rate").addEventListener("input", updateInvoicePreview);
     document.getElementById("inv-discount").addEventListener("input", updateInvoicePreview);
+    document.getElementById("inv-shipping").addEventListener("input", updateInvoicePreview);
     document.getElementById("inv-notes").addEventListener("input", (e) => {
         document.getElementById("preview-notes-text").innerText = e.target.value;
     });
+    document.getElementById("printed-name").addEventListener("input", updateSignaturePreview);
+    document.getElementById("request-client-signature-checkbox").addEventListener("change", updateSignaturePreview);
+    document.getElementById("creator-print-layout").addEventListener("change", (event) => {
+        currentProfile.print_layout = event.target.value || "pdf";
+        if (document.getElementById("print-layout")) document.getElementById("print-layout").value = currentProfile.print_layout;
+        applyInvoiceThemeColor();
+    });
+    document.getElementById("document-photo-file").addEventListener("change", handleDocumentPhotos);
 
     // Add line item row click
     document.getElementById("add-line-item-btn").addEventListener("click", () => {
@@ -895,6 +1120,7 @@ function initAppEventListeners() {
     document.getElementById("submit-mock-payment-btn").addEventListener("click", processMockPaymentUpgrade);
 
     document.getElementById("save-admin-payment-settings-btn").addEventListener("click", savePaymentSettings);
+    document.getElementById("submit-feature-request-btn").addEventListener("click", submitFeatureRequest);
 }
 
 // ==================== RENDERING LOGIC ====================
@@ -1022,6 +1248,7 @@ function removeItemRow(itemId) {
 // Dynamic invoice math calculator & live visual rendering
 function updateInvoicePreview() {
     let subtotal = 0;
+    applyReceiptLanguage();
     
     // Render dynamic rows to preview layout
     const previewBody = document.getElementById("preview-items-body");
@@ -1044,15 +1271,17 @@ function updateInvoicePreview() {
     // Tax & Discounts calculations
     const taxRate = parseFloat(document.getElementById("inv-tax-rate").value) || 0;
     const discount = parseFloat(document.getElementById("inv-discount").value) || 0;
+    const shipping = parseFloat(document.getElementById("inv-shipping").value) || 0;
     
     const taxAmount = subtotal * (taxRate / 100);
-    const grandTotal = subtotal + taxAmount - discount;
+    const grandTotal = subtotal + taxAmount + shipping - discount;
     
     // Write calculations to Preview
     document.getElementById("preview-subtotal").innerText = `${currentProfile.currency_symbol}${subtotal.toFixed(2)}`;
-    document.getElementById("preview-tax-label").innerText = `Tax (${taxRate}%)`;
+    document.getElementById("preview-tax-label").innerText = `${getReceiptText("tax")} (${taxRate}%)`;
     document.getElementById("preview-tax-amount").innerText = `${currentProfile.currency_symbol}${taxAmount.toFixed(2)}`;
     document.getElementById("preview-discount-val").innerText = `${currentProfile.currency_symbol}${discount.toFixed(2)}`;
+    document.getElementById("preview-shipping-val").innerText = `${currentProfile.currency_symbol}${shipping.toFixed(2)}`;
     document.getElementById("preview-grand-total").innerText = `${currentProfile.currency_symbol}${grandTotal.toFixed(2)}`;
     
     // Load store physical configuration settings to preview
@@ -1084,13 +1313,28 @@ function resetCreatorForm() {
     document.getElementById("inv-status").value = "Unpaid";
     document.getElementById("inv-client-select").value = "";
     document.getElementById("inv-discount").value = "0";
+    document.getElementById("inv-shipping").value = "0";
     document.getElementById("inv-notes").value = "";
+    document.getElementById("printed-name").value = "";
+    document.getElementById("request-client-signature-checkbox").checked = false;
+    currentDocumentPhotos = [];
+    renderDocumentPhotos();
     
     // Clear signature and state
     clearSignature();
     if (document.getElementById("show-signature-checkbox")) {
-        document.getElementById("show-signature-checkbox").checked = true;
-        document.getElementById("preview-signature-container").style.display = "flex";
+        const hasSavedSignature = !!(currentProfile.save_signature_permission && currentProfile.saved_signature_data_url);
+        document.getElementById("show-signature-checkbox").checked = hasSavedSignature;
+        document.getElementById("preview-signature-container").style.display = hasSavedSignature ? "flex" : "none";
+        document.getElementById("save-signature-permission-checkbox").checked = !!currentProfile.save_signature_permission;
+        if (hasSavedSignature) {
+            const img = new Image();
+            img.onload = () => {
+                sigCtx.drawImage(img, 0, 0);
+                updateSignaturePreview();
+            };
+            img.src = currentProfile.saved_signature_data_url;
+        }
     }
     
     // Load default tax
@@ -1098,6 +1342,7 @@ function resetCreatorForm() {
     
     // Clear preview labels
     document.getElementById("preview-inv-number").innerText = document.getElementById("inv-number").value;
+    applyReceiptLanguage();
     document.getElementById("preview-doc-type-text").innerText = "INVOICE";
     document.getElementById("creator-title").innerText = "Invoice Creator";
     document.getElementById("preview-client-name").innerText = "Walk-in Customer";
@@ -1112,7 +1357,7 @@ function resetCreatorForm() {
 async function saveInvoiceToDatabase() {
     // Check trial limits
     if (!currentProfile.is_pro && invoices.length >= 5 && !activeEditingInvoiceId) {
-        alert("Trial limit reached: Free accounts can create up to 5 invoices. Upgrade to Pro to continue.");
+        alert("Trial limit reached: Free accounts can create up to 5 invoices. Please subscribe to continue.");
         switchTab("billing-tab");
         return;
     }
@@ -1125,6 +1370,7 @@ async function saveInvoiceToDatabase() {
     const dueDate = document.getElementById("inv-duedate").value;
     const taxRate = parseFloat(document.getElementById("inv-tax-rate").value) || 0;
     const discount = parseFloat(document.getElementById("inv-discount").value) || 0;
+    const shipping = parseFloat(document.getElementById("inv-shipping").value) || 0;
     const notes = document.getElementById("inv-notes").value;
     
     if (!invoiceNumber) {
@@ -1141,12 +1387,17 @@ async function saveInvoiceToDatabase() {
     let subtotal = 0;
     currentInvoiceItems.forEach(i => subtotal += (i.quantity * i.unit_price));
     const taxAmount = subtotal * (taxRate / 100);
-    const total = subtotal + taxAmount - discount;
+    const total = subtotal + taxAmount + shipping - discount;
     
     // Check signature data URL
     const hasSignature = document.getElementById("show-signature-checkbox").checked;
     const signatureCanvas = document.getElementById("signature-canvas");
     const signatureUrl = (hasSignature && !isCanvasBlank(signatureCanvas)) ? signatureCanvas.toDataURL() : null;
+    const saveSignaturePermission = document.getElementById("save-signature-permission-checkbox").checked;
+    currentProfile.save_signature_permission = saveSignaturePermission;
+    currentProfile.saved_signature_data_url = saveSignaturePermission && signatureUrl ? signatureUrl : "";
+    const printedName = document.getElementById("printed-name").value.trim();
+    const requestClientSignature = document.getElementById("request-client-signature-checkbox").checked;
 
     const invoiceData = {
         invoice_number: invoiceNumber,
@@ -1157,15 +1408,23 @@ async function saveInvoiceToDatabase() {
         due_date: dueDate || null,
         tax_rate: taxRate,
         discount,
+        shipping,
         notes,
         subtotal,
         tax_amount: taxAmount,
         total,
-        signature_data_url: signatureUrl
+        signature_data_url: signatureUrl,
+        printed_name: printedName,
+        request_client_signature: requestClientSignature,
+        photo_data_urls: currentDocumentPhotos
     };
     
     if (isCloudActive) {
         invoiceData.user_id = currentUser.id;
+        await supabaseClient.from("profiles").update({
+            save_signature_permission: currentProfile.save_signature_permission,
+            saved_signature_data_url: currentProfile.saved_signature_data_url
+        }).eq("id", currentUser.id);
         
         let invResultId = null;
         if (activeEditingInvoiceId) {
@@ -1218,6 +1477,7 @@ async function saveInvoiceToDatabase() {
             invoices.push({ ...invoiceData, id: newId, items: currentInvoiceItems });
         }
         saveLocalData();
+        saveLocalStorageProfile();
     }
     
     alert("Invoice saved successfully to records!");
@@ -1288,7 +1548,12 @@ async function editInvoice(id) {
     document.getElementById("inv-client-select").value = inv.client_id || "";
     document.getElementById("inv-tax-rate").value = inv.tax_rate;
     document.getElementById("inv-discount").value = inv.discount;
+    document.getElementById("inv-shipping").value = inv.shipping || 0;
     document.getElementById("inv-notes").value = inv.notes || "";
+    document.getElementById("printed-name").value = inv.printed_name || "";
+    document.getElementById("request-client-signature-checkbox").checked = !!inv.request_client_signature;
+    currentDocumentPhotos = inv.photo_data_urls || [];
+    renderDocumentPhotos();
 
     // Load signature
     clearSignature();
@@ -1322,7 +1587,7 @@ async function editInvoice(id) {
     }
     
     // Change UI state
-    document.getElementById("creator-title").innerText = inv.type === "invoice" ? "Edit Invoice" : "Edit Estimate";
+    document.getElementById("creator-title").innerText = `Edit ${documentTypeLabels[inv.type] || "Document"}`;
     
     switchTab("creator-tab");
     renderEditorItems();
@@ -1408,6 +1673,12 @@ function renderDashboard() {
 // Update billing view stats
 function updateBillingTabUI() {
     document.getElementById("billing-invoice-count").innerText = invoices.length;
+    const line = document.getElementById("billing-invoice-count-line");
+    if (line) {
+        line.innerHTML = currentProfile.is_pro
+            ? `Total documents created: <span id="billing-invoice-count">${invoices.length}</span>`
+            : `Invoices Used: <span id="billing-invoice-count">${invoices.length}</span> / 5 free limits.`;
+    }
 }
 
 function renderAdminDashboard() {
@@ -1438,20 +1709,38 @@ function renderAdminDashboard() {
     tbody.innerHTML = "";
     if (records.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No payments recorded yet.</td></tr>';
-        return;
+    } else {
+        records.slice().reverse().forEach((record) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${new Date(record.created_at).toLocaleString()}</td>
+                <td>${record.customer_email}</td>
+                <td>${record.plan}</td>
+                <td>${record.method}</td>
+                <td style="font-weight: 700;">PHP ${(Number(record.price) || 0).toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+        });
     }
 
-    records.slice().reverse().forEach((record) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${new Date(record.created_at).toLocaleString()}</td>
-            <td>${record.customer_email}</td>
-            <td>${record.plan}</td>
-            <td>${record.method}</td>
-            <td style="font-weight: 700;">PHP ${(Number(record.price) || 0).toFixed(2)}</td>
-        `;
-        tbody.appendChild(row);
-    });
+    const requestsBody = document.querySelector("#admin-feature-requests-table tbody");
+    if (requestsBody) {
+        const requests = getFeatureRequests();
+        requestsBody.innerHTML = "";
+        if (requests.length === 0) {
+            requestsBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td></tr>';
+        } else {
+            requests.slice().reverse().forEach((request) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${new Date(request.created_at).toLocaleString()}</td>
+                    <td>${request.customer_email}</td>
+                    <td>${request.text}</td>
+                `;
+                requestsBody.appendChild(row);
+            });
+        }
+    }
 }
 
 // ==================== MOCK PAYMENT GATEWAY PROCESSOR ====================
@@ -1492,7 +1781,7 @@ async function processMockPaymentUpgrade() {
     // Visual success alerts
     overlay.style.display = "none";
     document.getElementById("payment-modal").style.display = "none";
-    alert(`Success! Thank you for your purchase. Your account is now upgraded to ${currentProfile.plan}.`);
+    alert(`Success! Your subscription is now active. A payment receipt email will be sent automatically after live email/payment integration is connected.`);
     
     // Refresh GUI details
     updateUserTierUI();
@@ -1512,8 +1801,7 @@ function initSignaturePad() {
     
     // Display checkbox event
     document.getElementById("show-signature-checkbox").addEventListener("change", (e) => {
-        const show = e.target.checked;
-        document.getElementById("preview-signature-container").style.display = show ? "flex" : "none";
+        updateSignaturePreview();
     });
 
     // Mouse drawing events
@@ -1568,9 +1856,50 @@ function initSignaturePad() {
     if (printLayout) {
         printLayout.addEventListener("change", (event) => {
             currentProfile.print_layout = event.target.value || "pdf";
+            if (document.getElementById("creator-print-layout")) document.getElementById("creator-print-layout").value = currentProfile.print_layout;
             applyInvoiceThemeColor();
         });
     }
+
+    const languageSelect = document.getElementById("preferred-language");
+    if (languageSelect) {
+        languageSelect.addEventListener("change", (event) => {
+            currentProfile.preferred_language = event.target.value || "en";
+            updateInvoicePreview();
+        });
+    }
+
+    const appearanceSelect = document.getElementById("app-appearance");
+    if (appearanceSelect) {
+        appearanceSelect.addEventListener("change", (event) => {
+            currentProfile.app_appearance = event.target.value || "dark";
+            applyAppearance();
+        });
+    }
+}
+
+function applyReceiptLanguage() {
+    const mapping = {
+        "preview-date-label": "date",
+        "preview-due-date-label": "dueDate",
+        "preview-billed-to-label": "billedTo",
+        "preview-description-label": "description",
+        "preview-qty-label": "qty",
+        "preview-unit-price-label": "unitPrice",
+        "preview-total-label": "total",
+        "preview-subtotal-label": "subtotal",
+        "preview-discount-label": "discount",
+        "preview-shipping-label": "shipping",
+        "preview-grand-total-label": "grandTotal",
+        "preview-notes-label": "notes",
+        "preview-authorized-label": "signature",
+        "preview-client-signature-label": "clientSignature"
+    };
+
+    Object.entries(mapping).forEach(([id, key]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = getReceiptText(key);
+    });
 }
 
 function resizeCanvas() {
@@ -1642,13 +1971,28 @@ function updateSignaturePreview() {
     const dataUrl = sigCanvas.toDataURL();
     const blank = isCanvasBlank(sigCanvas);
     const img = document.getElementById("preview-signature-img");
-    if (!blank) {
+    const showSignature = document.getElementById("show-signature-checkbox")?.checked;
+    if (!blank && showSignature) {
         img.src = dataUrl;
         img.style.display = "block";
     } else {
         img.src = "";
         img.style.display = "none";
     }
+
+    const signatureContainer = document.getElementById("preview-signature-container");
+    if (signatureContainer) signatureContainer.style.display = showSignature ? "flex" : "none";
+
+    const printedName = document.getElementById("printed-name")?.value.trim() || "";
+    const printedNameEl = document.getElementById("preview-printed-name");
+    if (printedNameEl) {
+        printedNameEl.innerText = printedName;
+        printedNameEl.style.display = printedName && showSignature ? "block" : "none";
+    }
+
+    const clientSignature = document.getElementById("request-client-signature-checkbox")?.checked;
+    const clientSignatureBox = document.getElementById("preview-client-signature-container");
+    if (clientSignatureBox) clientSignatureBox.style.display = clientSignature ? "flex" : "none";
 }
 
 function isCanvasBlank(canvas) {
@@ -1662,10 +2006,11 @@ function applyInvoiceThemeColor() {
     const color = currentProfile.invoice_theme_color || "#6366f1";
     const textColor = currentProfile.invoice_text_color || "#1e293b";
     const printLayout = currentProfile.print_layout || "pdf";
+    const thermal = printLayout.startsWith("thermal");
     const printable = document.getElementById("invoice-printable-area");
     if (printable) {
-        printable.style.setProperty('--invoice-accent', color);
-        printable.style.setProperty('--invoice-text', textColor);
+        printable.style.setProperty('--invoice-accent', thermal ? "#000000" : color);
+        printable.style.setProperty('--invoice-text', thermal ? "#000000" : textColor);
         printable.classList.remove("print-layout-pdf", "print-layout-thermal-80", "print-layout-thermal-58");
         printable.classList.add(`print-layout-${printLayout}`);
     }
@@ -1683,6 +2028,9 @@ function applyInvoiceThemeColor() {
 
     const printLayoutSelect = document.getElementById("print-layout");
     if (printLayoutSelect) printLayoutSelect.value = printLayout;
+
+    const creatorPrintLayoutSelect = document.getElementById("creator-print-layout");
+    if (creatorPrintLayoutSelect) creatorPrintLayoutSelect.value = printLayout;
 }
 
 Object.assign(window, {

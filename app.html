@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="app-title-tag">Valora M - Professional Invoicing SaaS</title>
+    <title id="app-title-tag">Valora EM - Professional Invoicing SaaS</title>
     <meta name="description" content="Generate professional estimates and invoices with a fully custom white-labeled system. Build client lists, track earnings, and run your business.">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="styles.css">
@@ -17,7 +17,7 @@
         <div class="auth-card">
             <div class="auth-header">
                 <div class="logo-icon" id="auth-logo-icon">V</div>
-                <h2 class="auth-title" id="auth-app-name">Valora M</h2>
+                <h2 class="auth-title" id="auth-app-name">Valora EM</h2>
                 <p style="color: var(--text-muted); font-size: 14px;">Professional Invoicing & Estimates</p>
                 <p style="color: var(--accent); font-size: 13px; font-weight: 700; margin-top: 6px;">Valuing every transaction.</p>
             </div>
@@ -30,9 +30,16 @@
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" required placeholder="Password">
+                    <div class="password-field">
+                        <input type="password" id="login-password" required placeholder="Password">
+                        <button type="button" class="password-toggle" data-target="login-password">Show</button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Sign In</button>
+                <div class="auth-methods">
+                    <button type="button" class="btn btn-secondary auth-provider-btn" data-provider="google">Continue with Google</button>
+                    <button type="button" class="btn btn-secondary auth-provider-btn" data-provider="phone">Sign in with Phone OTP</button>
+                </div>
             </form>
 
             <!-- Password Reset Form (Hidden by default) -->
@@ -42,8 +49,17 @@
                     <input type="email" id="reset-email" required placeholder="name@store.com">
                 </div>
                 <div class="form-group">
+                    <label for="reset-code">Email Verification Code</label>
+                    <input type="text" id="reset-code" required placeholder="Enter code from your email">
+                    <button type="button" class="btn btn-secondary btn-sm" id="send-reset-code-btn">Send Reset Code</button>
+                    <p style="font-size: 11px; color: var(--text-muted);">Live email codes require Supabase Auth or another email/OTP provider. In local preview, use code 123456.</p>
+                </div>
+                <div class="form-group">
                     <label for="reset-password">New Password</label>
-                    <input type="password" id="reset-password" required placeholder="At least 6 characters">
+                    <div class="password-field">
+                        <input type="password" id="reset-password" required placeholder="At least 6 characters">
+                        <button type="button" class="password-toggle" data-target="reset-password">Show</button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Reset Password</button>
             </form>
@@ -59,10 +75,21 @@
                     <input type="email" id="register-email" required placeholder="owner@store.com">
                 </div>
                 <div class="form-group">
+                    <label for="register-phone">Phone Number (optional)</label>
+                    <input type="text" id="register-phone" placeholder="For phone OTP login later">
+                </div>
+                <div class="form-group">
                     <label for="register-password">Password</label>
-                    <input type="password" id="register-password" required placeholder="At least 6 characters">
+                    <div class="password-field">
+                        <input type="password" id="register-password" required placeholder="At least 6 characters">
+                        <button type="button" class="password-toggle" data-target="register-password">Show</button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 10px;">Create Account</button>
+                <div class="auth-methods">
+                    <button type="button" class="btn btn-secondary auth-provider-btn" data-provider="google">Sign up with Google</button>
+                    <button type="button" class="btn btn-secondary auth-provider-btn" data-provider="phone">Sign up with Phone OTP</button>
+                </div>
             </form>
 
             <div class="auth-toggle">
@@ -80,7 +107,7 @@
         <aside class="sidebar">
             <div class="logo-container">
                 <div class="logo-icon" id="sidebar-logo-icon">V</div>
-                <span class="logo-text" id="sidebar-app-name">Valora M</span>
+                <span class="logo-text" id="sidebar-app-name">Valora EM</span>
             </div>
 
             <nav class="nav-menu">
@@ -146,7 +173,12 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                         </svg>
-                        Upgrade to Pro
+                        Subscription
+                    </a>
+                </li>
+                <li class="nav-item mobile-logout-nav" id="mobile-logout-nav">
+                    <a class="nav-link" style="color: var(--danger);">
+                        Logout
                     </a>
                 </li>
             </nav>
@@ -222,9 +254,9 @@
                 <div class="subscription-card" id="trial-warning-banner">
                     <div>
                         <h3 style="font-family: var(--font-title); font-size: 18px; margin-bottom: 4px;">Standard Free Trial</h3>
-                        <p style="color: var(--text-medium); font-size: 14px;">Free accounts can create up to 5 invoices. Upgrade to Pro for unlimited invoices and custom branding.</p>
+                        <p style="color: var(--text-medium); font-size: 14px;">Free accounts can create up to 5 invoices. Subscribe for unlimited invoices and custom branding.</p>
                     </div>
-                    <button class="btn btn-accent btn-sm" onclick="switchTab('billing-tab')">Upgrade Now</button>
+                    <button class="btn btn-accent btn-sm" onclick="switchTab('billing-tab')">Subscribe Now</button>
                 </div>
 
                 <!-- Recent Activity Table -->
@@ -257,7 +289,7 @@
                 <div class="tab-header">
                     <div class="tab-title-container">
                         <h1 id="creator-title">Estimate & Invoice Creator</h1>
-                        <p>Enter sales or service details and Valora M will calculate the invoice automatically.</p>
+                        <p>Enter sales or service details and Valora EM will calculate the invoice automatically.</p>
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-secondary" onclick="resetCreatorForm()">Clear Form</button>
@@ -290,8 +322,11 @@
                             <div class="form-group">
                                 <label for="inv-type">Document Type</label>
                                 <select id="inv-type">
-                                    <option value="invoice">Invoice (Resibo)</option>
-                                    <option value="estimate">Estimate (Tantya)</option>
+                                    <option value="invoice">Invoice</option>
+                                    <option value="estimate">Estimate</option>
+                                    <option value="credit-note">Credit Note</option>
+                                    <option value="delivery-note">Delivery Note</option>
+                                    <option value="purchase-order">Purchase Order</option>
                                 </select>
                             </div>
                         </div>
@@ -358,6 +393,25 @@
                                 <label for="inv-discount">Discount Amount (PHP)</label>
                                 <input type="number" id="inv-discount" value="0" min="0">
                             </div>
+                            <div class="form-group">
+                                <label for="inv-shipping">Shipping Amount (PHP)</label>
+                                <input type="number" id="inv-shipping" value="0" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="form-group">
+                                <label for="creator-print-layout">Print Style</label>
+                                <select id="creator-print-layout">
+                                    <option value="pdf">PDF / A4 Invoice</option>
+                                    <option value="thermal-80">Thermal Receipt 80mm</option>
+                                    <option value="thermal-58">Thermal Receipt 58mm</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="document-photo-file">Attach Photos (optional)</label>
+                                <input type="file" id="document-photo-file" accept="image/*" multiple>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -367,17 +421,27 @@
 
                         <!-- Signature Draw Pad Canvas Section -->
                         <div class="signature-section">
-                            <label style="font-weight: 700;">Signature / Pirma ng Tindahan</label>
-                            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">Iguhit ang iyong pirma gamit ang mouse o touch screen sa ibaba:</p>
+                            <label style="font-weight: 700;">Your Signature</label>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">Draw your signature only if you want it saved on this document.</p>
                             <div class="signature-pad-wrapper">
                                 <canvas id="signature-canvas"></canvas>
                             </div>
                             <div class="signature-controls" style="margin-top: 8px;">
                                 <button class="btn btn-secondary btn-sm" type="button" id="clear-signature-btn">Clear Signature</button>
                                 <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: normal; cursor: pointer;">
-                                    <input type="checkbox" id="show-signature-checkbox" checked> Ipakita sa Resibo
+                                    <input type="checkbox" id="show-signature-checkbox"> Add my signature to this document
                                 </label>
                             </div>
+                            <div class="form-group" style="margin-top: 12px;">
+                                <label for="printed-name">Printed Name Under Signature</label>
+                                <input type="text" id="printed-name" placeholder="Your printed name">
+                            </div>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: normal; cursor: pointer;">
+                                <input type="checkbox" id="request-client-signature-checkbox"> Request client signature
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: normal; cursor: pointer;">
+                                <input type="checkbox" id="save-signature-permission-checkbox"> Save my signature for future documents
+                            </label>
                         </div>
                     </div>
 
@@ -398,14 +462,14 @@
                                 <div class="preview-meta">
                                     <h2 id="preview-doc-type-text">INVOICE</h2>
                                     <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;" id="preview-inv-number">INV-0001</p>
-                                    <p style="font-size: 12px; color: #64748b;">Date: <span id="preview-inv-date">YYYY-MM-DD</span></p>
-                                    <p style="font-size: 12px; color: #64748b;">Due Date: <span id="preview-inv-duedate">YYYY-MM-DD</span></p>
+                                    <p style="font-size: 12px; color: #64748b;"><span id="preview-date-label">Date</span>: <span id="preview-inv-date">YYYY-MM-DD</span></p>
+                                    <p style="font-size: 12px; color: #64748b;"><span id="preview-due-date-label">Due Date</span>: <span id="preview-inv-duedate">YYYY-MM-DD</span></p>
                                 </div>
                             </div>
 
                             <div class="preview-details">
                                 <div class="preview-address-block">
-                                    <span class="title">Billed To</span>
+                                    <span class="title" id="preview-billed-to-label">Billed To</span>
                                     <strong id="preview-client-name" style="font-size: 14px;">Walk-in Customer</strong>
                                     <span id="preview-client-email">client@email.com</span>
                                     <span id="preview-client-phone">0912-345-6789</span>
@@ -417,10 +481,10 @@
                                 <table class="preview-table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 50%;">Description</th>
-                                            <th style="width: 15%; text-align: center;">Qty</th>
-                                            <th style="width: 20%; text-align: right;">Unit Price</th>
-                                            <th style="width: 15%; text-align: right;">Total</th>
+                                            <th style="width: 50%;" id="preview-description-label">Description</th>
+                                            <th style="width: 15%; text-align: center;" id="preview-qty-label">Qty</th>
+                                            <th style="width: 20%; text-align: right;" id="preview-unit-price-label">Unit Price</th>
+                                            <th style="width: 15%; text-align: right;" id="preview-total-label">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody id="preview-items-body">
@@ -431,7 +495,7 @@
 
                             <div class="preview-math">
                                 <div class="preview-math-row">
-                                    <span>Subtotal</span>
+                                    <span id="preview-subtotal-label">Subtotal</span>
                                     <span id="preview-subtotal">₱0.00</span>
                                 </div>
                                 <div class="preview-math-row">
@@ -439,24 +503,35 @@
                                     <span id="preview-tax-amount">₱0.00</span>
                                 </div>
                                 <div class="preview-math-row">
-                                    <span>Discount</span>
+                                    <span id="preview-discount-label">Discount</span>
                                     <span id="preview-discount-val">₱0.00</span>
                                 </div>
+                                <div class="preview-math-row">
+                                    <span id="preview-shipping-label">Shipping</span>
+                                    <span id="preview-shipping-val">PHP 0.00</span>
+                                </div>
                                 <div class="preview-math-row total">
-                                    <span>Grand Total</span>
+                                    <span id="preview-grand-total-label">Grand Total</span>
                                     <span id="preview-grand-total">₱0.00</span>
                                 </div>
                             </div>
 
                             <div style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 12px; font-size: 11px; color: #64748b; line-height: 1.4;">
-                                <strong>Payment Notes:</strong>
+                                <strong id="preview-notes-label">Payment Notes:</strong>
                                 <p id="preview-notes-text">Enter notes here.</p>
                             </div>
+
+                            <div class="invoice-photo-preview" id="preview-photo-container" style="display: none;"></div>
 
                             <!-- Live Signature Preview Image box -->
                             <div class="invoice-signature-preview-box" id="preview-signature-container">
                                 <img id="preview-signature-img" src="" alt="Authorized Signature" style="display: none;">
+                                <strong id="preview-printed-name" style="font-size: 12px; display: none;"></strong>
                                 <span id="preview-authorized-label">Authorized Signature</span>
+                            </div>
+                            <div class="invoice-signature-preview-box client-signature-box" id="preview-client-signature-container" style="display: none;">
+                                <div class="signature-line"></div>
+                                <span id="preview-client-signature-label">Client Signature</span>
                             </div>
                         </div>
                     </div>
@@ -623,6 +698,14 @@
                         </div>
 
                         <div class="form-group">
+                            <label for="app-appearance">App Appearance</label>
+                            <select id="app-appearance">
+                                <option value="dark">Dark Mode</option>
+                                <option value="light">Light Mode</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
                             <label for="preferred-language">Preferred Language (Business Unlimited)</label>
                             <select id="preferred-language">
                                 <option value="en">English</option>
@@ -681,6 +764,16 @@
                         <button class="btn btn-primary" id="save-store-settings-btn" style="width: 100%;">Save Store Settings</button>
                     </div>
 
+                    <div class="panel-card">
+                        <div class="panel-title">Send Feature Request</div>
+                        <p style="font-size: 13px; color: var(--text-medium);">Tell the Valora EM owner what feature you want next.</p>
+                        <div class="form-group">
+                            <label for="feature-request-text">Feature Request</label>
+                            <textarea id="feature-request-text" rows="4" placeholder="Example: Please add invoice reminder emails."></textarea>
+                        </div>
+                        <button class="btn btn-secondary" id="submit-feature-request-btn" type="button">Send Feature Request</button>
+                    </div>
+
                     <!-- Developer White-Label Settings (Monetization Center) -->
                     <div class="panel-card" style="border: 2px dashed var(--primary);">
                         <div class="panel-title" style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
@@ -693,7 +786,7 @@
 
                         <div class="form-group">
                             <label for="wl-app-name">SaaS Product Name</label>
-                            <input type="text" id="wl-app-name" value="Valora M">
+                            <input type="text" id="wl-app-name" value="Valora EM">
                         </div>
 
                         <div class="form-group">
@@ -856,6 +949,26 @@
                             </table>
                         </div>
                     </div>
+
+                    <div class="panel-card">
+                        <div class="panel-title">Customer Feature Requests</div>
+                        <div class="table-wrapper" style="max-height: 420px; overflow-y: auto;">
+                            <table class="custom-table" id="admin-feature-requests-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Customer</th>
+                                        <th>Request</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -871,7 +984,7 @@
                 <div class="subscription-card" style="margin-bottom: 20px;">
                     <div>
                         <h3 style="font-family: var(--font-title); font-size: 18px; margin-bottom: 4px;">Current Package: <span id="current-tier-status" style="color: var(--accent);">Standard Free Tier</span></h3>
-                        <p style="color: var(--text-medium); font-size: 14px;">Invoices Used: <span id="billing-invoice-count">0</span> / 5 free limits.</p>
+                        <p style="color: var(--text-medium); font-size: 14px;" id="billing-invoice-count-line">Invoices Used: <span id="billing-invoice-count">0</span> / 5 free limits.</p>
                     </div>
                 </div>
 
@@ -944,7 +1057,7 @@
                                 Signature and receipt color customization
                             </li>
                         </ul>
-                        <button class="btn btn-primary checkout-plan-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-price="249" style="width: 100%; margin-top: auto;">Upgrade to Pro</button>
+                        <button class="btn btn-primary checkout-plan-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-price="249" style="width: 100%; margin-top: auto;">Subscribe</button>
                     </div>
 
                     <!-- Business Unlimited Plan -->
@@ -994,7 +1107,7 @@
             </div>
             
             <p style="font-size: 13px; color: var(--text-medium);">
-                Preview the checkout flow customers will see when they upgrade and pay. Live checkout can be connected to PayMongo or Stripe.
+                Choose a payment method to activate your subscription.
             </p>
 
             <div class="form-group">
@@ -1009,7 +1122,7 @@
                         <span style="font-size: 11px; margin-top: 4px;">Debit / Credit Card</span>
                     </div>
                 </div>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Supported live options may include debit cards, credit cards, GCash, Maya, Vybe, and online banking depending on your PayMongo or Stripe setup.</p>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Supported payment methods may include debit cards, credit cards, GCash, Maya, Vybe, and online banking.</p>
             </div>
 
             <!-- GCash Section -->

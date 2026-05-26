@@ -1,4 +1,4 @@
--- Database Schema for Valora M Invoicing SaaS
+-- Database Schema for Valora EM Invoicing SaaS
 -- Copy and paste this script into the Supabase SQL Editor to set up your database tables.
 
 -- 1. Profiles Table (Linked to Supabase Auth.users)
@@ -20,6 +20,9 @@ CREATE TABLE public.profiles (
     preferred_language TEXT DEFAULT 'en',
     custom_language_name TEXT DEFAULT '',
     print_layout TEXT DEFAULT 'pdf',
+    app_appearance TEXT DEFAULT 'dark',
+    saved_signature_data_url TEXT,
+    save_signature_permission BOOLEAN DEFAULT FALSE,
     plan TEXT DEFAULT 'Standard Free Plan'
 );
 
@@ -70,11 +73,15 @@ CREATE TABLE public.invoices (
     status TEXT DEFAULT 'Unpaid', -- 'Paid', 'Unpaid', 'Draft', 'Overdue'
     tax_rate NUMERIC DEFAULT 12.0,
     discount NUMERIC DEFAULT 0.0,
+    shipping NUMERIC DEFAULT 0.0,
     notes TEXT,
     subtotal NUMERIC DEFAULT 0.0,
     tax_amount NUMERIC DEFAULT 0.0,
     total NUMERIC DEFAULT 0.0,
-    signature_data_url TEXT
+    signature_data_url TEXT,
+    printed_name TEXT,
+    request_client_signature BOOLEAN DEFAULT FALSE,
+    photo_data_urls JSONB DEFAULT '[]'::jsonb
 );
 
 -- Enable RLS for Invoices
@@ -114,6 +121,21 @@ CREATE POLICY "Users can CRUD their own invoice items."
             AND public.invoices.user_id = auth.uid()
         )
     );
+
+-- 5. Feature Requests (customer requests visible to owner/admin)
+CREATE TABLE public.feature_requests (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    customer_email TEXT,
+    request_text TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.feature_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can submit feature requests."
+    ON public.feature_requests FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
 
 -- 5. Automate Profile Creation on Sign Up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
