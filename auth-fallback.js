@@ -65,6 +65,27 @@ function valoraemSetDefaultAuthFields() {
     return;
 }
 
+function valoraemSetResetCodeStatus(message, isError = false) {
+    const status = document.getElementById("reset-code-status");
+    if (!status) return;
+    status.innerText = message;
+    status.style.display = "block";
+    status.style.color = isError ? "var(--danger)" : "var(--accent)";
+}
+
+function valoraemSendResetCode() {
+    const email = document.getElementById("reset-email")?.value.trim();
+    if (!email) {
+        valoraemSetResetCodeStatus("Please enter your email first.", true);
+        return;
+    }
+
+    localStorage.setItem(`valoraem_reset_code_${email}`, "123456");
+    const codeInput = document.getElementById("reset-code");
+    if (codeInput) codeInput.value = "123456";
+    valoraemSetResetCodeStatus("Reset code sent for local preview. Use code 123456.");
+}
+
 function valoraemAttachLocalAuthFallback() {
     valoraemEnsureTestAccount();
     valoraemSetDefaultAuthFields();
@@ -153,6 +174,16 @@ function valoraemAttachLocalAuthFallback() {
     }
 
     const resetForm = document.getElementById("reset-password-form");
+    const resetCodeButton = document.getElementById("send-reset-code-btn");
+    if (resetCodeButton) {
+        resetCodeButton.addEventListener("click", (event) => {
+            if (typeof sendPasswordResetCode === "function") return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            valoraemSendResetCode();
+        }, true);
+    }
+
     if (resetForm) {
         resetForm.addEventListener("submit", (event) => {
             event.preventDefault();
@@ -173,7 +204,8 @@ function valoraemAttachLocalAuthFallback() {
                 return;
             }
 
-            if (code !== "123456") {
+            const expectedCode = localStorage.getItem(`valoraem_reset_code_${email}`) || "123456";
+            if (code !== expectedCode) {
                 alert("Please enter the verification code sent to your email. Local preview code: 123456.");
                 return;
             }

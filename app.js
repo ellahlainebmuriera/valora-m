@@ -6,8 +6,8 @@
 
 // ==================== DATABASE CONFIGURATION ====================
 // TODO: Replace these with your own Supabase API credentials when cloud SaaS setup is ready.
-const SUPABASE_URL = "https://bdpcrsonguvxxuxnhpyy.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_4XOjRb8SC2Cw3vlKx5xukw_9OWGBA-_;
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 const DEFAULT_USER_EMAIL = "testaccount@valoraem.com";
 const DEFAULT_TEST_PASSWORD = "ValoraEM181920!!@";
 const DEFAULT_TEST_COMPANY = "Valora EM Test Store";
@@ -116,6 +116,39 @@ function isAdminUser() {
 
 function hasBusinessUnlimited() {
     return isAdminUser() || currentProfile.plan === "Business Unlimited";
+}
+
+function setResetCodeStatus(message, isError = false) {
+    const status = document.getElementById("reset-code-status");
+    if (!status) return;
+    status.innerText = message;
+    status.style.display = "block";
+    status.style.color = isError ? "var(--danger)" : "var(--accent)";
+}
+
+async function sendPasswordResetCode() {
+    const email = document.getElementById("reset-email")?.value.trim();
+    if (!email) {
+        setResetCodeStatus("Please enter your email first.", true);
+        return;
+    }
+
+    if (isCloudActive && supabaseClient?.auth?.resetPasswordForEmail) {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.href
+        });
+        if (error) {
+            setResetCodeStatus(`Could not send reset email: ${error.message}`, true);
+            return;
+        }
+        setResetCodeStatus("Password reset email sent. Please check your inbox.");
+        return;
+    }
+
+    localStorage.setItem(`valoraem_reset_code_${email}`, "123456");
+    const codeInput = document.getElementById("reset-code");
+    if (codeInput) codeInput.value = "123456";
+    setResetCodeStatus("Reset code sent for local preview. Use code 123456.");
 }
 
 const receiptTranslations = {
@@ -749,9 +782,10 @@ function initAppEventListeners() {
         });
     });
 
-    document.getElementById("send-reset-code-btn").addEventListener("click", () => {
-        alert("Reset code sent in local preview: 123456. Live email codes need Supabase Auth or an email OTP provider.");
-    });
+    const resetCodeButton = document.getElementById("send-reset-code-btn");
+    if (resetCodeButton) {
+        resetCodeButton.addEventListener("click", sendPasswordResetCode);
+    }
 
     // Auth Toggles
     document.querySelectorAll(".toggle-auth-btn").forEach(btn => {
@@ -2045,5 +2079,7 @@ Object.assign(window, {
     deleteInvoice,
     setupAuthenticatedUser,
     renderAdminDashboard,
-    savePaymentSettings
+    savePaymentSettings,
+    sendPasswordResetCode,
+    submitFeatureRequest
 });

@@ -51,7 +51,8 @@
                 <div class="form-group">
                     <label for="reset-code">Email Verification Code</label>
                     <input type="text" id="reset-code" required placeholder="Enter code from your email">
-                    <button type="button" class="btn btn-secondary btn-sm" id="send-reset-code-btn">Send Reset Code</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="send-reset-code-btn" onclick="sendPasswordResetCode()">Send Reset Code</button>
+                    <p id="reset-code-status" style="font-size: 12px; color: var(--accent); display: none;"></p>
                     <p style="font-size: 11px; color: var(--text-muted);">Live email codes require Supabase Auth or another email/OTP provider. In local preview, use code 123456.</p>
                 </div>
                 <div class="form-group">
