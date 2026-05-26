@@ -1133,7 +1133,7 @@ function initAppEventListeners() {
             if (error) {
                 alert(`Error: ${error.message}`);
             } else {
-                alert("Sign up successful! Please check your email for confirmation (or proceed to sign in if enabled).");
+                alert("Account created. You can now sign in.");
                 // Switch back to login form
                 document.getElementById("login-form").style.display = "block";
                 document.getElementById("register-form").style.display = "none";

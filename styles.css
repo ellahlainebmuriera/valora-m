@@ -1471,3 +1471,7 @@ textarea:focus {
         border-bottom: 1px solid #e2e8f0 !important;
     }
 }
+/* Temporarily hide auth options that need paid/reliable email or provider setup before launch. */
+.launch-disabled {
+    display: none !important;
+}
