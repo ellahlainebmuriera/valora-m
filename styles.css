@@ -1,5 +1,5 @@
 /* Design System and Stylesheet for Valora EM SaaS */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&family=Noto+Sans+KR:wght@400;600;700&family=Noto+Sans+SC:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
     /* Color Palette */
@@ -24,7 +24,7 @@
     --text-medium: #cbd5e1;
     --text-muted: #64748b;
     
-    --font-sans: 'Inter', sans-serif;
+    --font-sans: 'Inter', 'Noto Sans Thai', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Sans Devanagari', 'Noto Sans Arabic', sans-serif;
     --font-title: 'Outfit', sans-serif;
     
     --sidebar-width: 260px;
@@ -1233,15 +1233,19 @@ textarea:focus {
         margin-bottom: 15px;
     }
     .nav-menu {
-        flex-direction: row;
-        overflow-x: auto;
-        padding-bottom: 5px;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: visible;
+        padding-bottom: 0;
         flex-grow: 0;
+        width: 100%;
     }
     .nav-link {
         padding: 8px 12px;
         font-size: 13px;
-        white-space: nowrap;
+        white-space: normal;
+        width: 100%;
+        justify-content: flex-start;
     }
     .user-widget {
         display: flex;
@@ -1367,6 +1371,24 @@ textarea:focus {
     border-radius: 6px;
 }
 
+.invoice-paper[dir="rtl"] {
+    direction: rtl;
+}
+
+.invoice-paper[dir="rtl"] .preview-meta,
+.invoice-paper[dir="rtl"] .preview-table th,
+.invoice-paper[dir="rtl"] .preview-table td,
+.invoice-paper[dir="rtl"] .preview-math-row,
+.invoice-paper[dir="rtl"] .preview-address-block {
+    text-align: right !important;
+}
+
+.invoice-paper[dir="rtl"] .invoice-signature-preview-box {
+    align-items: flex-start;
+    align-self: flex-start;
+    text-align: left;
+}
+
 .preset-invoice-colors {
     display: flex;
     gap: 10px;
@@ -1389,6 +1411,10 @@ textarea:focus {
 .invoice-color-preset.active {
     border-color: #ffffff;
     box-shadow: 0 0 8px rgba(255,255,255,0.4);
+}
+
+.feature-locked .logo-upload-wrapper {
+    display: none;
 }
 
 /* PRINT MEDIA OVERRIDES - CRITICAL */

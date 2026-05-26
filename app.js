@@ -122,6 +122,21 @@ function hasBusinessUnlimited() {
     return isAdminUser() || currentProfile.plan === "Business Unlimited";
 }
 
+function getCurrentPlanName() {
+    if (isAdminUser()) return "Business Unlimited";
+    if (currentProfile.plan) return currentProfile.plan;
+    return currentProfile.is_pro ? "Pro Unlimited Plan" : "Standard Free Plan";
+}
+
+function hasLogoUploadAccess() {
+    const planName = getCurrentPlanName();
+    return isAdminUser() || planName === "Pro Unlimited Plan" || planName === "Business Unlimited";
+}
+
+function hasCloudConnection() {
+    return isCloudActive && (!window.navigator || window.navigator.onLine !== false);
+}
+
 function setResetCodeStatus(message, isError = false) {
     const status = document.getElementById("reset-code-status");
     if (!status) return;
@@ -320,15 +335,24 @@ const receiptTranslations = {
     sv: { date: "Datum", dueDate: "Forfallodatum", billedTo: "Faktureras Till", description: "Beskrivning", qty: "Antal", unitPrice: "Enhetspris", total: "Totalt", subtotal: "Delsumma", tax: "Skatt", discount: "Rabatt", shipping: "Frakt", grandTotal: "Totalsumma", notes: "Betalningsnoteringar:", signature: "Auktoriserad Signatur", clientSignature: "Kundsignatur", walkIn: "Kund" },
     tr: { date: "Tarih", dueDate: "Vade Tarihi", billedTo: "Fatura Edilen", description: "Aciklama", qty: "Adet", unitPrice: "Birim Fiyat", total: "Toplam", subtotal: "Ara Toplam", tax: "Vergi", discount: "Indirim", shipping: "Kargo", grandTotal: "Genel Toplam", notes: "Odeme Notlari:", signature: "Yetkili Imza", clientSignature: "Musteri Imzasi", walkIn: "Musteri" },
     ru: { date: "Data", dueDate: "Srok Oplaty", billedTo: "Poluchatel", description: "Opisanie", qty: "Kol-vo", unitPrice: "Cena", total: "Itogo", subtotal: "Promezhutochno", tax: "Nalog", discount: "Skidka", shipping: "Dostavka", grandTotal: "Obshchaya Summa", notes: "Primechaniya k Oplate:", signature: "Upolnomochennaya Podpis", clientSignature: "Podpis Klienta", walkIn: "Klient" },
-    ja: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
-    ko: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
-    zh: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
-    hi: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
-    ar: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
-    th: { date: "Date", dueDate: "Due Date", billedTo: "Billed To", description: "Description", qty: "Qty", unitPrice: "Unit Price", total: "Total", subtotal: "Subtotal", tax: "Tax", discount: "Discount", shipping: "Shipping", grandTotal: "Grand Total", notes: "Payment Notes:", signature: "Authorized Signature", clientSignature: "Client Signature", walkIn: "Customer" },
+    ja: { date: "日付", dueDate: "支払期限", billedTo: "請求先", description: "内容", qty: "数量", unitPrice: "単価", total: "合計", subtotal: "小計", tax: "税", discount: "割引", shipping: "送料", grandTotal: "総合計", notes: "支払いメモ:", signature: "承認署名", clientSignature: "顧客署名", walkIn: "顧客" },
+    ko: { date: "날짜", dueDate: "마감일", billedTo: "청구 대상", description: "설명", qty: "수량", unitPrice: "단가", total: "합계", subtotal: "소계", tax: "세금", discount: "할인", shipping: "배송비", grandTotal: "총합계", notes: "결제 메모:", signature: "승인 서명", clientSignature: "고객 서명", walkIn: "고객" },
+    zh: { date: "日期", dueDate: "到期日", billedTo: "账单收件人", description: "说明", qty: "数量", unitPrice: "单价", total: "合计", subtotal: "小计", tax: "税费", discount: "折扣", shipping: "运费", grandTotal: "总计", notes: "付款备注:", signature: "授权签名", clientSignature: "客户签名", walkIn: "客户" },
+    hi: { date: "तारीख", dueDate: "देय तारीख", billedTo: "बिल प्राप्तकर्ता", description: "विवरण", qty: "मात्रा", unitPrice: "इकाई मूल्य", total: "कुल", subtotal: "उप-योग", tax: "कर", discount: "छूट", shipping: "शिपिंग", grandTotal: "कुल योग", notes: "भुगतान नोट्स:", signature: "अधिकृत हस्ताक्षर", clientSignature: "ग्राहक हस्ताक्षर", walkIn: "ग्राहक" },
+    ar: { date: "التاريخ", dueDate: "تاريخ الاستحقاق", billedTo: "الفاتورة إلى", description: "الوصف", qty: "الكمية", unitPrice: "سعر الوحدة", total: "الإجمالي", subtotal: "المجموع الفرعي", tax: "الضريبة", discount: "الخصم", shipping: "الشحن", grandTotal: "الإجمالي النهائي", notes: "ملاحظات الدفع:", signature: "التوقيع المعتمد", clientSignature: "توقيع العميل", walkIn: "عميل" },
+    th: { date: "วันที่", dueDate: "วันครบกำหนด", billedTo: "เรียกเก็บเงินถึง", description: "รายละเอียด", qty: "จำนวน", unitPrice: "ราคาต่อหน่วย", total: "รวม", subtotal: "ยอดรวมย่อย", tax: "ภาษี", discount: "ส่วนลด", shipping: "ค่าจัดส่ง", grandTotal: "ยอดรวมทั้งหมด", notes: "หมายเหตุการชำระเงิน:", signature: "ลายเซ็นผู้อนุมัติ", clientSignature: "ลายเซ็นลูกค้า", walkIn: "ลูกค้า" },
     default: null
 };
 receiptTranslations.default = receiptTranslations.en;
+
+const receiptLanguageMeta = {
+    ar: { dir: "rtl", font: "'Noto Sans Arabic', var(--font-sans)" },
+    hi: { dir: "ltr", font: "'Noto Sans Devanagari', var(--font-sans)" },
+    ja: { dir: "ltr", font: "'Noto Sans JP', var(--font-sans)" },
+    ko: { dir: "ltr", font: "'Noto Sans KR', var(--font-sans)" },
+    th: { dir: "ltr", font: "'Noto Sans Thai', var(--font-sans)" },
+    zh: { dir: "ltr", font: "'Noto Sans SC', var(--font-sans)" }
+};
 
 const documentTypeLabels = {
     invoice: "Invoice",
@@ -655,13 +679,8 @@ async function setupAuthenticatedUser(user) {
         document.getElementById("save-signature-permission-checkbox").checked = !!currentProfile.save_signature_permission;
     }
     
-    // Apply logo preview if exists
-    if (currentProfile.logo_url) {
-        document.getElementById("settings-logo-preview").innerHTML = `<img src="${currentProfile.logo_url}" alt="Store logo">`;
-        document.getElementById("preview-logo-box").innerHTML = `<img src="${currentProfile.logo_url}" alt="Store logo">`;
-    }
-    
     applyAppearance();
+    renderLogoAccessUI();
     applyInvoiceThemeColor();
     updateUserTierUI();
     updateAdminVisibility();
@@ -703,6 +722,29 @@ function applyAppearance() {
     document.body.classList.toggle("theme-light", mode === "light");
     const appearanceSelect = document.getElementById("app-appearance");
     if (appearanceSelect) appearanceSelect.value = mode;
+}
+
+function renderLogoAccessUI() {
+    const allowed = hasLogoUploadAccess();
+    const uploadGroup = document.getElementById("logo-upload-group");
+    const lockedNote = document.getElementById("logo-locked-note");
+    const logoFile = document.getElementById("store-logo-file");
+    const settingsLogo = document.getElementById("settings-logo-preview");
+    const previewLogo = document.getElementById("preview-logo-box");
+    const logoUrl = allowed ? currentProfile.logo_url : "";
+
+    if (uploadGroup) uploadGroup.classList.toggle("feature-locked", !allowed);
+    if (lockedNote) lockedNote.style.display = allowed ? "none" : "block";
+    if (logoFile) logoFile.disabled = !allowed;
+
+    if (settingsLogo) {
+        settingsLogo.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="Store logo">` : "<span>LOGO</span>";
+    }
+
+    if (previewLogo) {
+        previewLogo.style.display = allowed ? "flex" : "none";
+        previewLogo.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="Store logo">` : "<span>LOGO</span>";
+    }
 }
 
 function saveLocalStorageProfile() {
@@ -910,9 +952,8 @@ function updateUserTierUI() {
         currentTierStatus.style.color = "var(--accent)";
         if (banner) banner.style.display = "none";
     } else if (currentProfile.is_pro) {
-        const planName = currentProfile.plan || "Pro Unlimited Plan";
-        const displayName = planName === "Business Unlimited" ? "BUSINESS UNLIMITED" : "PRO ACCOUNT";
-        tierDisplay.innerText = displayName;
+        const planName = getCurrentPlanName();
+        tierDisplay.innerText = planName.toUpperCase();
         tierDisplay.style.color = "var(--accent)";
         tierDisplay.style.backgroundColor = "var(--accent-glow)";
         currentTierStatus.innerText = planName.toUpperCase();
@@ -926,6 +967,8 @@ function updateUserTierUI() {
         currentTierStatus.style.color = "var(--warning)";
         if (banner) banner.style.display = "flex";
     }
+
+    renderLogoAccessUI();
 }
 
 // ==================== EVENT HANDLERS ====================
@@ -1208,8 +1251,8 @@ function initAppEventListeners() {
         currentProfile.address = document.getElementById("store-address").value.trim();
         currentProfile.currency = document.getElementById("store-currency").value.trim();
         currentProfile.currency_symbol = document.getElementById("store-currency-symbol").value.trim();
-        currentProfile.preferred_language = document.getElementById("preferred-language").value;
-        currentProfile.custom_language_name = document.getElementById("custom-language-name").value.trim();
+        currentProfile.preferred_language = hasBusinessUnlimited() ? document.getElementById("preferred-language").value : "en";
+        currentProfile.custom_language_name = hasBusinessUnlimited() ? document.getElementById("custom-language-name").value.trim() : "";
         currentProfile.invoice_text_color = document.getElementById("invoice-text-color").value || "#1e293b";
         currentProfile.print_layout = document.getElementById("print-layout").value || "pdf";
         currentProfile.app_appearance = document.getElementById("app-appearance").value || "dark";
@@ -1240,12 +1283,19 @@ function initAppEventListeners() {
         // Refresh logos/previews
         document.getElementById("user-avatar-char").innerText = currentProfile.company_name.charAt(0).toUpperCase();
         applyAppearance();
+        renderLogoAccessUI();
         applyInvoiceThemeColor();
         updateInvoicePreview();
     });
 
     // Store Logo File Selection (Converts file to base64 DataURL for offline compatibility)
     document.getElementById("store-logo-file").addEventListener("change", (e) => {
+        if (!hasLogoUploadAccess()) {
+            e.target.value = "";
+            alert("Logo upload is available on Pro Unlimited and Business Unlimited plans.");
+            return;
+        }
+
         const file = e.target.files[0];
         if (file) {
             if (file.size > 2 * 1024 * 1024) {
@@ -1259,8 +1309,7 @@ function initAppEventListeners() {
                 currentProfile.logo_url = dataUrl;
                 
                 // Show in Settings preview and live preview
-                document.getElementById("settings-logo-preview").innerHTML = `<img src="${dataUrl}" alt="logo">`;
-                document.getElementById("preview-logo-box").innerHTML = `<img src="${dataUrl}" alt="logo">`;
+                renderLogoAccessUI();
                 
                 // Save immediately
                 if (isCloudActive) {
@@ -1661,6 +1710,29 @@ function resetCreatorForm() {
     addNewLineItem("Product Sale / Professional Service", 1, 1000);
 }
 
+function isNetworkSaveError(error) {
+    const message = String(error?.message || error || "").toLowerCase();
+    return error instanceof TypeError || message.includes("failed to fetch") || message.includes("network");
+}
+
+function saveInvoiceLocally(invoiceData) {
+    if (activeEditingInvoiceId) {
+        const index = invoices.findIndex(i => i.id === activeEditingInvoiceId);
+        if (index !== -1) {
+            invoices[index] = { ...invoiceData, id: activeEditingInvoiceId, items: currentInvoiceItems };
+            saveLocalData();
+            saveLocalStorageProfile();
+            return activeEditingInvoiceId;
+        }
+    }
+
+    const newId = invoiceData.id || `inv-${Date.now()}`;
+    invoices.push({ ...invoiceData, id: newId, items: currentInvoiceItems });
+    saveLocalData();
+    saveLocalStorageProfile();
+    return newId;
+}
+
 // Save invoice to database (with checks on account tier limits)
 async function saveInvoiceToDatabase() {
     // Check trial limits
@@ -1727,65 +1799,73 @@ async function saveInvoiceToDatabase() {
         photo_data_urls: currentDocumentPhotos
     };
     
+    if (isCloudActive && !hasCloudConnection()) {
+        saveInvoiceLocally(invoiceData);
+        alert("You are offline, so this document was saved on this device. It will stay available here until cloud sync is available.");
+        activeEditingInvoiceId = null;
+        switchTab("invoices-tab");
+        return;
+    }
+
     if (isCloudActive) {
         invoiceData.user_id = currentUser.id;
-        await supabaseClient.from("profiles").update({
-            save_signature_permission: currentProfile.save_signature_permission,
-            saved_signature_data_url: currentProfile.saved_signature_data_url
-        }).eq("id", currentUser.id);
-        
-        let invResultId = null;
-        if (activeEditingInvoiceId) {
-            // Update
-            const { error } = await supabaseClient.from("invoices").update(invoiceData).eq("id", activeEditingInvoiceId);
-            if (error) {
-                alert("Error saving: " + error.message);
+        try {
+            await supabaseClient.from("profiles").update({
+                save_signature_permission: currentProfile.save_signature_permission,
+                saved_signature_data_url: currentProfile.saved_signature_data_url
+            }).eq("id", currentUser.id);
+            
+            let invResultId = null;
+            if (activeEditingInvoiceId) {
+                // Update
+                const { error } = await supabaseClient.from("invoices").update(invoiceData).eq("id", activeEditingInvoiceId);
+                if (error) {
+                    alert("Error saving: " + error.message);
+                    return;
+                }
+                invResultId = activeEditingInvoiceId;
+                // Delete old items to recreate
+                await supabaseClient.from("invoice_items").delete().eq("invoice_id", activeEditingInvoiceId);
+            } else {
+                // Insert
+                const { data, error } = await supabaseClient.from("invoices").insert(invoiceData).select();
+                if (error) {
+                    alert("Error saving: " + error.message);
+                    return;
+                }
+                invResultId = data[0].id;
+            }
+            
+            // Write Invoice Items to Supabase cloud
+            const dbItems = currentInvoiceItems.map(item => ({
+                invoice_id: invResultId,
+                description: item.description,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total: item.quantity * item.unit_price
+            }));
+            
+            const { error: itemsErr } = await supabaseClient.from("invoice_items").insert(dbItems);
+            if (itemsErr) {
+                alert("Error writing invoice items: " + itemsErr.message);
                 return;
             }
-            invResultId = activeEditingInvoiceId;
-            // Delete old items to recreate
-            await supabaseClient.from("invoice_items").delete().eq("invoice_id", activeEditingInvoiceId);
-        } else {
-            // Insert
-            const { data, error } = await supabaseClient.from("invoices").insert(invoiceData).select();
-            if (error) {
-                alert("Error saving: " + error.message);
+            
+            await fetchCloudData();
+        } catch (error) {
+            if (!isNetworkSaveError(error)) {
+                alert("Error saving: " + (error.message || error));
                 return;
             }
-            invResultId = data[0].id;
-        }
-        
-        // Write Invoice Items to Supabase cloud
-        const dbItems = currentInvoiceItems.map(item => ({
-            invoice_id: invResultId,
-            description: item.description,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total: item.quantity * item.unit_price
-        }));
-        
-        const { error: itemsErr } = await supabaseClient.from("invoice_items").insert(dbItems);
-        if (itemsErr) {
-            alert("Error writing invoice items: " + itemsErr.message);
+
+            saveInvoiceLocally(invoiceData);
+            alert("Cloud is unreachable right now, so this document was saved on this device instead of showing an error.");
+            activeEditingInvoiceId = null;
+            switchTab("invoices-tab");
             return;
         }
-        
-        await fetchCloudData();
     } else {
-        // LocalStorage logic
-        if (activeEditingInvoiceId) {
-            // Update
-            const index = invoices.findIndex(i => i.id === activeEditingInvoiceId);
-            if (index !== -1) {
-                invoices[index] = { ...invoiceData, id: activeEditingInvoiceId, items: currentInvoiceItems };
-            }
-        } else {
-            // Insert
-            const newId = `inv-${Date.now()}`;
-            invoices.push({ ...invoiceData, id: newId, items: currentInvoiceItems });
-        }
-        saveLocalData();
-        saveLocalStorageProfile();
+        saveInvoiceLocally(invoiceData);
     }
     
     alert("Invoice saved successfully to records!");
@@ -2187,6 +2267,14 @@ function initSignaturePad() {
 }
 
 function applyReceiptLanguage() {
+    const lang = currentProfile.preferred_language || "en";
+    const meta = receiptLanguageMeta[lang] || { dir: "ltr", font: "var(--font-sans)" };
+    const printable = document.getElementById("invoice-printable-area");
+    if (printable) {
+        printable.setAttribute("dir", meta.dir);
+        printable.style.fontFamily = meta.font;
+    }
+
     const mapping = {
         "preview-date-label": "date",
         "preview-due-date-label": "dueDate",
