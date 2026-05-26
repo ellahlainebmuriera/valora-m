@@ -754,8 +754,9 @@ textarea:focus {
 
 .invoice-paper {
     --invoice-accent: var(--primary);
+    --invoice-text: #1e293b;
     background-color: #ffffff;
-    color: #1e293b;
+    color: var(--invoice-text);
     border-radius: 8px;
     padding: 40px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
@@ -767,7 +768,62 @@ textarea:focus {
 }
 
 .invoice-paper h2, .invoice-paper h3, .invoice-paper h4, .invoice-paper p, .invoice-paper td, .invoice-paper th {
-    color: #1e293b;
+    color: var(--invoice-text);
+}
+
+.invoice-paper.print-layout-pdf {
+    max-width: 100%;
+}
+
+.invoice-paper.print-layout-thermal-80,
+.invoice-paper.print-layout-thermal-58 {
+    gap: 16px;
+    min-height: auto;
+    padding: 18px;
+    border-radius: 4px;
+}
+
+.invoice-paper.print-layout-thermal-80 {
+    max-width: 80mm;
+    margin: 0 auto;
+}
+
+.invoice-paper.print-layout-thermal-58 {
+    max-width: 58mm;
+    margin: 0 auto;
+    padding: 12px;
+    font-size: 11px;
+}
+
+.invoice-paper.print-layout-thermal-80 .preview-header,
+.invoice-paper.print-layout-thermal-58 .preview-header,
+.invoice-paper.print-layout-thermal-80 .preview-details,
+.invoice-paper.print-layout-thermal-58 .preview-details {
+    display: block;
+}
+
+.invoice-paper.print-layout-thermal-80 .preview-meta,
+.invoice-paper.print-layout-thermal-58 .preview-meta {
+    text-align: left;
+    margin-top: 12px;
+}
+
+.invoice-paper.print-layout-thermal-80 .preview-table th,
+.invoice-paper.print-layout-thermal-80 .preview-table td,
+.invoice-paper.print-layout-thermal-58 .preview-table th,
+.invoice-paper.print-layout-thermal-58 .preview-table td {
+    padding: 6px 4px;
+    font-size: 11px;
+}
+
+.invoice-paper.print-layout-thermal-58 .preview-table th,
+.invoice-paper.print-layout-thermal-58 .preview-table td {
+    font-size: 10px;
+}
+
+.invoice-paper.print-layout-thermal-80 .preview-math-row,
+.invoice-paper.print-layout-thermal-58 .preview-math-row {
+    width: 100%;
 }
 
 .preview-header {
@@ -1283,6 +1339,18 @@ textarea:focus {
         width: 100% !important;
         min-height: auto !important;
         background-color: #ffffff !important;
+    }
+    .invoice-paper.print-layout-thermal-80 {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        padding: 4mm !important;
+        margin: 0 auto !important;
+    }
+    .invoice-paper.print-layout-thermal-58 {
+        width: 58mm !important;
+        max-width: 58mm !important;
+        padding: 3mm !important;
+        margin: 0 auto !important;
     }
     .preview-table th {
         background-color: #f1f5f9 !important;

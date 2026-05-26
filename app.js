@@ -43,7 +43,11 @@ let currentProfile = {
     default_tax_rate: 12.0,
     is_pro: false,
     invoice_count: 0,
-    invoice_theme_color: "#6366f1"
+    invoice_theme_color: "#6366f1",
+    invoice_text_color: "#1e293b",
+    preferred_language: "en",
+    custom_language_name: "",
+    print_layout: "pdf"
 };
 
 let clients = [];
@@ -130,7 +134,10 @@ function seedTestAccount() {
             is_pro: true,
             invoice_count: 0,
             invoice_theme_color: "#0d9488",
+            invoice_text_color: "#1e293b",
             preferred_language: "en",
+            custom_language_name: "",
+            print_layout: "pdf",
             plan: "Business Unlimited"
         }));
     }
@@ -154,7 +161,10 @@ function seedTestAccount() {
             is_pro: true,
             invoice_count: 1,
             invoice_theme_color: "#0d9488",
-            preferred_language: "en"
+            invoice_text_color: "#1e293b",
+            preferred_language: "en",
+            custom_language_name: "",
+            print_layout: "pdf"
         }));
     }
 
@@ -373,6 +383,16 @@ async function setupAuthenticatedUser(user) {
         document.getElementById("preferred-language").value = currentProfile.preferred_language || "en";
         document.getElementById("preferred-language").disabled = !hasBusinessUnlimited();
     }
+    if (document.getElementById("custom-language-name")) {
+        document.getElementById("custom-language-name").value = currentProfile.custom_language_name || "";
+        document.getElementById("custom-language-name").disabled = !hasBusinessUnlimited();
+    }
+    if (document.getElementById("invoice-text-color")) {
+        document.getElementById("invoice-text-color").value = currentProfile.invoice_text_color || "#1e293b";
+    }
+    if (document.getElementById("print-layout")) {
+        document.getElementById("print-layout").value = currentProfile.print_layout || "pdf";
+    }
     
     // Apply logo preview if exists
     if (currentProfile.logo_url) {
@@ -405,7 +425,11 @@ function getLocalStorageProfile(email) {
         default_tax_rate: 12.0,
         is_pro: false,
         invoice_count: 0,
-        invoice_theme_color: "#6366f1"
+        invoice_theme_color: "#6366f1",
+        invoice_text_color: "#1e293b",
+        preferred_language: "en",
+        custom_language_name: "",
+        print_layout: "pdf"
     };
 }
 
@@ -430,7 +454,7 @@ function savePaymentSettings() {
         payoutAccount: document.getElementById("admin-payout-account").value.trim()
     };
     localStorage.setItem("valoram_payment_settings", JSON.stringify(paymentSettings));
-    alert("Admin payment settings saved locally. Connect these keys to the live checkout when Supabase/payment integration is ready.");
+    alert("Admin payment settings saved. Connect these keys to the live checkout when the payment integration is ready.");
 }
 
 function getPaymentRecords() {
@@ -497,10 +521,12 @@ function updateUserTierUI() {
         currentTierStatus.style.color = "var(--accent)";
         if (banner) banner.style.display = "none";
     } else if (currentProfile.is_pro) {
-        tierDisplay.innerText = "PRO ACCOUNT";
+        const planName = currentProfile.plan || "Pro Unlimited Plan";
+        const displayName = planName === "Business Unlimited" ? "BUSINESS UNLIMITED" : "PRO ACCOUNT";
+        tierDisplay.innerText = displayName;
         tierDisplay.style.color = "var(--accent)";
         tierDisplay.style.backgroundColor = "var(--accent-glow)";
-        currentTierStatus.innerText = "PRO UNLIMITED PLAN";
+        currentTierStatus.innerText = planName.toUpperCase();
         currentTierStatus.style.color = "var(--accent)";
         if (banner) banner.style.display = "none";
     } else {
@@ -663,6 +689,9 @@ function initAppEventListeners() {
         currentProfile.currency = document.getElementById("store-currency").value.trim();
         currentProfile.currency_symbol = document.getElementById("store-currency-symbol").value.trim();
         currentProfile.preferred_language = document.getElementById("preferred-language").value;
+        currentProfile.custom_language_name = document.getElementById("custom-language-name").value.trim();
+        currentProfile.invoice_text_color = document.getElementById("invoice-text-color").value || "#1e293b";
+        currentProfile.print_layout = document.getElementById("print-layout").value || "pdf";
         
         if (isCloudActive) {
             const { error } = await supabaseClient.from("profiles")
@@ -673,7 +702,10 @@ function initAppEventListeners() {
                     currency: currentProfile.currency,
                     currency_symbol: currentProfile.currency_symbol,
                     preferred_language: currentProfile.preferred_language,
-                    invoice_theme_color: currentProfile.invoice_theme_color
+                    custom_language_name: currentProfile.custom_language_name,
+                    invoice_theme_color: currentProfile.invoice_theme_color,
+                    invoice_text_color: currentProfile.invoice_text_color,
+                    print_layout: currentProfile.print_layout
                 })
                 .eq("id", currentUser.id);
             if (error) alert("Error updating settings: " + error.message);
@@ -685,6 +717,7 @@ function initAppEventListeners() {
         
         // Refresh logos/previews
         document.getElementById("user-avatar-char").innerText = currentProfile.company_name.charAt(0).toUpperCase();
+        applyInvoiceThemeColor();
         updateInvoicePreview();
     });
 
@@ -1451,7 +1484,7 @@ async function processMockPaymentUpgrade() {
     );
     
     if (isCloudActive) {
-        await supabaseClient.from("profiles").update({ is_pro: true }).eq("id", currentUser.id);
+        await supabaseClient.from("profiles").update({ is_pro: true, plan: currentProfile.plan }).eq("id", currentUser.id);
     } else {
         saveLocalStorageProfile();
     }
@@ -1459,7 +1492,7 @@ async function processMockPaymentUpgrade() {
     // Visual success alerts
     overlay.style.display = "none";
     document.getElementById("payment-modal").style.display = "none";
-    alert("Success! Thank you for your purchase. Your account is now upgraded to Pro Unlimited.");
+    alert(`Success! Thank you for your purchase. Your account is now upgraded to ${currentProfile.plan}.`);
     
     // Refresh GUI details
     updateUserTierUI();
@@ -1522,6 +1555,22 @@ function initSignaturePad() {
             applyInvoiceThemeColor();
         });
     });
+
+    const receiptTextColor = document.getElementById("invoice-text-color");
+    if (receiptTextColor) {
+        receiptTextColor.addEventListener("input", (event) => {
+            currentProfile.invoice_text_color = event.target.value || "#1e293b";
+            applyInvoiceThemeColor();
+        });
+    }
+
+    const printLayout = document.getElementById("print-layout");
+    if (printLayout) {
+        printLayout.addEventListener("change", (event) => {
+            currentProfile.print_layout = event.target.value || "pdf";
+            applyInvoiceThemeColor();
+        });
+    }
 }
 
 function resizeCanvas() {
@@ -1611,9 +1660,14 @@ function isCanvasBlank(canvas) {
 
 function applyInvoiceThemeColor() {
     const color = currentProfile.invoice_theme_color || "#6366f1";
+    const textColor = currentProfile.invoice_text_color || "#1e293b";
+    const printLayout = currentProfile.print_layout || "pdf";
     const printable = document.getElementById("invoice-printable-area");
     if (printable) {
         printable.style.setProperty('--invoice-accent', color);
+        printable.style.setProperty('--invoice-text', textColor);
+        printable.classList.remove("print-layout-pdf", "print-layout-thermal-80", "print-layout-thermal-58");
+        printable.classList.add(`print-layout-${printLayout}`);
     }
     
     // Apply selected class to settings presets
@@ -1623,6 +1677,12 @@ function applyInvoiceThemeColor() {
             el.classList.add("active");
         }
     });
+
+    const textColorInput = document.getElementById("invoice-text-color");
+    if (textColorInput) textColorInput.value = textColor;
+
+    const printLayoutSelect = document.getElementById("print-layout");
+    if (printLayoutSelect) printLayoutSelect.value = printLayout;
 }
 
 Object.assign(window, {

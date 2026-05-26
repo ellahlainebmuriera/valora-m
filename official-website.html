@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valora M | Invoice Maker for Small Businesses</title>
     <meta name="description" content="Create invoices, estimates, client records, and print-ready PDFs for Philippine small businesses.">
+    <link rel="manifest" href="manifest.webmanifest">
     <style>
         :root {
             --ink: #172033;
@@ -642,12 +643,16 @@
                     <p>Yes. Paid plans include store logo upload and custom invoice colors.</p>
                 </div>
                 <div class="faq-item">
-                    <strong>Does it work without Supabase?</strong>
-                    <p>Yes. Customers can create an account, generate invoices, save client records, and print or save PDFs from the web app.</p>
+                    <strong>Can I use Valora M offline?</strong>
+                    <p>Yes, after opening the app online once on the same device and browser. Existing users can continue creating invoices and printing or saving PDFs offline, but a new device needs internet first.</p>
                 </div>
                 <div class="faq-item">
                     <strong>How will payments work?</strong>
-                    <p>Payment links can be connected to PayMongo, Stripe, Gumroad, or manual GCash while starting out.</p>
+                    <p>Customers can pay through debit card, credit card, GCash, Maya, Vybe, and supported online banking options once your PayMongo or Stripe checkout is connected. Available methods depend on the payment provider.</p>
+                </div>
+                <div class="faq-item">
+                    <strong>Is there a refund policy?</strong>
+                    <p>All subscription payments are final and non-refundable once account access is activated, except where required by law or payment provider rules.</p>
                 </div>
             </div>
         </section>
@@ -665,5 +670,12 @@
         <span>Valora M</span>
         <span>Invoice maker for small businesses</span>
     </footer>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("service-worker.js").catch(() => {});
+            });
+        }
+    </script>
 </body>
 </html>

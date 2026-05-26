@@ -1,0 +1,10 @@
+{
+  "name": "Valora M",
+  "short_name": "Valora M",
+  "description": "Professional invoicing and estimates for small businesses.",
+  "start_url": "/app.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0d9488"
+}

@@ -15,7 +15,12 @@ CREATE TABLE public.profiles (
     default_tax_rate NUMERIC DEFAULT 12.0,
     is_pro BOOLEAN DEFAULT FALSE,
     invoice_count INTEGER DEFAULT 0,
-    invoice_theme_color TEXT DEFAULT '#6366f1'
+    invoice_theme_color TEXT DEFAULT '#6366f1',
+    invoice_text_color TEXT DEFAULT '#1e293b',
+    preferred_language TEXT DEFAULT 'en',
+    custom_language_name TEXT DEFAULT '',
+    print_layout TEXT DEFAULT 'pdf',
+    plan TEXT DEFAULT 'Standard Free Plan'
 );
 
 -- Enable RLS for Profiles
