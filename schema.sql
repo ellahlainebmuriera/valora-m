@@ -123,6 +123,31 @@ CREATE POLICY "Users can CRUD their own invoice items."
     );
 
 -- 5. Feature Requests (customer requests visible to owner/admin)
+CREATE TABLE public.app_payments (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    customer_email TEXT NOT NULL,
+    plan TEXT NOT NULL,
+    method TEXT NOT NULL,
+    amount NUMERIC DEFAULT 0,
+    status TEXT DEFAULT 'paid',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.app_payments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can create their own payment records."
+    ON public.app_payments FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own payment records."
+    ON public.app_payments FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Owner admin can view all payment records."
+    ON public.app_payments FOR SELECT
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
 CREATE TABLE public.feature_requests (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,

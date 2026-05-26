@@ -139,6 +139,7 @@ function valoraemAttachLocalAuthFallback() {
     const loginForm = document.getElementById("login-form");
     if (loginForm) {
         loginForm.addEventListener("submit", (event) => {
+            if (window.valoraemIsCloudActive) return;
             event.stopImmediatePropagation();
             const email = document.getElementById("login-email")?.value.trim();
             const password = document.getElementById("login-password")?.value || "";
@@ -161,6 +162,7 @@ function valoraemAttachLocalAuthFallback() {
     const registerForm = document.getElementById("register-form");
     if (registerForm) {
         registerForm.addEventListener("submit", (event) => {
+            if (window.valoraemIsCloudActive) return;
             event.stopImmediatePropagation();
             const company = document.getElementById("register-company")?.value.trim() || valoraem_TEST_COMPANY;
             const email = document.getElementById("register-email")?.value.trim();
@@ -186,6 +188,7 @@ function valoraemAttachLocalAuthFallback() {
 
     if (resetForm) {
         resetForm.addEventListener("submit", (event) => {
+            if (window.valoraemIsCloudActive) return;
             event.preventDefault();
             event.stopImmediatePropagation();
             const email = document.getElementById("reset-email")?.value.trim();

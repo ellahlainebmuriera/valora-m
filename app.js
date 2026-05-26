@@ -29,6 +29,8 @@ try {
 } catch (err) {
     console.error("Supabase connection failed. Falling back to LocalStorage.", err);
 }
+window.valoraemIsCloudActive = isCloudActive;
+window.valoraemSupabaseClient = supabaseClient;
 
 // ==================== STATE MANAGEMENT ====================
 let currentUser = null;
@@ -141,7 +143,7 @@ async function sendPasswordResetCode() {
             setResetCodeStatus(`Could not send reset email: ${error.message}`, true);
             return;
         }
-        setResetCodeStatus("Password reset email sent. Please check your inbox.");
+        setResetCodeStatus("Password reset email sent. If you do not see a numeric code, update the Supabase Recovery email template to show {{ .Token }}.");
         return;
     }
 
@@ -603,7 +605,7 @@ function savePaymentSettings() {
     alert("Admin payment settings saved. Connect these keys to the live checkout when the payment integration is ready.");
 }
 
-function getPaymentRecords() {
+function getLocalPaymentRecords() {
     return JSON.parse(localStorage.getItem("valoraem_payment_records")) || [];
 }
 
@@ -611,16 +613,54 @@ function savePaymentRecords(records) {
     localStorage.setItem("valoraem_payment_records", JSON.stringify(records));
 }
 
-function recordPayment(plan, price, method) {
-    const records = getPaymentRecords();
-    records.push({
+async function getPaymentRecords() {
+    if (isCloudActive) {
+        const query = isAdminUser()
+            ? supabaseClient.from("app_payments").select("*").order("created_at", { ascending: false })
+            : supabaseClient.from("app_payments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false });
+        const { data, error } = await query;
+        if (!error && data) {
+            return data.map((record) => ({
+                id: record.id,
+                plan: record.plan,
+                price: Number(record.amount) || 0,
+                method: record.method,
+                customer_email: record.customer_email,
+                created_at: record.created_at,
+                status: record.status || "paid"
+            }));
+        }
+        console.error("Unable to load app payments:", error);
+    }
+    return getLocalPaymentRecords();
+}
+
+async function recordPayment(plan, price, method) {
+    const record = {
         id: `pay-${Date.now()}`,
         plan,
         price: Number(price) || 0,
         method,
         customer_email: currentUser?.email || "local-customer",
         created_at: new Date().toISOString()
-    });
+    };
+
+    if (isCloudActive) {
+        const { error } = await supabaseClient.from("app_payments").insert({
+            user_id: currentUser.id,
+            customer_email: currentUser.email,
+            plan,
+            method,
+            amount: Number(price) || 0,
+            status: "paid"
+        });
+        if (error) {
+            console.error("Unable to save cloud payment record:", error);
+        }
+    }
+
+    const records = getLocalPaymentRecords();
+    records.push(record);
     savePaymentRecords(records);
 }
 
@@ -786,6 +826,65 @@ function initAppEventListeners() {
     if (resetCodeButton) {
         resetCodeButton.addEventListener("click", sendPasswordResetCode);
     }
+
+    document.getElementById("reset-password-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("reset-email").value.trim();
+        const code = document.getElementById("reset-code").value.trim();
+        const password = document.getElementById("reset-password").value;
+
+        if (!email || !code) {
+            setResetCodeStatus("Please enter your email and reset code.", true);
+            return;
+        }
+        if (password.length < 6) {
+            setResetCodeStatus("Password must be at least 6 characters.", true);
+            return;
+        }
+
+        if (isCloudActive) {
+            const { error: verifyError } = await supabaseClient.auth.verifyOtp({
+                email,
+                token: code,
+                type: "recovery"
+            });
+            if (verifyError) {
+                setResetCodeStatus(`Invalid or expired reset code: ${verifyError.message}`, true);
+                return;
+            }
+
+            const { error: updateError } = await supabaseClient.auth.updateUser({ password });
+            if (updateError) {
+                setResetCodeStatus(`Could not update password: ${updateError.message}`, true);
+                return;
+            }
+
+            setResetCodeStatus("Password updated. You can now sign in with your new password.");
+            await supabaseClient.auth.signOut();
+            document.getElementById("login-email").value = email;
+            document.getElementById("login-password").value = "";
+            document.getElementById("login-form").style.display = "block";
+            document.getElementById("reset-password-form").style.display = "none";
+            document.getElementById("auth-toggle-login").style.display = "block";
+            document.getElementById("auth-toggle-register").style.display = "none";
+            document.getElementById("auth-toggle-reset").style.display = "block";
+            document.getElementById("auth-toggle-reset-back").style.display = "none";
+            return;
+        }
+
+        const expectedCode = localStorage.getItem(`valoraem_reset_code_${email}`) || "123456";
+        if (code !== expectedCode) {
+            setResetCodeStatus("Invalid reset code. Local preview code is 123456.", true);
+            return;
+        }
+        const localAccount = getLocalAccount(email);
+        if (!localAccount) {
+            setResetCodeStatus("No account exists for this email. Please sign up first.", true);
+            return;
+        }
+        saveLocalAccount({ ...localAccount, password });
+        setResetCodeStatus("Password updated. You can now sign in with your new password.");
+    });
 
     // Auth Toggles
     document.querySelectorAll(".toggle-auth-btn").forEach(btn => {
@@ -1715,12 +1814,12 @@ function updateBillingTabUI() {
     }
 }
 
-function renderAdminDashboard() {
+async function renderAdminDashboard() {
     if (!isAdminUser()) return;
 
     loadPaymentSettings();
 
-    const records = getPaymentRecords();
+    const records = await getPaymentRecords();
     const totalRevenue = records.reduce((sum, record) => sum + (Number(record.price) || 0), 0);
     const monthlyRevenue = records
         .filter((record) => record.created_at && record.created_at.slice(0, 7) === new Date().toISOString().slice(0, 7))
@@ -1800,7 +1899,7 @@ async function processMockPaymentUpgrade() {
     currentProfile.is_pro = true;
     const paymentModal = document.getElementById("payment-modal");
     currentProfile.plan = paymentModal.dataset.plan || "Pro Unlimited Plan";
-    recordPayment(
+    await recordPayment(
         paymentModal.dataset.plan || "Pro Unlimited Plan",
         paymentModal.dataset.price || 249,
         gcashActive ? "GCash" : "Card"
