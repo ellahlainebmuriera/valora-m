@@ -816,9 +816,36 @@ function initAppEventListeners() {
     });
 
     document.querySelectorAll(".auth-provider-btn").forEach((button) => {
-        button.addEventListener("click", () => {
-            const provider = button.dataset.provider === "google" ? "Google login" : "Phone OTP login";
-            alert(`${provider} needs Supabase Auth/Firebase/Auth0 connected before it can send real OTP or sign users in.`);
+        button.addEventListener("click", async () => {
+            const provider = button.dataset.provider;
+            if (!isCloudActive) {
+                alert("Supabase is not connected yet. Please add your Supabase URL and anon key in app.js first.");
+                return;
+            }
+
+            if (provider === "google") {
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: "google",
+                    options: {
+                        redirectTo: `${window.location.origin}/app.html`
+                    }
+                });
+                if (error) {
+                    alert(`Google login error: ${error.message}`);
+                }
+                return;
+            }
+
+            if (provider === "phone") {
+                const phone = window.prompt("Enter your phone number with country code. Example: +639171234567");
+                if (!phone) return;
+                const { error } = await supabaseClient.auth.signInWithOtp({ phone });
+                if (error) {
+                    alert(`Phone OTP error: ${error.message}`);
+                    return;
+                }
+                alert("OTP sent. Phone OTP verification screen will be added next after SMS provider setup.");
+            }
         });
     });
 
