@@ -239,10 +239,27 @@ CREATE TABLE IF NOT EXISTS public.tickets (
 ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can create and read their own tickets." ON public.tickets;
-CREATE POLICY "Users can create and read their own tickets."
-    ON public.tickets FOR ALL
-    USING (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
-    WITH CHECK (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+DROP POLICY IF EXISTS "Users can read their own tickets." ON public.tickets;
+DROP POLICY IF EXISTS "Users can create their own tickets." ON public.tickets;
+DROP POLICY IF EXISTS "Owner admin can read all tickets." ON public.tickets;
+DROP POLICY IF EXISTS "Owner admin can update tickets." ON public.tickets;
+
+CREATE POLICY "Users can read their own tickets."
+    ON public.tickets FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own tickets."
+    ON public.tickets FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Owner admin can read all tickets."
+    ON public.tickets FOR SELECT
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+CREATE POLICY "Owner admin can update tickets."
+    ON public.tickets FOR UPDATE
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+    WITH CHECK ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
 
 CREATE TABLE IF NOT EXISTS public.ticket_messages (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -270,6 +287,8 @@ DROP POLICY IF EXISTS "Users and owner can send ticket messages." ON public.tick
 CREATE POLICY "Users and owner can send ticket messages."
     ON public.ticket_messages FOR INSERT
     WITH CHECK (
+        sender_id = auth.uid()
+        AND
         EXISTS (
             SELECT 1 FROM public.tickets
             WHERE public.tickets.id = public.ticket_messages.ticket_id

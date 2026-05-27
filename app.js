@@ -297,6 +297,66 @@ function createToast(message, isError = false) {
     }, 4200);
 }
 
+function logSupabaseError(context, error, payload = null) {
+    console.error(`Supabase Error Details (${context}):`, {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        payload
+    });
+}
+
+async function getAuthenticatedCloudUser() {
+    if (!hasCloudConnection() || !supabaseClient?.auth?.getUser) return currentUser;
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error || !data?.user) {
+        logSupabaseError("auth.getUser", error || { message: "No authenticated Supabase user session." });
+        alert(`Failed: ${error?.message || "No authenticated user session. Please sign out and sign in again."}`);
+        return null;
+    }
+    currentUser = data.user;
+    return data.user;
+}
+
+async function ensureCloudUserProfile(user) {
+    if (!hasCloudConnection() || !user?.id) return false;
+
+    const { data: existingProfile, error: lookupError } = await supabaseClient
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+    if (lookupError) {
+        logSupabaseError("profiles lookup before ticket insert", lookupError, { user_id: user.id });
+        alert(`Failed: ${lookupError.message}`);
+        return false;
+    }
+
+    if (existingProfile?.id) return true;
+
+    const profilePayload = {
+        id: user.id,
+        email: user.email || currentProfile.email || "",
+        company_name: currentProfile.company_name || "My Business",
+        is_pro: !!currentProfile.is_pro,
+        plan: currentProfile.plan || "Standard Free Plan"
+    };
+
+    const { error: insertError } = await supabaseClient
+        .from("profiles")
+        .insert([profilePayload]);
+
+    if (insertError) {
+        logSupabaseError("profiles insert before ticket insert", insertError, profilePayload);
+        alert(`Failed: ${insertError.message}`);
+        return false;
+    }
+
+    return true;
+}
+
 function setResetCodeStatus(message, isError = false) {
     const status = document.getElementById("reset-code-status");
     if (!status) return;
@@ -867,7 +927,10 @@ async function setupAuthenticatedUser(user) {
                 company_name: "My Business",
                 is_pro: false
             };
-            await supabaseClient.from("profiles").insert(newProfile);
+            const { error: insertProfileError } = await supabaseClient.from("profiles").insert([newProfile]);
+            if (insertProfileError) {
+                logSupabaseError("profiles insert during sign-in setup", insertProfileError, newProfile);
+            }
             currentProfile = newProfile;
         } else {
             currentProfile = profile;
@@ -1603,7 +1666,7 @@ async function fetchSupportTickets() {
     if (!ticketsError && dbTickets) {
         supportTickets = dbTickets;
     } else if (ticketsError) {
-        console.warn("Tickets table not ready yet:", ticketsError.message);
+        logSupabaseError("tickets select", ticketsError);
     }
 
     const { data: dbMessages, error: messagesError } = await supabaseClient
@@ -1613,7 +1676,7 @@ async function fetchSupportTickets() {
     if (!messagesError && dbMessages) {
         ticketMessages = dbMessages;
     } else if (messagesError) {
-        console.warn("Ticket messages table not ready yet:", messagesError.message);
+        logSupabaseError("ticket_messages select", messagesError);
     }
 }
 
@@ -1680,10 +1743,17 @@ async function createSupportTicket() {
         return;
     }
 
+    const cloudUser = hasCloudConnection() ? await getAuthenticatedCloudUser() : currentUser;
+    if (!cloudUser?.id) {
+        alert("Failed: Missing authenticated user ID. Please sign out and sign in again.");
+        return;
+    }
+
+    const customerEmail = cloudUser.email || currentUser?.email || currentProfile.email || "";
     const ticket = {
         id: `ticket-${Date.now()}`,
-        user_id: currentUser.id,
-        customer_email: currentUser.email,
+        user_id: cloudUser.id,
+        customer_email: customerEmail,
         subject,
         status: "OPEN",
         created_at: new Date().toISOString()
@@ -1691,33 +1761,51 @@ async function createSupportTicket() {
     const firstMessage = {
         id: `msg-${Date.now()}`,
         ticket_id: ticket.id,
-        sender_id: currentUser.id,
+        sender_id: cloudUser.id,
         message,
         is_admin_reply: false,
         created_at: new Date().toISOString()
     };
 
     if (hasCloudConnection()) {
-        const { data, error } = await supabaseClient.from("tickets").insert({
-            user_id: currentUser.id,
-            customer_email: currentUser.email,
+        const profileReady = await ensureCloudUserProfile(cloudUser);
+        if (!profileReady) return;
+
+        const ticketPayload = {
+            user_id: cloudUser.id,
+            customer_email: customerEmail,
             subject,
             status: "OPEN"
-        }).select();
+        };
+        const { data, error } = await supabaseClient
+            .from("tickets")
+            .insert([ticketPayload])
+            .select("id,user_id,customer_email,subject,status,created_at")
+            .single();
         if (error) {
-            alert("Unable to create ticket right now. Please try again later.");
-            console.error(error);
+            logSupabaseError("tickets insert", error, ticketPayload);
+            alert(`Failed: ${error.message}`);
             return;
         }
-        ticket.id = data[0].id;
+        Object.assign(ticket, data);
         firstMessage.ticket_id = ticket.id;
-        const { error: messageError } = await supabaseClient.from("ticket_messages").insert({
+        const messagePayload = {
             ticket_id: ticket.id,
-            sender_id: currentUser.id,
+            sender_id: cloudUser.id,
             message,
             is_admin_reply: false
-        });
-        if (messageError) console.warn("Ticket message cloud save skipped:", messageError.message);
+        };
+        const { data: savedMessage, error: messageError } = await supabaseClient
+            .from("ticket_messages")
+            .insert([messagePayload])
+            .select("id,ticket_id,sender_id,message,is_admin_reply,created_at")
+            .single();
+        if (messageError) {
+            logSupabaseError("ticket_messages insert", messageError, messagePayload);
+            alert(`Ticket created, but message failed: ${messageError.message}`);
+            return;
+        }
+        Object.assign(firstMessage, savedMessage);
     }
 
     supportTickets.unshift(ticket);
@@ -1749,23 +1837,34 @@ async function sendTicketMessage(adminMode = false) {
         return;
     }
 
+    const cloudUser = hasCloudConnection() ? await getAuthenticatedCloudUser() : currentUser;
+    if (!cloudUser?.id) {
+        alert("Failed: Missing authenticated user ID. Please sign out and sign in again.");
+        return;
+    }
+
     const messageRecord = {
         id: `msg-${Date.now()}`,
         ticket_id: ticketId,
-        sender_id: currentUser.id,
+        sender_id: cloudUser.id,
         message,
         is_admin_reply: adminMode,
         created_at: new Date().toISOString()
     };
 
     if (hasCloudConnection()) {
-        const { error } = await supabaseClient.from("ticket_messages").insert({
+        const replyPayload = {
             ticket_id: ticketId,
-            sender_id: currentUser.id,
+            sender_id: cloudUser.id,
             message,
             is_admin_reply: adminMode
-        });
-        if (error) console.warn("Ticket reply cloud save skipped:", error.message);
+        };
+        const { error } = await supabaseClient.from("ticket_messages").insert([replyPayload]);
+        if (error) {
+            logSupabaseError("ticket_messages reply insert", error, replyPayload);
+            alert(`Failed: ${error.message}`);
+            return;
+        }
     }
 
     ticketMessages.push(messageRecord);
@@ -1780,7 +1879,12 @@ async function updateTicketStatus(status) {
     if (!ticket) return;
     ticket.status = status;
     if (hasCloudConnection()) {
-        await supabaseClient.from("tickets").update({ status }).eq("id", activeAdminTicketId);
+        const { error } = await supabaseClient.from("tickets").update({ status }).eq("id", activeAdminTicketId);
+        if (error) {
+            logSupabaseError("tickets status update", error, { id: activeAdminTicketId, status });
+            alert(`Failed: ${error.message}`);
+            return;
+        }
     }
     saveLocalData();
     renderAdminTickets();
