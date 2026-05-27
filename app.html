@@ -170,6 +170,14 @@
                         Feature Requests
                     </a>
                 </li>
+                <li class="nav-item" data-tab="bug-report-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v3.75m0 3.75h.008v.008H12v-.008Zm-3.75-9.75h7.5m-9.75 3h12m-13.5 3h15m-12.75 6h10.5a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3H6.75a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3Z" />
+                        </svg>
+                        Bug Report
+                    </a>
+                </li>
                 <li class="nav-item" data-tab="offline-tab">
                     <a class="nav-link">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -987,13 +995,23 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- ==================== BUG REPORT TAB ==================== -->
+            <div id="bug-report-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Bug Report</h1>
+                        <p>Submit a support ticket and track replies from Valora EM support.</p>
+                    </div>
+                </div>
 
                 <div class="panel-card support-tickets-card">
                     <div class="panel-title">In-App Bug Reporting System</div>
-                    <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Create a support ticket and continue the conversation with Valora EM support here.</p>
+                    <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Send a new ticket with a subject and details, then check the conversation thread for responses.</p>
                     <div class="ticket-create-grid">
-                        <input type="text" id="ticket-subject" placeholder="Ticket subject">
-                        <textarea id="ticket-message" rows="3" placeholder="Describe the issue, billing concern, or feature problem."></textarea>
+                        <input type="text" id="ticket-subject" placeholder="Subject">
+                        <textarea id="ticket-message" rows="3" placeholder="Details: what happened, what page you were on, and what device you used."></textarea>
                         <button class="btn btn-primary" type="button" id="create-ticket-btn">Create Ticket</button>
                     </div>
                     <div class="ticket-workspace">
@@ -1050,6 +1068,12 @@
                     </div>
                 </div>
 
+                <div class="admin-screen-tabs" aria-label="Admin sections">
+                    <button class="active" type="button" data-admin-screen="admin-gateway-screen">Dashboard & Gateway Settings</button>
+                    <button type="button" data-admin-screen="admin-tickets-screen">Bug Reports / Support Tickets</button>
+                </div>
+
+                <div class="admin-screen active" id="admin-gateway-screen">
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-header">
@@ -1141,10 +1165,12 @@
                     </div>
 
                 </div>
+                </div>
 
+                <div class="admin-screen" id="admin-tickets-screen">
                 <div class="panel-card admin-ticket-panel">
                     <div class="panel-title">Support Ticket Inbox</div>
-                    <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Read customer bug reports and send replies from the owner dashboard.</p>
+                    <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Select an incoming ticket, read the conversation, reply to the user, and mark resolved when finished.</p>
                     <div class="ticket-workspace admin-ticket-workspace">
                         <div class="ticket-list" id="admin-ticket-list">
                             <div class="ticket-empty">No tickets yet.</div>
@@ -1160,6 +1186,7 @@
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
 

@@ -360,9 +360,35 @@
             background: #fff;
         }
 
+        .billing-cycle-toggle {
+            width: fit-content;
+            margin: 0 auto 20px;
+            padding: 4px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--soft);
+            display: flex;
+            gap: 4px;
+        }
+
+        .billing-cycle-toggle button {
+            border: 0;
+            border-radius: 9px;
+            padding: 10px 18px;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .billing-cycle-toggle button.active {
+            background: var(--brand);
+            color: #fff;
+        }
+
         .price-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(220px, 1fr));
+            grid-template-columns: repeat(4, minmax(220px, 1fr));
             gap: 18px;
         }
 
@@ -373,12 +399,16 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            min-height: 390px;
+            min-height: 640px;
         }
 
         .price-card.featured {
-            border: 2px solid var(--brand);
+            border: 2px solid #7c3aed;
             box-shadow: var(--shadow);
+        }
+
+        .price-card.business {
+            border-color: #059669;
         }
 
         .price {
@@ -410,6 +440,61 @@
 
         .price-card .btn {
             margin-top: auto;
+        }
+
+        .price-card ul {
+            gap: 12px;
+            color: var(--ink);
+        }
+
+        .price-card li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            min-height: 36px;
+        }
+
+        .price-card li::before {
+            content: none;
+        }
+
+        .feature-icon {
+            width: 18px;
+            flex: 0 0 18px;
+            color: var(--brand);
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .price-card.featured .feature-icon {
+            color: #6d28d9;
+        }
+
+        .price-card.business .feature-icon {
+            color: #047857;
+        }
+
+        .price-card li.locked {
+            color: rgba(100, 116, 139, 0.72);
+            opacity: 0.5;
+        }
+
+        .price-card li.locked .feature-icon {
+            color: #9ca3af;
+        }
+
+        .price-card small {
+            display: block;
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .regular-rate,
+        .promo-note {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
         }
 
         .faq {
@@ -592,41 +677,75 @@
                 <h2>Simple monthly pricing.</h2>
                 <p>Choose the plan that fits your business. Automated checkout is available directly inside Valora EM.</p>
             </div>
+            <div class="billing-cycle-toggle" aria-label="Billing cycle">
+                <button type="button" class="active" data-landing-cycle="monthly">Monthly</button>
+                <button type="button" data-landing-cycle="yearly">Yearly</button>
+            </div>
             <div class="price-grid">
                 <div class="price-card">
-                    <h3>Starter Unlimited</h3>
-                    <div class="price">PHP 149<span> / month</span></div>
-                    <p style="font-size: 12px; color: var(--muted);">Promo rate valid for first cycle only. Automatic renewal at PHP 298/month applies thereafter.</p>
+                    <h3>Standard Free Plan</h3>
+                    <div class="price" data-landing-price="Standard Free Plan">PHP 0<span> / month</span></div>
+                    <p class="regular-rate" data-landing-regular="Standard Free Plan">Free forever.</p>
                     <ul>
-                        <li>Unlimited invoice creation</li>
-                        <li>Client list and invoice history</li>
-                        <li>Print / save as PDF</li>
+                        <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>5 free documents</small></span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Customer Directory & Advanced History</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Print / Save as PDF</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Store Logo Upload</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Signature & Receipt Customization</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Multi-Store Business Profiles</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Preferred Language Receipts</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Offline Mode & Item Catalog</span></li>
+                    </ul>
+                    <a class="btn secondary" href="app.html">Open Free Plan</a>
+                </div>
+                <div class="price-card">
+                    <h3>Starter Unlimited</h3>
+                    <div class="price" data-landing-price="Starter Unlimited">PHP 149<span> / month</span></div>
+                    <p class="regular-rate" data-landing-regular="Starter Unlimited">Renews at PHP 298 / month.</p>
+                    <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
+                    <ul>
+                        <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
+                        <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
+                        <li><span class="feature-icon">✓</span><span>Print / Save as PDF</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Store Logo Upload</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Signature & Receipt Customization</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Multi-Store Business Profiles</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Preferred Language Receipts</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Offline Mode & Item Catalog</span></li>
                     </ul>
                     <a class="btn secondary" href="app.html">Get Started</a>
                 </div>
                 <div class="price-card featured">
                     <h3>Pro Unlimited Plan</h3>
-                    <div class="price">PHP 249<span> / month</span></div>
-                    <p style="font-size: 12px; color: var(--muted);">Promo rate valid for first cycle only. Automatic renewal at PHP 498/month applies thereafter.</p>
+                    <div class="price" data-landing-price="Pro Unlimited Plan">PHP 249<span> / month</span></div>
+                    <p class="regular-rate" data-landing-regular="Pro Unlimited Plan">Renews at PHP 498 / month.</p>
+                    <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
                     <ul>
-                        <li>Unlimited invoice creation</li>
-                        <li>Upload your own store logo</li>
-                        <li>PDF and offline printing support</li>
-                        <li>Signature and color customization</li>
+                        <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
+                        <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
+                        <li><span class="feature-icon">✓</span><span>Print / Save as PDF</span></li>
+                        <li><span class="feature-icon">✓</span><span>Store Logo Upload</span></li>
+                        <li><span class="feature-icon">✓</span><span>Signature & Receipt Customization</span></li>
+                        <li><span class="feature-icon">✓</span><span>Multi-Store Business Profiles <small>Up to 2 stores</small></span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Preferred Language Receipts</span></li>
+                        <li class="locked"><span class="feature-icon">-</span><span>Offline Mode & Item Catalog</span></li>
                     </ul>
                     <a class="btn primary" href="app.html">Choose Pro</a>
                 </div>
-                <div class="price-card">
+                <div class="price-card business">
                     <h3>Business Unlimited</h3>
-                    <div class="price">PHP 449<span> / month</span></div>
-                    <p style="font-size: 12px; color: var(--muted);">Promo rate valid for first cycle only. Automatic renewal at PHP 898/month applies thereafter.</p>
+                    <div class="price" data-landing-price="Business Unlimited">PHP 449<span> / month</span></div>
+                    <p class="regular-rate" data-landing-regular="Business Unlimited">Renews at PHP 898 / month.</p>
+                    <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
                     <ul>
-                        <li>Everything in Pro Unlimited</li>
-                        <li>Custom business layout reports</li>
-                        <li>Preferred language settings</li>
-                        <li>Offline mode on the same device/browser</li>
-                        <li>White-label setup options</li>
-                        <li>Priority onboarding support</li>
+                        <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
+                        <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
+                        <li><span class="feature-icon">✓</span><span>Print / Save as PDF</span></li>
+                        <li><span class="feature-icon">✓</span><span>Store Logo Upload</span></li>
+                        <li><span class="feature-icon">✓</span><span>Signature & Receipt Customization</span></li>
+                        <li><span class="feature-icon">✓</span><span>Multi-Store Business Profiles <small>Unlimited stores</small></span></li>
+                        <li><span class="feature-icon">✓</span><span>Preferred Language Receipts</span></li>
+                        <li><span class="feature-icon">✓</span><span>Offline Mode & Item Catalog</span></li>
                     </ul>
                     <a class="btn secondary" href="app.html">Go Business</a>
                 </div>
@@ -680,6 +799,37 @@
         <a href="refund-policy" style="color: inherit;">Refund Policy</a>
     </footer>
     <script>
+        const landingRates = {
+            "Standard Free Plan": { promo: 0, regular: 0 },
+            "Starter Unlimited": { promo: 149, regular: 298 },
+            "Pro Unlimited Plan": { promo: 249, regular: 498 },
+            "Business Unlimited": { promo: 449, regular: 898 }
+        };
+
+        function updateLandingPricing(cycle) {
+            const multiplier = cycle === "yearly" ? 12 : 1;
+            const suffix = cycle === "yearly" ? " / year" : " / month";
+            document.querySelectorAll("[data-landing-cycle]").forEach((button) => {
+                button.classList.toggle("active", button.dataset.landingCycle === cycle);
+            });
+            document.querySelectorAll("[data-landing-price]").forEach((price) => {
+                const plan = price.dataset.landingPrice;
+                const rate = landingRates[plan] || landingRates["Standard Free Plan"];
+                price.innerHTML = `PHP ${(rate.promo * multiplier).toLocaleString("en-PH")}<span>${suffix}</span>`;
+            });
+            document.querySelectorAll("[data-landing-regular]").forEach((regular) => {
+                const plan = regular.dataset.landingRegular;
+                const rate = landingRates[plan] || landingRates["Standard Free Plan"];
+                regular.textContent = rate.regular === 0
+                    ? "Free forever."
+                    : `Renews at PHP ${(rate.regular * multiplier).toLocaleString("en-PH")}${suffix}.`;
+            });
+        }
+
+        document.querySelectorAll("[data-landing-cycle]").forEach((button) => {
+            button.addEventListener("click", () => updateLandingPricing(button.dataset.landingCycle));
+        });
+
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
                 navigator.serviceWorker.register("service-worker.js").catch(() => {});

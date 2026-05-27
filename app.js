@@ -743,7 +743,7 @@ function switchTab(tabId) {
         renderAdminTickets();
     } else if (tabId === "admin-feature-inbox-tab") {
         renderAdminFeatureInbox();
-    } else if (tabId === "feature-requests-tab") {
+    } else if (tabId === "feature-requests-tab" || tabId === "bug-report-tab") {
         renderSupportTickets();
     }
 }
@@ -771,6 +771,20 @@ function updateAdminVisibility() {
             }
             textNode.textContent = isAdminUser() ? " Feature Inbox" : " Feature Requests";
         }
+    }
+}
+
+function showAdminScreen(screenId) {
+    document.querySelectorAll(".admin-screen").forEach((screen) => {
+        screen.classList.toggle("active", screen.id === screenId);
+    });
+    document.querySelectorAll("[data-admin-screen]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.adminScreen === screenId);
+    });
+    if (screenId === "admin-tickets-screen") {
+        renderAdminTickets();
+    } else if (screenId === "admin-gateway-screen") {
+        renderAdminDashboard();
     }
 }
 
@@ -1583,7 +1597,13 @@ function renderTicketList(containerId, adminMode = false) {
     container.innerHTML = tickets.map((ticket) => `
         <button class="ticket-list-item ${ticket.id === selectedId ? "active" : ""}" onclick="${adminMode ? "selectAdminTicket" : "selectTicket"}('${ticket.id}')">
             <strong>${escapeHtml(ticket.subject)}</strong>
-            <span>${escapeHtml(ticket.customer_email || "Customer")} - ${ticket.status}</span>
+            ${adminMode
+                ? `<span class="ticket-list-meta">
+                    <span>${escapeHtml(ticket.customer_email || "Unknown user")}</span>
+                    <span>${new Date(ticket.created_at).toLocaleString()}</span>
+                    <span class="ticket-status-badge ${ticket.status === "RESOLVED" ? "resolved" : ""}">${ticket.status}</span>
+                </span>`
+                : `<span>${new Date(ticket.created_at).toLocaleString()} - ${ticket.status}</span>`}
         </button>
     `).join("");
 }
@@ -2201,6 +2221,12 @@ function initAppEventListeners() {
         button.addEventListener("click", () => {
             billingCycle = button.dataset.billingCycle || "monthly";
             updatePricingDisplay();
+        });
+    });
+
+    document.querySelectorAll("[data-admin-screen]").forEach((button) => {
+        button.addEventListener("click", () => {
+            showAdminScreen(button.dataset.adminScreen);
         });
     });
 
