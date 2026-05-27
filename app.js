@@ -179,7 +179,20 @@ function getCurrentPlanName() {
     return currentProfile.is_pro ? "Pro Unlimited Plan" : "Standard Free Plan";
 }
 
+function getPlanKey(planName) {
+    return String(planName || "Standard Free Plan")
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
 function hasLogoUploadAccess() {
+    const planName = getCurrentPlanName();
+    return isAdminUser() || planName === "Pro Unlimited Plan" || planName === "Business Unlimited";
+}
+
+function hasSignatureAccess() {
     const planName = getCurrentPlanName();
     return isAdminUser() || planName === "Pro Unlimited Plan" || planName === "Business Unlimited";
 }
@@ -595,7 +608,7 @@ function switchTab(tabId) {
     }
 
     // Don't show premium features if user is on Free Tier and trying to write too many invoices
-    if (tabId === "creator-tab" && !currentProfile.is_pro && invoices.length >= 5) {
+    if (tabId === "creator-tab" && !currentProfile.is_pro && getActiveInvoices().length >= 5) {
         alert("Trial limit reached: Free accounts can create up to 5 invoices. Please subscribe to continue.");
         switchTab("billing-tab");
         return;
@@ -616,6 +629,8 @@ function switchTab(tabId) {
         renderDashboard();
     } else if (tabId === "invoices-tab") {
         renderInvoicesTable();
+    } else if (tabId === "trash-tab") {
+        renderTrashBin();
     } else if (tabId === "clients-tab") {
         renderClientsTable();
         populateClientDropdown();
@@ -756,6 +771,7 @@ async function setupAuthenticatedUser(user) {
     
     applyAppearance();
     renderLogoAccessUI();
+    renderSignatureAccessUI();
     applyInvoiceThemeColor();
     updateUserTierUI();
     updateAdminVisibility();
@@ -819,6 +835,35 @@ function renderLogoAccessUI() {
     if (previewLogo) {
         previewLogo.style.display = allowed ? "flex" : "none";
         previewLogo.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="Store logo">` : "<span>LOGO</span>";
+    }
+}
+
+function renderSignatureAccessUI() {
+    const allowed = hasSignatureAccess();
+    const section = document.getElementById("signature-section");
+    if (section) section.classList.toggle("signature-locked", !allowed);
+
+    [
+        "signature-canvas",
+        "clear-signature-btn",
+        "show-signature-checkbox",
+        "printed-name",
+        "request-client-signature-checkbox",
+        "save-signature-permission-checkbox"
+    ].forEach((id) => {
+        const element = document.getElementById(id);
+        if (element) element.disabled = !allowed;
+    });
+
+    if (!allowed) {
+        clearSignature();
+        const showSignature = document.getElementById("show-signature-checkbox");
+        const saveSignature = document.getElementById("save-signature-permission-checkbox");
+        const requestClientSignature = document.getElementById("request-client-signature-checkbox");
+        if (showSignature) showSignature.checked = false;
+        if (saveSignature) saveSignature.checked = false;
+        if (requestClientSignature) requestClientSignature.checked = false;
+        updateSignaturePreview();
     }
 }
 
@@ -1015,6 +1060,66 @@ function renderDocumentPhotos() {
         .join("");
 }
 
+async function handleLogoFile(file) {
+    if (!hasLogoUploadAccess()) {
+        alert("Logo upload is available on Pro Unlimited and Business Unlimited plans.");
+        return;
+    }
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+        alert("Please upload an image file.");
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        alert("Maximum size supported is 2MB.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        currentProfile.logo_url = event.target.result;
+        renderLogoAccessUI();
+
+        if (isCloudActive) {
+            await supabaseClient.from("profiles").update({ logo_url: currentProfile.logo_url }).eq("id", currentUser.id);
+        } else {
+            saveLocalStorageProfile();
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function initDropZone(dropZoneId, inputId, onFiles) {
+    const dropZone = document.getElementById(dropZoneId);
+    const input = document.getElementById(inputId);
+    if (!dropZone || !input) return;
+
+    dropZone.addEventListener("click", (event) => {
+        if (event.target !== input && event.target.tagName !== "BUTTON") {
+            input.click();
+        }
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropZone.classList.add("drag-over");
+        });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropZone.classList.remove("drag-over");
+        });
+    });
+
+    dropZone.addEventListener("drop", (event) => {
+        const files = Array.from(event.dataTransfer?.files || []);
+        if (files.length) onFiles(files);
+    });
+}
+
 // Fetch database records from Supabase
 async function fetchCloudData() {
     try {
@@ -1042,6 +1147,67 @@ function saveLocalData() {
     const suffix = currentUser.email;
     localStorage.setItem(`valoraem_clients_${suffix}`, JSON.stringify(clients));
     localStorage.setItem(`valoraem_invoices_${suffix}`, JSON.stringify(invoices));
+}
+
+function getActiveInvoices() {
+    return invoices.filter((invoice) => !invoice.is_deleted);
+}
+
+function getDeletedInvoices() {
+    return invoices.filter((invoice) => invoice.is_deleted);
+}
+
+function getInvoiceDate(invoice) {
+    return invoice.issue_date || invoice.created_at || "";
+}
+
+function isDateInRange(dateValue, startDate, endDate) {
+    if (!dateValue) return false;
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return false;
+    if (startDate && date < startDate) return false;
+    if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (date > end) return false;
+    }
+    return true;
+}
+
+function getPresetDateRange(preset) {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+
+    if (preset === "today") {
+        return { start, end: now };
+    }
+    if (preset === "month") {
+        return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: now };
+    }
+    if (preset === "last30") {
+        const last30 = new Date(now);
+        last30.setDate(now.getDate() - 30);
+        last30.setHours(0, 0, 0, 0);
+        return { start: last30, end: now };
+    }
+    if (preset === "year") {
+        return { start: new Date(now.getFullYear(), 0, 1), end: now };
+    }
+    return { start: null, end: null };
+}
+
+function getDashboardFilteredInvoices() {
+    const preset = document.getElementById("dashboard-date-filter")?.value || "all";
+    if (preset === "all") return getActiveInvoices();
+
+    const customStart = document.getElementById("dashboard-custom-start")?.value;
+    const customEnd = document.getElementById("dashboard-custom-end")?.value;
+    const range = preset === "custom"
+        ? { start: customStart ? new Date(customStart) : null, end: customEnd ? new Date(customEnd) : null }
+        : getPresetDateRange(preset);
+
+    return getActiveInvoices().filter((invoice) => isDateInRange(getInvoiceDate(invoice), range.start, range.end));
 }
 
 // Update UI headers depending on Pro Status
@@ -1075,6 +1241,7 @@ function updateUserTierUI() {
     }
 
     renderLogoAccessUI();
+    renderSignatureAccessUI();
 }
 
 // ==================== EVENT HANDLERS ====================
@@ -1340,7 +1507,10 @@ function initAppEventListeners() {
     document.getElementById("logout-btn").addEventListener("click", async () => {
         await logoutCurrentUser();
     });
-    document.getElementById("mobile-logout-nav").addEventListener("click", logoutCurrentUser);
+    const mobileLogoutNav = document.getElementById("mobile-logout-nav");
+    if (mobileLogoutNav) {
+        mobileLogoutNav.addEventListener("click", logoutCurrentUser);
+    }
 
     // Navigation item click links
     document.querySelectorAll(".nav-item").forEach(item => {
@@ -1408,37 +1578,11 @@ function initAppEventListeners() {
 
     // Store Logo File Selection (Converts file to base64 DataURL for offline compatibility)
     document.getElementById("store-logo-file").addEventListener("change", (e) => {
-        if (!hasLogoUploadAccess()) {
-            e.target.value = "";
-            alert("Logo upload is available on Pro Unlimited and Business Unlimited plans.");
-            return;
-        }
-
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-                alert("Maximum size supported is 2MB.");
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const dataUrl = event.target.result;
-                currentProfile.logo_url = dataUrl;
-                
-                // Show in Settings preview and live preview
-                renderLogoAccessUI();
-                
-                // Save immediately
-                if (isCloudActive) {
-                    await supabaseClient.from("profiles").update({ logo_url: dataUrl }).eq("id", currentUser.id);
-                } else {
-                    saveLocalStorageProfile();
-                }
-            };
-            reader.readAsDataURL(file);
-        }
+        handleLogoFile(e.target.files[0]);
     });
+
+    initDropZone("logo-drop-zone", "store-logo-file", (files) => handleLogoFile(files[0]));
+    initDropZone("document-photo-drop-zone", "document-photo-file", (files) => handleDocumentPhotos({ target: { files } }));
 
     // Developer Branding Save
     document.getElementById("save-wl-settings-btn").addEventListener("click", () => {
@@ -1555,7 +1699,18 @@ function initAppEventListeners() {
     // Search inputs filtering
     document.getElementById("invoice-search-input").addEventListener("input", renderInvoicesTable);
     document.getElementById("invoice-filter-status").addEventListener("change", renderInvoicesTable);
+    document.getElementById("invoice-filter-start").addEventListener("change", renderInvoicesTable);
+    document.getElementById("invoice-filter-end").addEventListener("change", renderInvoicesTable);
     document.getElementById("client-search-input").addEventListener("input", renderClientsTable);
+
+    document.getElementById("dashboard-date-filter").addEventListener("change", () => {
+        const custom = document.getElementById("dashboard-date-filter").value === "custom";
+        document.getElementById("dashboard-custom-start").style.display = custom ? "block" : "none";
+        document.getElementById("dashboard-custom-end").style.display = custom ? "block" : "none";
+        renderDashboard();
+    });
+    document.getElementById("dashboard-custom-start").addEventListener("change", renderDashboard);
+    document.getElementById("dashboard-custom-end").addEventListener("change", renderDashboard);
 
     // Save invoice click
     document.getElementById("save-invoice-btn").addEventListener("click", saveInvoiceToDatabase);
@@ -1859,7 +2014,7 @@ function saveInvoiceLocally(invoiceData) {
 // Save invoice to database (with checks on account tier limits)
 async function saveInvoiceToDatabase() {
     // Check trial limits
-    if (!currentProfile.is_pro && invoices.length >= 5 && !activeEditingInvoiceId) {
+    if (!currentProfile.is_pro && getActiveInvoices().length >= 5 && !activeEditingInvoiceId) {
         alert("Trial limit reached: Free accounts can create up to 5 invoices. Please subscribe to continue.");
         switchTab("billing-tab");
         return;
@@ -1893,14 +2048,15 @@ async function saveInvoiceToDatabase() {
     const total = subtotal + taxAmount + shipping - discount;
     
     // Check signature data URL
-    const hasSignature = document.getElementById("show-signature-checkbox").checked;
+    const signatureAllowed = hasSignatureAccess();
+    const hasSignature = signatureAllowed && document.getElementById("show-signature-checkbox").checked;
     const signatureCanvas = document.getElementById("signature-canvas");
     const signatureUrl = (hasSignature && !isCanvasBlank(signatureCanvas)) ? signatureCanvas.toDataURL() : null;
-    const saveSignaturePermission = document.getElementById("save-signature-permission-checkbox").checked;
+    const saveSignaturePermission = signatureAllowed && document.getElementById("save-signature-permission-checkbox").checked;
     currentProfile.save_signature_permission = saveSignaturePermission;
     currentProfile.saved_signature_data_url = saveSignaturePermission && signatureUrl ? signatureUrl : "";
     const printedName = document.getElementById("printed-name").value.trim();
-    const requestClientSignature = document.getElementById("request-client-signature-checkbox").checked;
+    const requestClientSignature = signatureAllowed && document.getElementById("request-client-signature-checkbox").checked;
 
     const invoiceData = {
         invoice_number: invoiceNumber,
@@ -1919,7 +2075,9 @@ async function saveInvoiceToDatabase() {
         signature_data_url: signatureUrl,
         printed_name: printedName,
         request_client_signature: requestClientSignature,
-        photo_data_urls: currentDocumentPhotos
+        photo_data_urls: currentDocumentPhotos,
+        is_deleted: false,
+        deleted_at: null
     };
     
     if (isCloudActive && !hasCloudConnection()) {
@@ -2001,16 +2159,21 @@ function renderInvoicesTable() {
     const tbody = document.querySelector("#all-invoices-table tbody");
     const query = document.getElementById("invoice-search-input").value.toLowerCase();
     const filterStatus = document.getElementById("invoice-filter-status").value;
+    const startDateValue = document.getElementById("invoice-filter-start").value;
+    const endDateValue = document.getElementById("invoice-filter-end").value;
+    const startDate = startDateValue ? new Date(startDateValue) : null;
+    const endDate = endDateValue ? new Date(endDateValue) : null;
     
     tbody.innerHTML = "";
     
-    let filtered = invoices.filter(inv => {
+    let filtered = getActiveInvoices().filter(inv => {
         // Get client name
         const client = clients.find(c => c.id == inv.client_id);
         const clientName = client ? client.name.toLowerCase() : "walk-in customer";
         const matchesQuery = inv.invoice_number.toLowerCase().includes(query) || clientName.includes(query);
         const matchesStatus = filterStatus ? inv.status === filterStatus : true;
-        return matchesQuery && matchesStatus;
+        const matchesDate = startDate || endDate ? isDateInRange(getInvoiceDate(inv), startDate, endDate) : true;
+        return matchesQuery && matchesStatus && matchesDate;
     });
     
     if (filtered.length === 0) {
@@ -2037,7 +2200,7 @@ function renderInvoicesTable() {
             <td style="font-weight: 700;">${currentProfile.currency_symbol}${parseFloat(inv.total).toFixed(2)}</td>
             <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
                 <button class="btn btn-sm btn-secondary" onclick="editInvoice('${inv.id}')">View/Edit</button>
-                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteInvoice('${inv.id}')">Delete</button>
+                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteInvoice('${inv.id}')">Trash</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -2110,21 +2273,94 @@ async function editInvoice(id) {
 
 // Delete invoice row
 async function deleteInvoice(id) {
-    if (!confirm("Do you want to permanently delete this invoice record?")) return;
+    if (!confirm("Move this invoice to Trash Bin? You can recover it within 30 days.")) return;
+    const deletedAt = new Date().toISOString();
     
     if (isCloudActive) {
+        const { error } = await supabaseClient
+            .from("invoices")
+            .update({ is_deleted: true, deleted_at: deletedAt })
+            .eq("id", id);
+        if (error) {
+            alert("Error: " + error.message);
+            return;
+        }
+        invoices = invoices.map(i => i.id === id ? { ...i, is_deleted: true, deleted_at: deletedAt } : i);
+    } else {
+        invoices = invoices.map(i => i.id === id ? { ...i, is_deleted: true, deleted_at: deletedAt } : i);
+        saveLocalData();
+    }
+    
+    renderInvoicesTable();
+    renderDashboard();
+    renderTrashBin();
+}
+
+async function restoreInvoice(id) {
+    if (isCloudActive) {
+        const { error } = await supabaseClient
+            .from("invoices")
+            .update({ is_deleted: false, deleted_at: null })
+            .eq("id", id);
+        if (error) {
+            alert("Error: " + error.message);
+            return;
+        }
+    }
+
+    invoices = invoices.map(i => i.id === id ? { ...i, is_deleted: false, deleted_at: null } : i);
+    saveLocalData();
+    renderTrashBin();
+    renderInvoicesTable();
+    renderDashboard();
+}
+
+async function permanentlyDeleteInvoice(id) {
+    if (!confirm("Permanently delete this invoice? This cannot be undone.")) return;
+
+    if (isCloudActive) {
+        await supabaseClient.from("invoice_items").delete().eq("invoice_id", id);
         const { error } = await supabaseClient.from("invoices").delete().eq("id", id);
         if (error) {
             alert("Error: " + error.message);
             return;
         }
-        invoices = invoices.filter(i => i.id !== id);
-    } else {
-        invoices = invoices.filter(i => i.id !== id);
-        saveLocalData();
     }
-    
-    renderInvoicesTable();
+
+    invoices = invoices.filter(i => i.id !== id);
+    saveLocalData();
+    renderTrashBin();
+    renderDashboard();
+}
+
+function renderTrashBin() {
+    const tbody = document.querySelector("#trash-invoices-table tbody");
+    if (!tbody) return;
+
+    const deleted = getDeletedInvoices();
+    tbody.innerHTML = "";
+
+    if (deleted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Trash bin is empty.</td></tr>';
+        return;
+    }
+
+    deleted.forEach((inv) => {
+        const client = clients.find(c => c.id == inv.client_id);
+        const clientName = client ? client.name : '<span style="color: var(--text-muted);">Walk-in</span>';
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><strong>${inv.invoice_number}</strong></td>
+            <td>${clientName}</td>
+            <td>${inv.deleted_at ? new Date(inv.deleted_at).toLocaleString() : "Recently deleted"}</td>
+            <td style="font-weight: 700;">${currentProfile.currency_symbol}${parseFloat(inv.total).toFixed(2)}</td>
+            <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-sm btn-secondary" onclick="restoreInvoice('${inv.id}')">Recover</button>
+                <button class="btn btn-sm btn-secondary btn-danger" onclick="permanentlyDeleteInvoice('${inv.id}')">Delete Forever</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 // Load stats metrics on Dashboard tab
@@ -2132,8 +2368,9 @@ function renderDashboard() {
     let totalRevenue = 0;
     let totalPaid = 0;
     let totalUnpaid = 0;
+    const dashboardInvoices = getDashboardFilteredInvoices();
     
-    invoices.forEach(inv => {
+    dashboardInvoices.forEach(inv => {
         const total = parseFloat(inv.total) || 0;
         if (inv.status === "Paid") {
             totalPaid += total;
@@ -2147,15 +2384,15 @@ function renderDashboard() {
     document.getElementById("dash-total-revenue").innerText = `${currentProfile.currency_symbol}${totalRevenue.toFixed(2)}`;
     document.getElementById("dash-total-paid").innerText = `${currentProfile.currency_symbol}${totalPaid.toFixed(2)}`;
     document.getElementById("dash-total-unpaid").innerText = `${currentProfile.currency_symbol}${totalUnpaid.toFixed(2)}`;
-    document.getElementById("dash-total-count").innerText = invoices.length;
+    document.getElementById("dash-total-count").innerText = dashboardInvoices.length;
     
     // Render recent invoices (Limit to first 5)
     const tbody = document.querySelector("#recent-invoices-table tbody");
     tbody.innerHTML = "";
     
-    const limit = invoices.slice(0, 5);
+    const limit = dashboardInvoices.slice(0, 5);
     if (limit.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No recent invoices. Click create below.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No recent invoices. Click create below.</td></tr>';
         return;
     }
     
@@ -2176,6 +2413,9 @@ function renderDashboard() {
             <td><span class="badge ${statusClass}">${inv.status}</span></td>
             <td><span style="text-transform: capitalize;">${inv.type}</span></td>
             <td style="font-weight: 700;">${currentProfile.currency_symbol}${parseFloat(inv.total).toFixed(2)}</td>
+            <td style="text-align: right;">
+                <button class="icon-action danger" onclick="deleteInvoice('${inv.id}')" title="Move to Trash">&#128465;</button>
+            </td>
         `;
         tbody.appendChild(row);
     });
@@ -2183,13 +2423,39 @@ function renderDashboard() {
 
 // Update billing view stats
 function updateBillingTabUI() {
-    document.getElementById("billing-invoice-count").innerText = invoices.length;
+    const activeInvoiceCount = getActiveInvoices().length;
+    document.getElementById("billing-invoice-count").innerText = activeInvoiceCount;
+    const currentPlan = getCurrentPlanName();
+    const currentPlanKey = getPlanKey(currentPlan);
     const line = document.getElementById("billing-invoice-count-line");
     if (line) {
         line.innerHTML = currentProfile.is_pro
-            ? `Total documents created: <span id="billing-invoice-count">${invoices.length}</span>`
-            : `Invoices Used: <span id="billing-invoice-count">${invoices.length}</span> / 5 free limits.`;
+            ? `Total documents created: <span id="billing-invoice-count">${activeInvoiceCount}</span>`
+            : `Invoices Used: <span id="billing-invoice-count">${activeInvoiceCount}</span> / 5 free limits.`;
     }
+
+    document.querySelectorAll("[data-plan-card]").forEach((card) => {
+        card.classList.toggle("active-plan-card", getPlanKey(card.dataset.planCard) === currentPlanKey);
+    });
+
+    document.querySelectorAll("[data-plan-action]").forEach((button) => {
+        const planName = button.dataset.planAction;
+        const isActivePlan = getPlanKey(planName) === currentPlanKey;
+        button.disabled = isActivePlan || (planName === "Standard Free Plan" && currentProfile.is_pro);
+        button.classList.toggle("checkout-plan-btn", !isActivePlan && planName !== "Standard Free Plan");
+
+        if (isActivePlan) {
+            button.innerText = "Active Plan";
+        } else if (planName === "Standard Free Plan") {
+            button.innerText = currentProfile.is_pro ? "Downgrade" : "Free Plan";
+        } else if (planName === "Starter Unlimited") {
+            button.innerText = "Choose Starter";
+        } else if (planName === "Pro Unlimited Plan") {
+            button.innerText = "Subscribe";
+        } else if (planName === "Business Unlimited") {
+            button.innerText = "Choose Business";
+        }
+    });
 }
 
 async function renderAdminDashboard() {
@@ -2453,6 +2719,7 @@ function resizeCanvas() {
 }
 
 function startDrawing(e) {
+    if (!hasSignatureAccess()) return;
     sigDrawing = true;
     const pos = getMousePos(sigCanvas, e);
     sigCtx.beginPath();
@@ -2497,7 +2764,7 @@ function updateSignaturePreview() {
     const dataUrl = sigCanvas.toDataURL();
     const blank = isCanvasBlank(sigCanvas);
     const img = document.getElementById("preview-signature-img");
-    const showSignature = document.getElementById("show-signature-checkbox")?.checked;
+    const showSignature = hasSignatureAccess() && document.getElementById("show-signature-checkbox")?.checked;
     if (!blank && showSignature) {
         img.src = dataUrl;
         img.style.display = "block";
@@ -2516,7 +2783,7 @@ function updateSignaturePreview() {
         printedNameEl.style.display = printedName && showSignature ? "block" : "none";
     }
 
-    const clientSignature = document.getElementById("request-client-signature-checkbox")?.checked;
+    const clientSignature = hasSignatureAccess() && document.getElementById("request-client-signature-checkbox")?.checked;
     const clientSignatureBox = document.getElementById("preview-client-signature-container");
     if (clientSignatureBox) clientSignatureBox.style.display = clientSignature ? "flex" : "none";
 }
@@ -2534,11 +2801,21 @@ function applyInvoiceThemeColor() {
     const printLayout = currentProfile.print_layout || "pdf";
     const thermal = printLayout.startsWith("thermal");
     const printable = document.getElementById("invoice-printable-area");
+    const previewContainer = document.querySelector(".invoice-preview-container");
+    const previewModeLabel = document.getElementById("preview-mode-label");
     if (printable) {
         printable.style.setProperty('--invoice-accent', thermal ? "#000000" : color);
         printable.style.setProperty('--invoice-text', thermal ? "#000000" : textColor);
         printable.classList.remove("print-layout-pdf", "print-layout-thermal-80", "print-layout-thermal-58");
         printable.classList.add(`print-layout-${printLayout}`);
+    }
+
+    if (previewContainer) {
+        previewContainer.classList.toggle("thermal-preview", thermal);
+    }
+
+    if (previewModeLabel) {
+        previewModeLabel.textContent = thermal ? "\ud83d\udcdf Thermal Receipt Preview" : "\ud83d\udcc4 PDF / A4 Layout Preview";
     }
     
     // Apply selected class to settings presets
@@ -2569,9 +2846,12 @@ Object.assign(window, {
     saveInvoiceToDatabase,
     editInvoice,
     deleteInvoice,
+    restoreInvoice,
+    permanentlyDeleteInvoice,
     setupAuthenticatedUser,
     renderAdminDashboard,
     renderAdminFeatureInbox,
+    renderTrashBin,
     savePaymentSettings,
     sendPasswordResetCode,
     configurePasswordResetForm,

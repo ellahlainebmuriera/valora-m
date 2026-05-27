@@ -137,6 +137,14 @@
                         Invoice History
                     </a>
                 </li>
+                <li class="nav-item" data-tab="trash-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21.75H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
+                        Trash Bin
+                    </a>
+                </li>
                 <li class="nav-item" data-tab="clients-tab">
                     <a class="nav-link">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -179,16 +187,11 @@
                     </a>
                 </li>
                 <li class="nav-item" data-tab="billing-tab">
-                    <a class="nav-link" style="color: var(--accent);">
+                    <a class="nav-link">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                         </svg>
                         Subscription
-                    </a>
-                </li>
-                <li class="nav-item mobile-logout-nav" id="mobile-logout-nav">
-                    <a class="nav-link" style="color: var(--danger);">
-                        Logout
                     </a>
                 </li>
             </nav>
@@ -220,12 +223,24 @@
                         <h1>SaaS Dashboard</h1>
                         <p>Track invoices, clients, and business income from one simple dashboard.</p>
                     </div>
-                    <button class="btn btn-primary" onclick="switchTab('creator-tab')">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        New Invoice/Estimate
-                    </button>
+                    <div class="dashboard-actions">
+                        <select id="dashboard-date-filter">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="month">This Month</option>
+                            <option value="last30">Last 30 Days</option>
+                            <option value="year">This Year</option>
+                            <option value="custom">Custom Date</option>
+                        </select>
+                        <input type="date" id="dashboard-custom-start" style="display: none;">
+                        <input type="date" id="dashboard-custom-end" style="display: none;">
+                        <button class="btn btn-primary" onclick="switchTab('creator-tab')">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            New Invoice/Estimate
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Metrics Grid -->
@@ -282,11 +297,12 @@
                                     <th>Status</th>
                                     <th>Type</th>
                                     <th>Total Amount</th>
+                                    <th style="width: 80px; text-align: right;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No data yet. Create your first invoice to get started.</td>
+                                    <td colspan="7" style="text-align: center; color: var(--text-muted);">No data yet. Create your first invoice to get started.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -375,7 +391,7 @@
 
                         <!-- Line Items Dynamic Adder Table -->
                         <div style="margin-top: 10px;">
-                            <label style="font-weight: 700;">Line Items (Mga Ibinebenta/Serbisyo)</label>
+                            <label style="font-weight: 700;">Line Items (Products/Services)</label>
                             <table class="items-editor-table">
                                 <thead>
                                     <tr>
@@ -420,7 +436,10 @@
                             </div>
                             <div class="form-group">
                                 <label for="document-photo-file">Attach Photos (optional)</label>
-                                <input type="file" id="document-photo-file" accept="image/*" multiple>
+                                <div class="drop-zone" id="document-photo-drop-zone">
+                                    <span>Drop photos here or click to choose</span>
+                                    <input type="file" id="document-photo-file" accept="image/*" multiple>
+                                </div>
                             </div>
                         </div>
 
@@ -430,7 +449,11 @@
                         </div>
 
                         <!-- Signature Draw Pad Canvas Section -->
-                        <div class="signature-section">
+                        <div class="signature-section" id="signature-section">
+                            <div class="feature-overlay" id="signature-pro-overlay">
+                                <strong>Pro Feature</strong>
+                                <span>Upgrade to Pro or Business to add saved signatures.</span>
+                            </div>
                             <label style="font-weight: 700;">Your Signature</label>
                             <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 5px;">Draw your signature only if you want it saved on this document.</p>
                             <div class="signature-pad-wrapper">
@@ -457,6 +480,7 @@
 
                     <!-- Right Panel: Live Invoice Design Preview (White-Labeled) -->
                     <div class="invoice-preview-container">
+                        <div class="preview-mode-label" id="preview-mode-label">PDF / A4 Layout Preview</div>
                         <div class="invoice-paper" id="invoice-printable-area">
                             <div class="preview-header">
                                 <div>
@@ -558,7 +582,7 @@
                 </div>
 
                 <div class="panel-card" style="flex-grow: 1;">
-                    <div style="display: flex; gap: 15px; width: 100%;">
+                    <div class="history-filters">
                         <input type="text" id="invoice-search-input" placeholder="Search by Client Name or Invoice Number..." style="flex-grow: 1;">
                         <select id="invoice-filter-status" style="width: 200px;">
                             <option value="">-- Filter Status --</option>
@@ -567,6 +591,8 @@
                             <option value="Draft">Draft</option>
                             <option value="Overdue">Overdue</option>
                         </select>
+                        <input type="date" id="invoice-filter-start" title="Start date">
+                        <input type="date" id="invoice-filter-end" title="End date">
                     </div>
 
                     <div class="table-wrapper">
@@ -584,6 +610,38 @@
                             </thead>
                             <tbody>
                                 <!-- Injected rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TRASH BIN TAB ==================== -->
+            <div id="trash-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Trash Bin</h1>
+                        <p>Recover deleted invoices within 30 days before permanent cleanup.</p>
+                    </div>
+                </div>
+
+                <div class="panel-card" style="flex-grow: 1;">
+                    <div class="panel-title">Deleted Invoices & Estimates</div>
+                    <div class="table-wrapper">
+                        <table class="custom-table" id="trash-invoices-table">
+                            <thead>
+                                <tr>
+                                    <th>Doc Number</th>
+                                    <th>Customer</th>
+                                    <th>Date Deleted</th>
+                                    <th>Total Amount</th>
+                                    <th style="width: 220px; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted);">Trash bin is empty.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -663,13 +721,13 @@
                         
                         <div class="form-group" id="logo-upload-group">
                             <label>Business / Store Logo</label>
-                            <div class="logo-upload-wrapper">
+                            <div class="logo-upload-wrapper drop-zone" id="logo-drop-zone">
                                 <div class="logo-preview-box" id="settings-logo-preview">
                                     <span>LOGO</span>
                                 </div>
                                 <div>
                                     <input type="file" id="store-logo-file" accept="image/*" style="display: none;">
-                                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('store-logo-file').click()">Select Logo Image</button>
+                                    <button class="btn btn-secondary btn-sm" type="button" onclick="document.getElementById('store-logo-file').click()">Select Logo Image</button>
                                     <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Supports JPEG/PNG. Max size 2MB.</p>
                                 </div>
                             </div>
@@ -1057,7 +1115,7 @@
 
                 <div class="pricing-plans">
                     <!-- Standard Plan -->
-                    <div class="plan-card">
+                    <div class="plan-card" data-plan-card="Standard Free Plan">
                         <div class="plan-name">Standard Free Plan</div>
                         <div class="plan-price">PHP 0<span> / Month</span></div>
                         <ul class="plan-features">
@@ -1077,11 +1135,11 @@
                                 ❌ No custom logo upload
                             </li>
                         </ul>
-                        <button class="btn btn-secondary" style="width: 100%; margin-top: auto;" disabled>Active Plan</button>
+                        <button class="btn btn-secondary plan-action-btn" data-plan-action="Standard Free Plan" style="width: 100%; margin-top: auto;" disabled>Active Plan</button>
                     </div>
 
                     <!-- Starter Unlimited Plan -->
-                    <div class="plan-card">
+                    <div class="plan-card" data-plan-card="Starter Unlimited">
                         <div class="plan-name">Starter Unlimited</div>
                         <div class="plan-price">PHP 149<span> / Month</span></div>
                         <ul class="plan-features">
@@ -1098,11 +1156,11 @@
                                 Print / save as PDF
                             </li>
                         </ul>
-                        <button class="btn btn-secondary checkout-plan-btn" data-plan="Starter Unlimited" data-price="149" style="width: 100%; margin-top: auto;">Choose Starter</button>
+                        <button class="btn btn-secondary checkout-plan-btn plan-action-btn" data-plan="Starter Unlimited" data-plan-action="Starter Unlimited" data-price="149" style="width: 100%; margin-top: auto;">Choose Starter</button>
                     </div>
 
                     <!-- Pro Unlimited Plan -->
-                    <div class="plan-card popular">
+                    <div class="plan-card popular" data-plan-card="Pro Unlimited Plan">
                         <div class="popular-badge">Most Popular</div>
                         <div class="plan-name">Pro Unlimited Plan</div>
                         <div class="plan-price">PHP 249<span> / Month</span></div>
@@ -1124,11 +1182,11 @@
                                 Signature and receipt color customization
                             </li>
                         </ul>
-                        <button class="btn btn-primary checkout-plan-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-price="249" style="width: 100%; margin-top: auto;">Subscribe</button>
+                        <button class="btn btn-primary checkout-plan-btn plan-action-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-plan-action="Pro Unlimited Plan" data-price="249" style="width: 100%; margin-top: auto;">Subscribe</button>
                     </div>
 
                     <!-- Business Unlimited Plan -->
-                    <div class="plan-card">
+                    <div class="plan-card" data-plan-card="Business Unlimited">
                         <div class="plan-name">Business Unlimited</div>
                         <div class="plan-price">PHP 449<span> / Month</span></div>
                         <ul class="plan-features">
@@ -1157,7 +1215,7 @@
                                 Offline mode on the same device/browser
                             </li>
                         </ul>
-                        <button class="btn btn-accent checkout-plan-btn" data-plan="Business Unlimited" data-price="449" style="width: 100%; margin-top: auto;">Choose Business</button>
+                        <button class="btn btn-accent checkout-plan-btn plan-action-btn" data-plan="Business Unlimited" data-plan-action="Business Unlimited" data-price="449" style="width: 100%; margin-top: auto;">Choose Business</button>
                     </div>
                 </div>
             </div>

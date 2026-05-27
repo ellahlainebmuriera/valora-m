@@ -81,8 +81,14 @@ CREATE TABLE public.invoices (
     signature_data_url TEXT,
     printed_name TEXT,
     request_client_signature BOOLEAN DEFAULT FALSE,
-    photo_data_urls JSONB DEFAULT '[]'::jsonb
+    photo_data_urls JSONB DEFAULT '[]'::jsonb,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
+
+-- For existing Supabase projects, run these safely if the table already exists.
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
 
 -- Enable RLS for Invoices
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;

@@ -164,6 +164,14 @@ body {
     border: 1px solid transparent;
 }
 
+.nav-item[data-tab="billing-tab"] .nav-link {
+    color: var(--text-medium);
+}
+
+.nav-item[data-tab="billing-tab"].active .nav-link {
+    color: #ffffff;
+}
+
 .nav-link svg {
     width: 20px;
     height: 20px;
@@ -205,6 +213,7 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
 }
 
 .user-avatar {
@@ -221,15 +230,17 @@ body {
 
 .user-meta {
     overflow: hidden;
+    min-width: 0;
+    flex: 1;
 }
 
 .user-name {
-    font-size: 14px;
+    font-size: clamp(11px, 0.8vw, 13px);
     font-weight: 600;
     color: var(--text-main);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .user-tier {
@@ -304,6 +315,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
 }
 
 .tab-title-container h1 {
@@ -316,6 +328,21 @@ body {
 .tab-title-container p {
     color: var(--text-muted);
     font-size: 15px;
+}
+
+.dashboard-actions,
+.history-filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dashboard-actions select,
+.dashboard-actions input,
+.history-filters input,
+.history-filters select {
+    min-width: 150px;
 }
 
 /* Buttons */
@@ -380,6 +407,29 @@ body {
     padding: 8px 16px;
     font-size: 12px;
     border-radius: 8px;
+}
+
+.icon-action {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-medium);
+    cursor: pointer;
+}
+
+.icon-action.danger {
+    color: #fca5a5;
+}
+
+.icon-action:hover {
+    border-color: var(--danger);
+    color: #ffffff;
+    background: rgba(239, 68, 68, 0.16);
 }
 
 /* Cards & Dashboard Metrics */
@@ -678,6 +728,26 @@ textarea:focus {
     }
 }
 
+@media (max-width: 768px) {
+    .tab-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-actions,
+    .history-filters {
+        width: 100%;
+    }
+
+    .dashboard-actions select,
+    .dashboard-actions input,
+    .dashboard-actions .btn,
+    .history-filters input,
+    .history-filters select {
+        width: 100%;
+    }
+}
+
 .panel-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -840,6 +910,27 @@ textarea:focus {
 .invoice-preview-container {
     position: sticky;
     top: 40px;
+    transition: all 0.2s ease;
+}
+
+.preview-mode-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.invoice-preview-container.thermal-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .invoice-paper {
@@ -1074,6 +1165,11 @@ textarea:focus {
 .plan-card.popular {
     border: 2px solid var(--primary);
     box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.plan-card.active-plan-card {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2), 0 0 22px rgba(16, 185, 129, 0.12);
 }
 
 .popular-badge {
@@ -1328,10 +1424,37 @@ textarea:focus {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    position: relative;
+}
+
+.signature-section.signature-locked > :not(.feature-overlay) {
+    opacity: 0.22;
+    pointer-events: none;
+}
+
+.feature-overlay {
+    display: none;
+    position: absolute;
+    inset: 18px 0 0;
+    z-index: 2;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    border: 1px dashed var(--primary);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.82);
+    color: var(--text-main);
+    padding: 18px;
+}
+
+.signature-section.signature-locked .feature-overlay {
+    display: flex;
 }
 
 .signature-pad-wrapper {
-    background-color: #ffffff;
+    background-color: #64748b;
     border: 2px solid var(--border-color);
     border-radius: 12px;
     position: relative;
@@ -1346,7 +1469,30 @@ textarea:focus {
     height: 100%;
     display: block;
     cursor: crosshair;
-    background-color: #ffffff;
+    background-color: #64748b;
+}
+
+.drop-zone {
+    border: 1px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.drop-zone.drag-over {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.12);
+}
+
+#document-photo-drop-zone {
+    display: grid;
+    gap: 10px;
+}
+
+#document-photo-drop-zone span {
+    color: var(--text-muted);
+    font-size: 12px;
 }
 
 .signature-controls {
