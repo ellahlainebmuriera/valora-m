@@ -406,6 +406,7 @@
                                     <!-- Dynamic rows injected here -->
                                 </tbody>
                             </table>
+                            <datalist id="saved-items-datalist"></datalist>
                             <button class="btn btn-secondary btn-sm" id="add-line-item-btn" style="margin-top: 15px; width: 100%;">+ Add Line Item</button>
                         </div>
 
@@ -575,6 +576,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <!-- ==================== INVOICE HISTORY TAB ==================== -->
@@ -708,6 +710,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <!-- ==================== SETTINGS TAB (White-Labeled Settings) ==================== -->
@@ -723,6 +726,17 @@
                     <!-- Store Customizer Settings -->
                     <div class="panel-card">
                         <div class="panel-title">1. Your Business Details</div>
+
+                        <div class="business-profile-toolbar">
+                            <div class="form-group">
+                                <label for="business-profile-select">Active Business Profile</label>
+                                <select id="business-profile-select">
+                                    <option value="primary-store">My Business</option>
+                                </select>
+                                <p id="business-profile-limit-note" style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">1/1 business profile slots used.</p>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" type="button" id="add-business-profile-btn">+ Add Store</button>
+                        </div>
                         
                         <div class="form-group" id="logo-upload-group">
                             <label>Business / Store Logo</label>
@@ -856,6 +870,40 @@
                         <button class="btn btn-primary" id="save-store-settings-btn" style="width: 100%;">Save Store Settings</button>
                     </div>
 
+                    <div class="panel-card">
+                        <div class="panel-title">2. Per-Store Item Catalog</div>
+                        <p id="catalog-access-note" style="font-size: 13px; color: var(--text-medium);">Saved items are attached to the active business profile.</p>
+                        <div class="form-group">
+                            <label for="catalog-item-name">Item Name</label>
+                            <input type="text" id="catalog-item-name" placeholder="Example: Consultation Fee">
+                        </div>
+                        <div class="form-group">
+                            <label for="catalog-item-price">Unit Price</label>
+                            <input type="number" id="catalog-item-price" min="0" step="any" placeholder="0.00">
+                        </div>
+                        <label class="checkbox-row">
+                            <input type="checkbox" id="clone-catalog-checkbox">
+                            Clone this catalog item to all my business profiles
+                        </label>
+                        <button class="btn btn-secondary" id="save-catalog-item-btn" type="button" style="width: 100%; margin-top: 12px;">Save Catalog Item</button>
+                        <div class="table-wrapper" style="margin-top: 16px; max-height: 280px; overflow-y: auto;">
+                            <table class="custom-table" id="saved-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Unit Price</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; color: var(--text-muted);">No saved items for this store yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <!-- Owner-only branding settings -->
                     <div class="panel-card" id="owner-branding-card" style="border: 2px dashed var(--primary); display: none;">
                         <div class="panel-title" style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
@@ -935,6 +983,30 @@
                             <div>
                                 <strong>Which device did you use?</strong>
                                 <p style="color: var(--text-muted); font-size: 14px;">Mention if you were using phone, tablet, or computer.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card support-tickets-card">
+                    <div class="panel-title">In-App Bug Reporting System</div>
+                    <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Create a support ticket and continue the conversation with Valora EM support here.</p>
+                    <div class="ticket-create-grid">
+                        <input type="text" id="ticket-subject" placeholder="Ticket subject">
+                        <textarea id="ticket-message" rows="3" placeholder="Describe the issue, billing concern, or feature problem."></textarea>
+                        <button class="btn btn-primary" type="button" id="create-ticket-btn">Create Ticket</button>
+                    </div>
+                    <div class="ticket-workspace">
+                        <div class="ticket-list" id="ticket-list">
+                            <div class="ticket-empty">No tickets yet.</div>
+                        </div>
+                        <div class="ticket-thread">
+                            <div class="ticket-thread-messages" id="ticket-thread-messages">
+                                <div class="ticket-empty">Select a ticket to view the conversation.</div>
+                            </div>
+                            <div class="ticket-reply-row">
+                                <textarea id="ticket-reply" rows="2" placeholder="Write a reply..."></textarea>
+                                <button class="btn btn-secondary" type="button" id="send-ticket-message-btn">Send Reply</button>
                             </div>
                         </div>
                     </div>
@@ -1069,6 +1141,26 @@
                     </div>
 
                 </div>
+
+                <div class="panel-card admin-ticket-panel">
+                    <div class="panel-title">Support Ticket Inbox</div>
+                    <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Read customer bug reports and send replies from the owner dashboard.</p>
+                    <div class="ticket-workspace admin-ticket-workspace">
+                        <div class="ticket-list" id="admin-ticket-list">
+                            <div class="ticket-empty">No tickets yet.</div>
+                        </div>
+                        <div class="ticket-thread">
+                            <div class="ticket-thread-messages" id="admin-ticket-thread-messages">
+                                <div class="ticket-empty">Select a ticket to view the conversation.</div>
+                            </div>
+                            <div class="ticket-reply-row">
+                                <textarea id="admin-ticket-reply" rows="2" placeholder="Reply as Valora EM support..."></textarea>
+                                <button class="btn btn-secondary" type="button" id="admin-send-ticket-message-btn">Reply</button>
+                                <button class="btn btn-accent" type="button" id="admin-resolve-ticket-btn">Mark Resolved</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- ==================== ADMIN FEATURE INBOX TAB ==================== -->
@@ -1118,7 +1210,86 @@
                     </div>
                 </div>
 
-                <div class="pricing-plans">
+                <div class="billing-cycle-toggle" aria-label="Billing cycle">
+                    <button type="button" class="active" data-billing-cycle="monthly">Monthly</button>
+                    <button type="button" data-billing-cycle="yearly">Yearly</button>
+                </div>
+
+                <div class="pricing-plans pricing-plans-matrix">
+                    <div class="plan-card plan-free" data-plan-card="Standard Free Plan">
+                        <div class="plan-name">Standard Free Plan</div>
+                        <div class="plan-price" data-plan-price="Standard Free Plan">PHP 0<span> / Month</span></div>
+                        <p class="regular-rate" data-regular-rate="Standard Free Plan">Free forever.</p>
+                        <ul class="plan-features">
+                            <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>5 free documents</small></span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Customer Directory & Advanced History</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Print / Save as PDF</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Store Logo Upload</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Signature & Receipt Customization</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Multi-Store Business Profiles</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Preferred Language Receipts</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Offline Mode & Item Catalog</span></li>
+                        </ul>
+                        <button class="btn btn-secondary plan-action-btn" data-plan-action="Standard Free Plan" style="width: 100%; margin-top: auto;" disabled>Active Plan</button>
+                    </div>
+
+                    <div class="plan-card plan-starter" data-plan-card="Starter Unlimited">
+                        <div class="plan-name">Starter Unlimited</div>
+                        <div class="plan-price" data-plan-price="Starter Unlimited">PHP 149<span> / Month</span></div>
+                        <p class="regular-rate" data-regular-rate="Starter Unlimited">Renews at PHP 298 / Month.</p>
+                        <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
+                        <ul class="plan-features">
+                            <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
+                            <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
+                            <li><span class="feature-icon">✓</span><span>Print / Save as PDF</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Store Logo Upload</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Signature & Receipt Customization</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Multi-Store Business Profiles</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Preferred Language Receipts</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Offline Mode & Item Catalog</span></li>
+                        </ul>
+                        <button class="btn btn-secondary checkout-plan-btn plan-action-btn" data-plan="Starter Unlimited" data-plan-action="Starter Unlimited" data-price="149" data-regular-price="298" data-billing-cycle="monthly" style="width: 100%; margin-top: auto;">Choose Starter</button>
+                    </div>
+
+                    <div class="plan-card popular plan-pro" data-plan-card="Pro Unlimited Plan">
+                        <div class="popular-badge">Most Popular</div>
+                        <div class="plan-name">Pro Unlimited Plan</div>
+                        <div class="plan-price" data-plan-price="Pro Unlimited Plan">PHP 249<span> / Month</span></div>
+                        <p class="regular-rate" data-regular-rate="Pro Unlimited Plan">Renews at PHP 498 / Month.</p>
+                        <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
+                        <ul class="plan-features">
+                            <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
+                            <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
+                            <li><span class="feature-icon">✓</span><span>Print / Save as PDF</span></li>
+                            <li><span class="feature-icon">✓</span><span>Store Logo Upload</span></li>
+                            <li><span class="feature-icon">✓</span><span>Signature & Receipt Customization</span></li>
+                            <li><span class="feature-icon">✓</span><span>Multi-Store Business Profiles <small>Up to 2 stores</small></span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Preferred Language Receipts</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Offline Mode & Item Catalog</span></li>
+                        </ul>
+                        <button class="btn btn-primary checkout-plan-btn plan-action-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-plan-action="Pro Unlimited Plan" data-price="249" data-regular-price="498" data-billing-cycle="monthly" style="width: 100%; margin-top: auto;">Choose Pro</button>
+                    </div>
+
+                    <div class="plan-card plan-business" data-plan-card="Business Unlimited">
+                        <div class="plan-name">Business Unlimited</div>
+                        <div class="plan-price" data-plan-price="Business Unlimited">PHP 449<span> / Month</span></div>
+                        <p class="regular-rate" data-regular-rate="Business Unlimited">Renews at PHP 898 / Month.</p>
+                        <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
+                        <ul class="plan-features">
+                            <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
+                            <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
+                            <li><span class="feature-icon">✓</span><span>Print / Save as PDF</span></li>
+                            <li><span class="feature-icon">✓</span><span>Store Logo Upload</span></li>
+                            <li><span class="feature-icon">✓</span><span>Signature & Receipt Customization</span></li>
+                            <li><span class="feature-icon">✓</span><span>Multi-Store Business Profiles <small>Unlimited stores</small></span></li>
+                            <li><span class="feature-icon">✓</span><span>Preferred Language Receipts</span></li>
+                            <li><span class="feature-icon">✓</span><span>Offline Mode & Item Catalog</span></li>
+                        </ul>
+                        <button class="btn btn-accent checkout-plan-btn plan-action-btn" data-plan="Business Unlimited" data-plan-action="Business Unlimited" data-price="449" data-regular-price="898" data-billing-cycle="monthly" style="width: 100%; margin-top: auto;">Choose Business</button>
+                    </div>
+                </div>
+
+                <div class="pricing-plans legacy-pricing-plans" style="display: none;">
                     <!-- Standard Plan -->
                     <div class="plan-card" data-plan-card="Standard Free Plan">
                         <div class="plan-name">Standard Free Plan</div>
@@ -1130,14 +1301,11 @@
                             </li>
                             <li>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                                Estimates at Invoices Creator
+                                Create Invoices & Estimates
                             </li>
                             <li>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                                 Standard Print Layout
-                            </li>
-                            <li style="color: var(--text-muted);">
-                                ❌ No custom logo upload
                             </li>
                         </ul>
                         <button class="btn btn-secondary plan-action-btn" data-plan-action="Standard Free Plan" style="width: 100%; margin-top: auto;" disabled>Active Plan</button>
@@ -1154,7 +1322,7 @@
                             </li>
                             <li>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                                Client list at invoice history
+                                Customer Directory & Advanced History
                             </li>
                             <li>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
@@ -1187,7 +1355,7 @@
                                 Signature and receipt color customization
                             </li>
                         </ul>
-                        <button class="btn btn-primary checkout-plan-btn plan-action-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-plan-action="Pro Unlimited Plan" data-price="249" style="width: 100%; margin-top: auto;">Subscribe</button>
+                        <button class="btn btn-primary checkout-plan-btn plan-action-btn" data-plan="Pro Unlimited Plan" data-plan-action="Pro Unlimited Plan" data-price="249" style="width: 100%; margin-top: auto;">Choose Pro</button>
                     </div>
 
                     <!-- Business Unlimited Plan -->

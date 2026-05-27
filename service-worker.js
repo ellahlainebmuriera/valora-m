@@ -3,6 +3,7 @@ const APP_ASSETS = [
   "/",
   "/index.html",
   "/official-website.html",
+  "/refund-policy.html",
   "/app.html",
   "/styles.css",
   "/app.js",

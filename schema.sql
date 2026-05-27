@@ -23,7 +23,9 @@ CREATE TABLE public.profiles (
     app_appearance TEXT DEFAULT 'dark',
     saved_signature_data_url TEXT,
     save_signature_permission BOOLEAN DEFAULT FALSE,
-    plan TEXT DEFAULT 'Standard Free Plan'
+    plan TEXT DEFAULT 'Standard Free Plan',
+    billing_cycle TEXT DEFAULT 'monthly',
+    last_business_info_updated_at TIMESTAMP WITH TIME ZONE
 );
 
 -- Enable RLS for Profiles
@@ -89,6 +91,9 @@ CREATE TABLE public.invoices (
 -- For existing Supabase projects, run these safely if the table already exists.
 ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS business_profile_id TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS billing_cycle TEXT DEFAULT 'monthly';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_business_info_updated_at TIMESTAMP WITH TIME ZONE;
 
 -- Enable RLS for Invoices
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
@@ -172,7 +177,107 @@ CREATE POLICY "Owner admin can view all feature requests."
     ON public.feature_requests FOR SELECT
     USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
 
--- 5. Automate Profile Creation on Sign Up
+-- 6. Multi-store business profiles, per-store catalog, and support tickets
+CREATE TABLE IF NOT EXISTS public.business_profiles (
+    id TEXT PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    company_name TEXT DEFAULT 'My Business',
+    email TEXT,
+    phone TEXT,
+    address TEXT,
+    logo_url TEXT,
+    currency TEXT DEFAULT 'PHP',
+    currency_symbol TEXT DEFAULT 'PHP',
+    default_tax_rate NUMERIC DEFAULT 12.0,
+    invoice_theme_color TEXT DEFAULT '#6366f1',
+    invoice_text_color TEXT DEFAULT '#1e293b',
+    preferred_language TEXT DEFAULT 'en',
+    custom_language_name TEXT DEFAULT '',
+    print_layout TEXT DEFAULT 'pdf',
+    app_appearance TEXT DEFAULT 'dark',
+    saved_signature_data_url TEXT,
+    save_signature_permission BOOLEAN DEFAULT FALSE,
+    last_business_info_updated_at TIMESTAMP WITH TIME ZONE
+);
+
+ALTER TABLE public.business_profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can CRUD their own business profiles." ON public.business_profiles;
+CREATE POLICY "Users can CRUD their own business profiles."
+    ON public.business_profiles FOR ALL
+    USING (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+    WITH CHECK (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+CREATE TABLE IF NOT EXISTS public.saved_items (
+    id TEXT PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    business_profile_id TEXT REFERENCES public.business_profiles(id) ON DELETE CASCADE NOT NULL,
+    name TEXT NOT NULL,
+    unit_price NUMERIC DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    UNIQUE (business_profile_id, name)
+);
+
+ALTER TABLE public.saved_items ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can CRUD saved catalog items for their stores." ON public.saved_items;
+CREATE POLICY "Users can CRUD saved catalog items for their stores."
+    ON public.saved_items FOR ALL
+    USING (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+    WITH CHECK (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+CREATE TABLE IF NOT EXISTS public.tickets (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    customer_email TEXT,
+    subject TEXT NOT NULL,
+    status TEXT DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'RESOLVED')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can create and read their own tickets." ON public.tickets;
+CREATE POLICY "Users can create and read their own tickets."
+    ON public.tickets FOR ALL
+    USING (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+    WITH CHECK (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+CREATE TABLE IF NOT EXISTS public.ticket_messages (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    ticket_id UUID REFERENCES public.tickets(id) ON DELETE CASCADE NOT NULL,
+    sender_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    message TEXT NOT NULL,
+    is_admin_reply BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.ticket_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users and owner can read ticket messages." ON public.ticket_messages;
+CREATE POLICY "Users and owner can read ticket messages."
+    ON public.ticket_messages FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.tickets
+            WHERE public.tickets.id = public.ticket_messages.ticket_id
+            AND (public.tickets.user_id = auth.uid() OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+        )
+    );
+
+DROP POLICY IF EXISTS "Users and owner can send ticket messages." ON public.ticket_messages;
+CREATE POLICY "Users and owner can send ticket messages."
+    ON public.ticket_messages FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.tickets
+            WHERE public.tickets.id = public.ticket_messages.ticket_id
+            AND (public.tickets.user_id = auth.uid() OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+        )
+    );
+
+-- 7. Automate Profile Creation on Sign Up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN

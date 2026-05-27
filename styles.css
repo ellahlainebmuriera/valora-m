@@ -32,6 +32,25 @@
     --border-radius: 16px;
     --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     --glass-blur: blur(12px);
+    --pricing-free-check: #4B5563;
+    --pricing-locked-icon: #9CA3AF;
+    --pricing-locked-text: rgba(156, 163, 175, 0.6);
+    --pricing-pro-accent: #7C3AED;
+    --pricing-pro-check: #6D28D9;
+    --pricing-pro-bg: #F5F3FF;
+    --pricing-biz-accent: #059669;
+    --pricing-biz-check: #047857;
+    --pricing-biz-bg: #ECFDF5;
+}
+
+[data-theme="dark"] {
+    --pricing-free-check: #9CA3AF;
+    --pricing-pro-accent: #A78BFA;
+    --pricing-pro-check: #C4B5FD;
+    --pricing-pro-bg: #2E1065;
+    --pricing-biz-accent: #34D399;
+    --pricing-biz-check: #6EE7B7;
+    --pricing-biz-bg: #064E3B;
 }
 
 /* Rebranding custom theme presets (applied dynamically via JS) */
@@ -699,6 +718,169 @@ textarea:focus {
     align-items: start;
 }
 
+.business-profile-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+    padding: 14px;
+    margin-bottom: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.checkbox-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-medium);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.support-tickets-card,
+.admin-ticket-panel {
+    margin-top: 24px;
+}
+
+.ticket-create-grid {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(220px, 1fr) auto;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 16px;
+}
+
+.ticket-create-grid textarea {
+    min-height: 48px;
+}
+
+.ticket-workspace {
+    display: grid;
+    grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
+    gap: 14px;
+    min-height: 360px;
+}
+
+.ticket-list,
+.ticket-thread {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    overflow: hidden;
+}
+
+.ticket-list {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.ticket-list-item {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-main);
+    padding: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.ticket-list-item.active,
+.ticket-list-item:hover {
+    background: var(--primary-glow);
+}
+
+.ticket-list-item span {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.ticket-thread {
+    display: flex;
+    flex-direction: column;
+}
+
+.ticket-thread-messages {
+    flex: 1;
+    padding: 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ticket-message {
+    max-width: 78%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.ticket-message.admin-reply {
+    margin-left: auto;
+    border-color: rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.ticket-message span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+.ticket-message p {
+    white-space: pre-wrap;
+    font-size: 13px;
+}
+
+.ticket-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 16px;
+    text-align: center;
+}
+
+.ticket-reply-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 10px;
+    padding: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.toast-message {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 500;
+    max-width: 420px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    color: var(--text-main);
+    box-shadow: var(--card-shadow);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+}
+
+.toast-message.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-error {
+    border-color: rgba(239, 68, 68, 0.45);
+}
+
 .settings-layout .panel-card:first-child,
 .admin-layout .panel-card:first-child {
     grid-row: span 2;
@@ -725,6 +907,15 @@ textarea:focus {
     .settings-layout .panel-card:first-child,
     .admin-layout .panel-card:first-child {
         grid-row: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .business-profile-toolbar,
+    .ticket-create-grid,
+    .ticket-workspace,
+    .ticket-reply-row {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1266,6 +1457,35 @@ textarea:focus {
     width: 100%;
 }
 
+.billing-cycle-toggle {
+    display: flex;
+    width: fit-content;
+    margin: 0 auto 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 4px;
+    background: var(--bg-card);
+}
+
+.billing-cycle-toggle button {
+    border: 0;
+    border-radius: 9px;
+    padding: 9px 18px;
+    background: transparent;
+    color: var(--text-medium);
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.billing-cycle-toggle button.active {
+    background: var(--primary-gradient);
+    color: #fff;
+}
+
+.pricing-plans-matrix .plan-card {
+    min-height: 620px;
+}
+
 @media (max-width: 1180px) {
     .pricing-plans {
         grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -1297,6 +1517,14 @@ textarea:focus {
 .plan-card.active-plan-card {
     border-color: var(--accent);
     box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2), 0 0 22px rgba(16, 185, 129, 0.12);
+}
+
+.plan-card.plan-pro {
+    border-color: var(--pricing-pro-accent);
+}
+
+.plan-card.plan-business {
+    border-color: var(--pricing-biz-accent);
 }
 
 .popular-badge {
@@ -1331,6 +1559,17 @@ textarea:focus {
     font-weight: normal;
 }
 
+.regular-rate,
+.promo-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: -12px;
+}
+
+.promo-note {
+    line-height: 1.45;
+}
+
 .plan-features {
     list-style: none;
     display: flex;
@@ -1341,14 +1580,56 @@ textarea:focus {
 
 .plan-features li {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
+    min-height: 34px;
 }
 
 .plan-features li svg {
     color: var(--accent);
     width: 18px;
     height: 18px;
+}
+
+.plan-features .feature-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--accent);
+}
+
+.plan-free .plan-features .feature-icon {
+    color: var(--pricing-free-check);
+}
+
+.plan-pro .plan-features .feature-icon {
+    color: var(--pricing-pro-check);
+}
+
+.plan-business .plan-features .feature-icon {
+    color: var(--pricing-biz-check);
+}
+
+.plan-features li.locked {
+    color: var(--pricing-locked-text);
+    opacity: 0.5;
+}
+
+.plan-features li.locked .feature-icon {
+    color: var(--pricing-locked-icon);
+}
+
+.plan-features small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 11px;
 }
 
 /* Payment Gateway Simulator Modal */

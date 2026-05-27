@@ -62,6 +62,46 @@ const CURRENCY_ALIASES = {
     YEN: "JPY"
 };
 
+const PROFILE_LOCK_MESSAGE = "Profile Lock active. Free and Starter tiers can only modify business profile settings once every 7 days. Upgrade to Pro or Business Plan to manage multiple stores instantly.";
+
+const BUSINESS_PROFILE_FIELDS = [
+    "company_name",
+    "email",
+    "phone",
+    "address",
+    "logo_url",
+    "currency",
+    "currency_symbol",
+    "default_tax_rate",
+    "invoice_theme_color",
+    "invoice_text_color",
+    "preferred_language",
+    "custom_language_name",
+    "print_layout",
+    "app_appearance",
+    "saved_signature_data_url",
+    "save_signature_permission",
+    "last_business_info_updated_at"
+];
+
+const PLAN_RATES = {
+    "Standard Free Plan": { promoMonthly: 0, regularMonthly: 0 },
+    "Starter Unlimited": { promoMonthly: 149, regularMonthly: 298 },
+    "Pro Unlimited Plan": { promoMonthly: 249, regularMonthly: 498 },
+    "Business Unlimited": { promoMonthly: 449, regularMonthly: 898 }
+};
+
+const PRICING_FEATURES = [
+    { label: "Create Invoices & Estimates", allowed: ["Standard Free Plan", "Starter Unlimited", "Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Customer Directory & Advanced History", allowed: ["Starter Unlimited", "Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Print / Save as PDF", allowed: ["Starter Unlimited", "Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Store Logo Upload", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Signature & Receipt Customization", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Multi-Store Business Profiles", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Preferred Language Receipts", allowed: ["Business Unlimited"] },
+    { label: "Offline Mode & Item Catalog", allowed: ["Business Unlimited"] }
+];
+
 function normalizeCurrencyCode(code) {
     const normalized = String(code || "PHP").trim().toUpperCase();
     const mapped = CURRENCY_ALIASES[normalized] || normalized;
@@ -104,15 +144,25 @@ let currentProfile = {
     print_layout: "pdf",
     app_appearance: "dark",
     saved_signature_data_url: "",
-    save_signature_permission: false
+    save_signature_permission: false,
+    last_business_info_updated_at: null,
+    billing_cycle: "monthly"
 };
 
 let clients = [];
 let invoices = [];
+let businessProfiles = [];
+let activeBusinessProfileId = null;
+let savedItems = [];
+let supportTickets = [];
+let ticketMessages = [];
+let activeTicketId = null;
+let activeAdminTicketId = null;
 let currentInvoiceItems = []; // List of { id, description, quantity, unit_price }
 let currentDocumentPhotos = [];
 let activeEditingInvoiceId = null;
 let thermalEcoModeEnabled = false;
+let billingCycle = "monthly";
 let paymentSettings = {
     paymongoPublicKey: "",
     paymongoSecretKey: "",
@@ -188,18 +238,63 @@ function getPlanKey(planName) {
         .trim();
 }
 
+function getPlanCanonicalName(planName) {
+    const key = getPlanKey(planName);
+    if (key.includes("business")) return "Business Unlimited";
+    if (key.includes("pro")) return "Pro Unlimited Plan";
+    if (key.includes("starter")) return "Starter Unlimited";
+    return "Standard Free Plan";
+}
+
+function isFreeOrStarterPlan() {
+    const planName = getPlanCanonicalName(getCurrentPlanName());
+    return !isAdminUser() && (planName === "Standard Free Plan" || planName === "Starter Unlimited");
+}
+
+function getBusinessProfileLimit() {
+    const planName = getPlanCanonicalName(getCurrentPlanName());
+    if (isAdminUser() || planName === "Business Unlimited") return Infinity;
+    if (planName === "Pro Unlimited Plan") return 2;
+    return 1;
+}
+
 function hasLogoUploadAccess() {
-    const planName = getCurrentPlanName();
+    const planName = getPlanCanonicalName(getCurrentPlanName());
     return isAdminUser() || planName === "Pro Unlimited Plan" || planName === "Business Unlimited";
 }
 
 function hasSignatureAccess() {
-    const planName = getCurrentPlanName();
+    const planName = getPlanCanonicalName(getCurrentPlanName());
     return isAdminUser() || planName === "Pro Unlimited Plan" || planName === "Business Unlimited";
+}
+
+function hasCatalogAccess() {
+    return isAdminUser() || getPlanCanonicalName(getCurrentPlanName()) === "Business Unlimited";
 }
 
 function hasCloudConnection() {
     return isCloudActive && (!window.navigator || window.navigator.onLine !== false);
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function createToast(message, isError = false) {
+    const toast = document.createElement("div");
+    toast.className = `toast-message ${isError ? "toast-error" : "toast-success"}`;
+    toast.innerText = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add("visible"), 20);
+    setTimeout(() => {
+        toast.classList.remove("visible");
+        setTimeout(() => toast.remove(), 250);
+    }, 4200);
 }
 
 function setResetCodeStatus(message, isError = false) {
@@ -645,8 +740,11 @@ function switchTab(tabId) {
         updateBillingTabUI();
     } else if (tabId === "admin-tab") {
         renderAdminDashboard();
+        renderAdminTickets();
     } else if (tabId === "admin-feature-inbox-tab") {
         renderAdminFeatureInbox();
+    } else if (tabId === "feature-requests-tab") {
+        renderSupportTickets();
     }
 }
 
@@ -730,6 +828,8 @@ async function setupAuthenticatedUser(user) {
         currentProfile = getLocalStorageProfile(user.email);
         loadLocalData();
     }
+
+    ensureBusinessProfiles();
     
     // Update application-wide profile displays
     document.getElementById("user-display-email").innerText = currentProfile.email || currentUser.email;
@@ -771,6 +871,8 @@ async function setupAuthenticatedUser(user) {
     }
     
     applyAppearance();
+    populateBusinessProfileSwitcher();
+    renderSavedItemsUI();
     renderLogoAccessUI();
     renderSignatureAccessUI();
     applyInvoiceThemeColor();
@@ -812,6 +914,8 @@ function getLocalStorageProfile(email) {
 function applyAppearance() {
     const mode = currentProfile.app_appearance || "dark";
     document.body.classList.toggle("theme-light", mode === "light");
+    document.documentElement.dataset.theme = mode === "light" ? "light" : "dark";
+    document.body.dataset.theme = mode === "light" ? "light" : "dark";
     const appearanceSelect = document.getElementById("app-appearance");
     if (appearanceSelect) appearanceSelect.value = mode;
 }
@@ -871,6 +975,207 @@ function renderSignatureAccessUI() {
 function saveLocalStorageProfile() {
     const key = `valoraem_profile_${currentUser.email}`;
     localStorage.setItem(key, JSON.stringify(currentProfile));
+}
+
+function getLocalBusinessProfilesKey() {
+    return `valoraem_business_profiles_${currentUser.email}`;
+}
+
+function getLocalSavedItemsKey() {
+    return `valoraem_saved_items_${currentUser.email}`;
+}
+
+function getLocalTicketsKey() {
+    return "valoraem_support_tickets";
+}
+
+function getLocalTicketMessagesKey() {
+    return "valoraem_ticket_messages";
+}
+
+function normalizeBusinessProfile(profile = {}) {
+    const id = profile.id || profile.business_profile_id || `biz-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    return {
+        id,
+        user_id: profile.user_id || currentUser?.id || null,
+        created_at: profile.created_at || new Date().toISOString(),
+        company_name: profile.company_name || currentProfile.company_name || "My Business",
+        email: profile.email || currentProfile.email || currentUser?.email || "",
+        phone: profile.phone || "",
+        address: profile.address || "",
+        logo_url: profile.logo_url || "",
+        currency: normalizeCurrencyCode(profile.currency || currentProfile.currency || "PHP"),
+        currency_symbol: getCurrencySymbol(profile.currency || currentProfile.currency || "PHP"),
+        default_tax_rate: Number(profile.default_tax_rate ?? currentProfile.default_tax_rate ?? 12),
+        invoice_theme_color: profile.invoice_theme_color || currentProfile.invoice_theme_color || "#6366f1",
+        invoice_text_color: profile.invoice_text_color || currentProfile.invoice_text_color || "#1e293b",
+        preferred_language: profile.preferred_language || currentProfile.preferred_language || "en",
+        custom_language_name: profile.custom_language_name || currentProfile.custom_language_name || "",
+        print_layout: profile.print_layout || currentProfile.print_layout || "pdf",
+        app_appearance: profile.app_appearance || currentProfile.app_appearance || "dark",
+        saved_signature_data_url: profile.saved_signature_data_url || "",
+        save_signature_permission: !!profile.save_signature_permission,
+        last_business_info_updated_at: profile.last_business_info_updated_at || null
+    };
+}
+
+function getActiveBusinessProfile() {
+    if (!businessProfiles.length) return null;
+    return businessProfiles.find((profile) => profile.id === activeBusinessProfileId) || businessProfiles[0];
+}
+
+function applyBusinessProfileToCurrentProfile(profile) {
+    if (!profile) return;
+    BUSINESS_PROFILE_FIELDS.forEach((field) => {
+        if (field in profile) currentProfile[field] = profile[field];
+    });
+    currentProfile.currency = normalizeCurrencyCode(currentProfile.currency);
+    currentProfile.currency_symbol = getCurrencySymbol(currentProfile.currency);
+}
+
+function syncActiveBusinessProfileFromCurrentForm() {
+    const profile = getActiveBusinessProfile();
+    if (!profile) return null;
+
+    profile.company_name = document.getElementById("store-name")?.value.trim() || "My Business";
+    profile.email = document.getElementById("store-email")?.value.trim() || currentUser?.email || "";
+    profile.phone = document.getElementById("store-phone")?.value.trim() || "";
+    profile.address = document.getElementById("store-address")?.value.trim() || "";
+    profile.currency = normalizeCurrencyCode(document.getElementById("store-currency")?.value || "PHP");
+    profile.currency_symbol = getCurrencySymbol(profile.currency);
+    profile.default_tax_rate = parseFloat(document.getElementById("inv-tax-rate")?.value) || currentProfile.default_tax_rate || 12;
+    profile.preferred_language = hasBusinessUnlimited() ? document.getElementById("preferred-language")?.value || "en" : "en";
+    profile.custom_language_name = hasBusinessUnlimited() ? document.getElementById("custom-language-name")?.value.trim() || "" : "";
+    profile.invoice_theme_color = currentProfile.invoice_theme_color || profile.invoice_theme_color || "#6366f1";
+    profile.invoice_text_color = document.getElementById("invoice-text-color")?.value || "#1e293b";
+    profile.print_layout = document.getElementById("print-layout")?.value || "pdf";
+    profile.app_appearance = document.getElementById("app-appearance")?.value || "dark";
+    profile.logo_url = currentProfile.logo_url || profile.logo_url || "";
+    profile.saved_signature_data_url = currentProfile.saved_signature_data_url || profile.saved_signature_data_url || "";
+    profile.save_signature_permission = !!currentProfile.save_signature_permission;
+    return profile;
+}
+
+function ensureBusinessProfiles() {
+    businessProfiles = (businessProfiles || []).map(normalizeBusinessProfile);
+    if (!businessProfiles.length) {
+        businessProfiles = [normalizeBusinessProfile({ id: "primary-store" })];
+    }
+
+    const savedActiveId = currentUser ? localStorage.getItem(`valoraem_active_business_profile_${currentUser.email}`) : null;
+    activeBusinessProfileId = activeBusinessProfileId || savedActiveId || businessProfiles[0].id;
+    if (!businessProfiles.some((profile) => profile.id === activeBusinessProfileId)) {
+        activeBusinessProfileId = businessProfiles[0].id;
+    }
+
+    if (currentUser) {
+        localStorage.setItem(`valoraem_active_business_profile_${currentUser.email}`, activeBusinessProfileId);
+    }
+
+    applyBusinessProfileToCurrentProfile(getActiveBusinessProfile());
+}
+
+function populateBusinessProfileSwitcher() {
+    const select = document.getElementById("business-profile-select");
+    const addButton = document.getElementById("add-business-profile-btn");
+    const note = document.getElementById("business-profile-limit-note");
+    if (!select) return;
+
+    const limit = getBusinessProfileLimit();
+    select.innerHTML = "";
+    businessProfiles.forEach((profile) => {
+        const option = document.createElement("option");
+        option.value = profile.id;
+        option.textContent = profile.company_name || "My Business";
+        select.appendChild(option);
+    });
+    select.value = activeBusinessProfileId;
+    select.disabled = businessProfiles.length <= 1 && limit <= 1;
+
+    if (addButton) {
+        addButton.disabled = businessProfiles.length >= limit;
+        addButton.innerText = limit === Infinity ? "+ Add Store" : `+ Add Store (${businessProfiles.length}/${limit})`;
+    }
+
+    if (note) {
+        const limitText = limit === Infinity ? "Unlimited business profiles on Business Unlimited." : `${businessProfiles.length}/${limit} business profile slots used.`;
+        note.innerText = `${limitText} Free and Starter can only edit business details once every 7 days.`;
+    }
+}
+
+function applyActiveBusinessProfileToForms() {
+    const profile = getActiveBusinessProfile();
+    if (!profile) return;
+    applyBusinessProfileToCurrentProfile(profile);
+
+    document.getElementById("store-name").value = currentProfile.company_name || "My Business";
+    document.getElementById("store-email").value = currentProfile.email || "";
+    document.getElementById("store-phone").value = currentProfile.phone || "";
+    document.getElementById("store-address").value = currentProfile.address || "";
+    document.getElementById("store-currency").value = currentProfile.currency || "PHP";
+    syncCurrencySymbolFromCode();
+    if (document.getElementById("preferred-language")) document.getElementById("preferred-language").value = currentProfile.preferred_language || "en";
+    if (document.getElementById("custom-language-name")) document.getElementById("custom-language-name").value = currentProfile.custom_language_name || "";
+    if (document.getElementById("invoice-text-color")) document.getElementById("invoice-text-color").value = currentProfile.invoice_text_color || "#1e293b";
+    if (document.getElementById("print-layout")) document.getElementById("print-layout").value = currentProfile.print_layout || "pdf";
+    if (document.getElementById("creator-print-layout")) document.getElementById("creator-print-layout").value = currentProfile.print_layout || "pdf";
+    if (document.getElementById("app-appearance")) document.getElementById("app-appearance").value = currentProfile.app_appearance || "dark";
+
+    document.getElementById("user-avatar-char").innerText = (currentProfile.company_name || "M").charAt(0).toUpperCase();
+    populateBusinessProfileSwitcher();
+    renderLogoAccessUI();
+    applyAppearance();
+    applyInvoiceThemeColor();
+    renderSavedItemsUI();
+    updateInvoicePreview();
+}
+
+function isBusinessProfileLocked(profile) {
+    if (!isFreeOrStarterPlan()) return false;
+    if (!profile?.last_business_info_updated_at) return false;
+    const lastUpdate = new Date(profile.last_business_info_updated_at);
+    if (Number.isNaN(lastUpdate.getTime())) return false;
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    return Date.now() - lastUpdate.getTime() < sevenDaysMs;
+}
+
+async function persistActiveBusinessProfile() {
+    const profile = getActiveBusinessProfile();
+    if (!profile) return;
+
+    if (hasCloudConnection()) {
+        const payload = { ...profile, user_id: currentUser.id };
+        const { error } = await supabaseClient
+            .from("business_profiles")
+            .upsert(payload, { onConflict: "id" });
+        if (error) {
+            console.warn("Business profile cloud save skipped:", error.message);
+        }
+    }
+
+    saveLocalData();
+}
+
+async function addBusinessProfile() {
+    const limit = getBusinessProfileLimit();
+    if (businessProfiles.length >= limit) {
+        alert("Your current plan can only manage one business profile. Upgrade to Pro or Business to add more stores.");
+        return;
+    }
+
+    const name = window.prompt("Business profile name", "New Store");
+    if (!name) return;
+
+    const profile = normalizeBusinessProfile({
+        id: `biz-${Date.now()}`,
+        company_name: name,
+        email: currentUser?.email || ""
+    });
+    businessProfiles.push(profile);
+    activeBusinessProfileId = profile.id;
+    localStorage.setItem(`valoraem_active_business_profile_${currentUser.email}`, activeBusinessProfileId);
+    await persistActiveBusinessProfile();
+    applyActiveBusinessProfileToForms();
 }
 
 function loadPaymentSettings() {
@@ -1121,6 +1426,324 @@ function initDropZone(dropZoneId, inputId, onFiles) {
     });
 }
 
+function getStoreSavedItems(profileId = activeBusinessProfileId) {
+    return savedItems.filter((item) => item.business_profile_id === profileId);
+}
+
+function renderSavedItemsDatalist() {
+    const datalist = document.getElementById("saved-items-datalist");
+    if (!datalist) return;
+    datalist.innerHTML = getStoreSavedItems()
+        .map((item) => `<option value="${escapeHtml(item.name)}">${currentProfile.currency_symbol}${Number(item.unit_price || 0).toFixed(2)}</option>`)
+        .join("");
+}
+
+function renderSavedItemsUI() {
+    renderSavedItemsDatalist();
+    const tbody = document.querySelector("#saved-items-table tbody");
+    const status = document.getElementById("catalog-access-note");
+    const itemName = document.getElementById("catalog-item-name");
+    const itemPrice = document.getElementById("catalog-item-price");
+    const saveButton = document.getElementById("save-catalog-item-btn");
+    const cloneCheckbox = document.getElementById("clone-catalog-checkbox");
+    const allowed = hasCatalogAccess();
+
+    [itemName, itemPrice, saveButton, cloneCheckbox].forEach((element) => {
+        if (element) element.disabled = !allowed;
+    });
+    if (status) {
+        status.innerText = allowed
+            ? "Saved items are attached to the active business profile."
+            : "Item catalog is available on Business Unlimited because it syncs across store profiles.";
+    }
+    if (!tbody) return;
+
+    const items = getStoreSavedItems();
+    tbody.innerHTML = "";
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No saved items for this store yet.</td></tr>';
+        return;
+    }
+
+    items.forEach((item) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${escapeHtml(item.name)}</td>
+            <td>${currentProfile.currency_symbol}${Number(item.unit_price || 0).toFixed(2)}</td>
+            <td style="text-align: right;">
+                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteCatalogItem('${item.id}')">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+async function saveCatalogItem() {
+    if (!hasCatalogAccess()) {
+        alert("Item catalog is available on Business Unlimited.");
+        return;
+    }
+
+    const name = document.getElementById("catalog-item-name").value.trim();
+    const price = parseFloat(document.getElementById("catalog-item-price").value) || 0;
+    const cloneAcrossStores = document.getElementById("clone-catalog-checkbox").checked;
+    if (!name) {
+        alert("Please enter an item name.");
+        return;
+    }
+
+    const targetProfiles = cloneAcrossStores ? businessProfiles : [getActiveBusinessProfile()];
+    const newItems = targetProfiles.filter(Boolean).map((profile) => ({
+        id: `saved-${Date.now()}-${profile.id}-${Math.random().toString(36).slice(2, 6)}`,
+        user_id: currentUser.id,
+        business_profile_id: profile.id,
+        name,
+        unit_price: price,
+        created_at: new Date().toISOString()
+    }));
+
+    savedItems = savedItems.filter((item) => !newItems.some((newItem) =>
+        newItem.business_profile_id === item.business_profile_id &&
+        item.name.toLowerCase() === name.toLowerCase()
+    ));
+    savedItems.push(...newItems);
+
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient.from("saved_items").upsert(newItems, { onConflict: "business_profile_id,name" });
+        if (error) console.warn("Saved item cloud save skipped:", error.message);
+    }
+
+    saveLocalData();
+    document.getElementById("catalog-item-name").value = "";
+    document.getElementById("catalog-item-price").value = "";
+    renderSavedItemsUI();
+    createToast("Catalog item saved.");
+}
+
+async function deleteCatalogItem(id) {
+    savedItems = savedItems.filter((item) => item.id !== id);
+    if (hasCloudConnection()) {
+        await supabaseClient.from("saved_items").delete().eq("id", id);
+    }
+    saveLocalData();
+    renderSavedItemsUI();
+}
+
+function maybeApplySavedItem(itemId, description) {
+    const item = getStoreSavedItems().find((savedItem) => savedItem.name.toLowerCase() === String(description || "").trim().toLowerCase());
+    if (!item) return;
+    const invoiceItem = currentInvoiceItems.find((line) => line.id === itemId);
+    if (!invoiceItem) return;
+    invoiceItem.unit_price = Number(item.unit_price) || 0;
+    const priceInput = document.querySelector(`[data-item-price="${itemId}"]`);
+    const rowTotal = document.querySelector(`[data-row-total="${itemId}"]`);
+    if (priceInput) priceInput.value = invoiceItem.unit_price;
+    if (rowTotal) rowTotal.innerText = `${currentProfile.currency_symbol}${(invoiceItem.quantity * invoiceItem.unit_price).toFixed(2)}`;
+    updateInvoicePreview();
+}
+
+async function fetchSupportTickets() {
+    if (!hasCloudConnection()) return;
+    const ticketsQuery = isAdminUser()
+        ? supabaseClient.from("tickets").select("*").order("created_at", { ascending: false })
+        : supabaseClient.from("tickets").select("*").order("created_at", { ascending: false });
+    const { data: dbTickets, error: ticketsError } = await ticketsQuery;
+    if (!ticketsError && dbTickets) {
+        supportTickets = dbTickets;
+    } else if (ticketsError) {
+        console.warn("Tickets table not ready yet:", ticketsError.message);
+    }
+
+    const { data: dbMessages, error: messagesError } = await supabaseClient
+        .from("ticket_messages")
+        .select("*")
+        .order("created_at", { ascending: true });
+    if (!messagesError && dbMessages) {
+        ticketMessages = dbMessages;
+    } else if (messagesError) {
+        console.warn("Ticket messages table not ready yet:", messagesError.message);
+    }
+}
+
+function getVisibleTickets() {
+    if (isAdminUser()) return supportTickets;
+    return supportTickets.filter((ticket) => ticket.user_id === currentUser.id || ticket.customer_email === currentUser.email);
+}
+
+function renderTicketList(containerId, adminMode = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const tickets = adminMode ? supportTickets : getVisibleTickets();
+    const selectedId = adminMode ? activeAdminTicketId : activeTicketId;
+    if (!tickets.length) {
+        container.innerHTML = '<div class="ticket-empty">No tickets yet.</div>';
+        return;
+    }
+
+    container.innerHTML = tickets.map((ticket) => `
+        <button class="ticket-list-item ${ticket.id === selectedId ? "active" : ""}" onclick="${adminMode ? "selectAdminTicket" : "selectTicket"}('${ticket.id}')">
+            <strong>${escapeHtml(ticket.subject)}</strong>
+            <span>${escapeHtml(ticket.customer_email || "Customer")} - ${ticket.status}</span>
+        </button>
+    `).join("");
+}
+
+function renderTicketThread(ticketId, threadId, replyBoxId, statusButtonId = null) {
+    const thread = document.getElementById(threadId);
+    const replyBox = document.getElementById(replyBoxId);
+    const statusButton = statusButtonId ? document.getElementById(statusButtonId) : null;
+    if (!thread) return;
+    const ticket = supportTickets.find((item) => item.id === ticketId);
+    if (!ticket) {
+        thread.innerHTML = '<div class="ticket-empty">Select a ticket to view the conversation.</div>';
+        if (replyBox) replyBox.disabled = true;
+        if (statusButton) statusButton.disabled = true;
+        return;
+    }
+
+    const messages = ticketMessages.filter((message) => message.ticket_id === ticketId);
+    thread.innerHTML = messages.map((message) => `
+        <div class="ticket-message ${message.is_admin_reply ? "admin-reply" : ""}">
+            <span>${message.is_admin_reply ? "Valora EM Support" : escapeHtml(ticket.customer_email || "Customer")}</span>
+            <p>${escapeHtml(message.message)}</p>
+        </div>
+    `).join("") || '<div class="ticket-empty">No messages yet.</div>';
+    if (replyBox) replyBox.disabled = ticket.status === "RESOLVED";
+    if (statusButton) statusButton.disabled = ticket.status === "RESOLVED";
+}
+
+async function createSupportTicket() {
+    const subjectInput = document.getElementById("ticket-subject");
+    const messageInput = document.getElementById("ticket-message");
+    const subject = subjectInput.value.trim();
+    const message = messageInput.value.trim();
+    if (!subject || !message) {
+        alert("Please enter both subject and message.");
+        return;
+    }
+
+    const ticket = {
+        id: `ticket-${Date.now()}`,
+        user_id: currentUser.id,
+        customer_email: currentUser.email,
+        subject,
+        status: "OPEN",
+        created_at: new Date().toISOString()
+    };
+    const firstMessage = {
+        id: `msg-${Date.now()}`,
+        ticket_id: ticket.id,
+        sender_id: currentUser.id,
+        message,
+        is_admin_reply: false,
+        created_at: new Date().toISOString()
+    };
+
+    if (hasCloudConnection()) {
+        const { data, error } = await supabaseClient.from("tickets").insert({
+            user_id: currentUser.id,
+            customer_email: currentUser.email,
+            subject,
+            status: "OPEN"
+        }).select();
+        if (error) {
+            alert("Unable to create ticket right now. Please try again later.");
+            console.error(error);
+            return;
+        }
+        ticket.id = data[0].id;
+        firstMessage.ticket_id = ticket.id;
+        const { error: messageError } = await supabaseClient.from("ticket_messages").insert({
+            ticket_id: ticket.id,
+            sender_id: currentUser.id,
+            message,
+            is_admin_reply: false
+        });
+        if (messageError) console.warn("Ticket message cloud save skipped:", messageError.message);
+    }
+
+    supportTickets.unshift(ticket);
+    ticketMessages.push(firstMessage);
+    activeTicketId = ticket.id;
+    saveLocalData();
+    subjectInput.value = "";
+    messageInput.value = "";
+    renderSupportTickets();
+    createToast("Ticket sent to Valora EM support.");
+}
+
+function selectTicket(id) {
+    activeTicketId = id;
+    renderSupportTickets();
+}
+
+function selectAdminTicket(id) {
+    activeAdminTicketId = id;
+    renderAdminTickets();
+}
+
+async function sendTicketMessage(adminMode = false) {
+    const ticketId = adminMode ? activeAdminTicketId : activeTicketId;
+    const input = document.getElementById(adminMode ? "admin-ticket-reply" : "ticket-reply");
+    const message = input?.value.trim();
+    if (!ticketId || !message) {
+        alert("Please select a ticket and type a message.");
+        return;
+    }
+
+    const messageRecord = {
+        id: `msg-${Date.now()}`,
+        ticket_id: ticketId,
+        sender_id: currentUser.id,
+        message,
+        is_admin_reply: adminMode,
+        created_at: new Date().toISOString()
+    };
+
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient.from("ticket_messages").insert({
+            ticket_id: ticketId,
+            sender_id: currentUser.id,
+            message,
+            is_admin_reply: adminMode
+        });
+        if (error) console.warn("Ticket reply cloud save skipped:", error.message);
+    }
+
+    ticketMessages.push(messageRecord);
+    input.value = "";
+    saveLocalData();
+    adminMode ? renderAdminTickets() : renderSupportTickets();
+}
+
+async function updateTicketStatus(status) {
+    if (!activeAdminTicketId) return;
+    const ticket = supportTickets.find((item) => item.id === activeAdminTicketId);
+    if (!ticket) return;
+    ticket.status = status;
+    if (hasCloudConnection()) {
+        await supabaseClient.from("tickets").update({ status }).eq("id", activeAdminTicketId);
+    }
+    saveLocalData();
+    renderAdminTickets();
+}
+
+async function renderSupportTickets() {
+    if (hasCloudConnection()) await fetchSupportTickets();
+    const tickets = getVisibleTickets();
+    if (!activeTicketId && tickets.length) activeTicketId = tickets[0].id;
+    renderTicketList("ticket-list", false);
+    renderTicketThread(activeTicketId, "ticket-thread-messages", "ticket-reply");
+}
+
+async function renderAdminTickets() {
+    if (!isAdminUser()) return;
+    if (hasCloudConnection()) await fetchSupportTickets();
+    if (!activeAdminTicketId && supportTickets.length) activeAdminTicketId = supportTickets[0].id;
+    renderTicketList("admin-ticket-list", true);
+    renderTicketThread(activeAdminTicketId, "admin-ticket-thread-messages", "admin-ticket-reply", "admin-resolve-ticket-btn");
+}
+
 // Fetch database records from Supabase
 async function fetchCloudData() {
     try {
@@ -1131,6 +1754,28 @@ async function fetchCloudData() {
         // Fetch Invoices
         const { data: dbInvoices } = await supabaseClient.from("invoices").select("*").order("created_at", { ascending: false });
         invoices = dbInvoices || [];
+
+        const { data: dbBusinessProfiles, error: businessProfileError } = await supabaseClient
+            .from("business_profiles")
+            .select("*")
+            .order("created_at", { ascending: true });
+        if (!businessProfileError && dbBusinessProfiles) {
+            businessProfiles = dbBusinessProfiles;
+        } else if (businessProfileError) {
+            console.warn("Business profiles table not ready yet:", businessProfileError.message);
+        }
+
+        const { data: dbSavedItems, error: savedItemsError } = await supabaseClient
+            .from("saved_items")
+            .select("*")
+            .order("name", { ascending: true });
+        if (!savedItemsError && dbSavedItems) {
+            savedItems = dbSavedItems;
+        } else if (savedItemsError) {
+            console.warn("Saved items table not ready yet:", savedItemsError.message);
+        }
+
+        await fetchSupportTickets();
     } catch (err) {
         console.error("Error fetching cloud data:", err);
     }
@@ -1141,6 +1786,10 @@ function loadLocalData() {
     const suffix = currentUser.email;
     clients = JSON.parse(localStorage.getItem(`valoraem_clients_${suffix}`)) || [];
     invoices = JSON.parse(localStorage.getItem(`valoraem_invoices_${suffix}`)) || [];
+    businessProfiles = JSON.parse(localStorage.getItem(getLocalBusinessProfilesKey())) || [];
+    savedItems = JSON.parse(localStorage.getItem(getLocalSavedItemsKey())) || [];
+    supportTickets = JSON.parse(localStorage.getItem(getLocalTicketsKey())) || [];
+    ticketMessages = JSON.parse(localStorage.getItem(getLocalTicketMessagesKey())) || [];
 }
 
 // Save database records to LocalStorage
@@ -1148,6 +1797,10 @@ function saveLocalData() {
     const suffix = currentUser.email;
     localStorage.setItem(`valoraem_clients_${suffix}`, JSON.stringify(clients));
     localStorage.setItem(`valoraem_invoices_${suffix}`, JSON.stringify(invoices));
+    localStorage.setItem(getLocalBusinessProfilesKey(), JSON.stringify(businessProfiles));
+    localStorage.setItem(getLocalSavedItemsKey(), JSON.stringify(savedItems));
+    localStorage.setItem(getLocalTicketsKey(), JSON.stringify(supportTickets));
+    localStorage.setItem(getLocalTicketMessagesKey(), JSON.stringify(ticketMessages));
 }
 
 function getActiveInvoices() {
@@ -1532,9 +2185,35 @@ function initAppEventListeners() {
         updateInvoicePreview();
     });
 
+    document.getElementById("business-profile-select").addEventListener("change", (event) => {
+        activeBusinessProfileId = event.target.value;
+        localStorage.setItem(`valoraem_active_business_profile_${currentUser.email}`, activeBusinessProfileId);
+        applyActiveBusinessProfileToForms();
+    });
+    document.getElementById("add-business-profile-btn").addEventListener("click", addBusinessProfile);
+    document.getElementById("save-catalog-item-btn").addEventListener("click", saveCatalogItem);
+    document.getElementById("create-ticket-btn").addEventListener("click", createSupportTicket);
+    document.getElementById("send-ticket-message-btn").addEventListener("click", () => sendTicketMessage(false));
+    document.getElementById("admin-send-ticket-message-btn").addEventListener("click", () => sendTicketMessage(true));
+    document.getElementById("admin-resolve-ticket-btn").addEventListener("click", () => updateTicketStatus("RESOLVED"));
+
+    document.querySelectorAll("[data-billing-cycle]").forEach((button) => {
+        button.addEventListener("click", () => {
+            billingCycle = button.dataset.billingCycle || "monthly";
+            updatePricingDisplay();
+        });
+    });
+
     // Store Settings Save
     document.getElementById("save-store-settings-btn").addEventListener("click", async () => {
+        const activeProfile = getActiveBusinessProfile();
+        if (isBusinessProfileLocked(activeProfile)) {
+            createToast(PROFILE_LOCK_MESSAGE, true);
+            return;
+        }
+
         currentProfile.company_name = document.getElementById("store-name").value.trim();
+        currentProfile.email = document.getElementById("store-email").value.trim();
         currentProfile.phone = document.getElementById("store-phone").value.trim();
         currentProfile.address = document.getElementById("store-address").value.trim();
         currentProfile.currency = normalizeCurrencyCode(document.getElementById("store-currency").value);
@@ -1545,11 +2224,17 @@ function initAppEventListeners() {
         currentProfile.invoice_text_color = document.getElementById("invoice-text-color").value || "#1e293b";
         currentProfile.print_layout = document.getElementById("print-layout").value || "pdf";
         currentProfile.app_appearance = document.getElementById("app-appearance").value || "dark";
+        currentProfile.last_business_info_updated_at = new Date().toISOString();
+        const updatedBusinessProfile = syncActiveBusinessProfileFromCurrentForm();
+        if (updatedBusinessProfile) {
+            updatedBusinessProfile.last_business_info_updated_at = currentProfile.last_business_info_updated_at;
+        }
         
         if (isCloudActive) {
             const { error } = await supabaseClient.from("profiles")
                 .update({
                     company_name: currentProfile.company_name,
+                    email: currentProfile.email,
                     phone: currentProfile.phone,
                     address: currentProfile.address,
                     currency: currentProfile.currency,
@@ -1559,12 +2244,17 @@ function initAppEventListeners() {
                     invoice_theme_color: currentProfile.invoice_theme_color,
                     invoice_text_color: currentProfile.invoice_text_color,
                     print_layout: currentProfile.print_layout,
-                    app_appearance: currentProfile.app_appearance
+                    app_appearance: currentProfile.app_appearance,
+                    last_business_info_updated_at: currentProfile.last_business_info_updated_at
                 })
                 .eq("id", currentUser.id);
             if (error) alert("Error updating settings: " + error.message);
-            else alert("Store details saved successfully!");
+            else {
+                await persistActiveBusinessProfile();
+                alert("Store details saved successfully!");
+            }
         } else {
+            await persistActiveBusinessProfile();
             saveLocalStorageProfile();
             alert("Store details saved locally!");
         }
@@ -1572,6 +2262,7 @@ function initAppEventListeners() {
         // Refresh logos/previews
         document.getElementById("user-avatar-char").innerText = currentProfile.company_name.charAt(0).toUpperCase();
         applyAppearance();
+        populateBusinessProfileSwitcher();
         renderLogoAccessUI();
         applyInvoiceThemeColor();
         updateInvoicePreview();
@@ -1733,12 +2424,16 @@ function initAppEventListeners() {
     document.querySelectorAll(".checkout-plan-btn").forEach((button) => {
         button.addEventListener("click", () => {
             const price = button.dataset.price || "249";
+            const regularPrice = button.dataset.regularPrice || price;
+            const cycle = button.dataset.billingCycle || billingCycle;
             const plan = button.dataset.plan || "Pro Unlimited";
             document.getElementById("payment-modal").dataset.plan = plan;
             document.getElementById("payment-modal").dataset.price = price;
+            document.getElementById("payment-modal").dataset.regularPrice = regularPrice;
+            document.getElementById("payment-modal").dataset.billingCycle = cycle;
             document.getElementById("payment-plan-name").innerText = plan;
-            document.getElementById("payment-plan-amount").innerText = `PHP ${price}.00`;
-            document.getElementById("submit-mock-payment-btn").innerText = `Pay PHP ${price}.00 Now`;
+            document.getElementById("payment-plan-amount").innerText = `PHP ${Number(price).toLocaleString("en-PH")}.00 ${cycle === "yearly" ? "/ Year" : "/ Month"}`;
+            document.getElementById("submit-mock-payment-btn").innerText = `Pay PHP ${Number(price).toLocaleString("en-PH")}.00 Now`;
             document.getElementById("payment-modal").style.display = "flex";
         });
     });
@@ -1842,20 +2537,21 @@ function addNewLineItem(description = "", quantity = 1, unit_price = 0) {
 function renderEditorItems() {
     const tbody = document.getElementById("invoice-items-body");
     tbody.innerHTML = "";
+    renderSavedItemsDatalist();
     
     currentInvoiceItems.forEach((item, index) => {
         const row = document.createElement("tr");
         row.innerHTML = `
             <td>
-                <input type="text" value="${item.description}" placeholder="Description of item/service..." 
-                    oninput="updateItemField('${item.id}', 'description', this.value)">
+                <input type="text" value="${escapeHtml(item.description)}" list="saved-items-datalist" placeholder="Description of item/service..." 
+                    oninput="updateItemField('${item.id}', 'description', this.value); maybeApplySavedItem('${item.id}', this.value)">
             </td>
             <td>
                 <input type="number" value="${item.quantity}" min="0.1" step="any" style="text-align: center;"
                     oninput="updateItemField('${item.id}', 'quantity', parseFloat(this.value) || 0)">
             </td>
             <td>
-                <input type="number" value="${item.unit_price}" min="0" step="any"
+                <input type="number" value="${item.unit_price}" min="0" step="any" data-item-price="${item.id}"
                     oninput="updateItemField('${item.id}', 'unit_price', parseFloat(this.value) || 0)">
             </td>
             <td data-row-total="${item.id}" style="text-align: right; font-weight: 600; padding-right: 10px;">
@@ -2085,6 +2781,7 @@ async function saveInvoiceToDatabase() {
         printed_name: printedName,
         request_client_signature: requestClientSignature,
         photo_data_urls: currentDocumentPhotos,
+        business_profile_id: activeBusinessProfileId,
         is_deleted: false,
         deleted_at: null
     };
@@ -2222,6 +2919,10 @@ async function editInvoice(id) {
     if (!inv) return;
     
     activeEditingInvoiceId = inv.id;
+    if (inv.business_profile_id && businessProfiles.some((profile) => profile.id === inv.business_profile_id)) {
+        activeBusinessProfileId = inv.business_profile_id;
+        applyActiveBusinessProfileToForms();
+    }
     
     document.getElementById("inv-number").value = inv.invoice_number;
     document.getElementById("inv-type").value = inv.type;
@@ -2431,6 +3132,38 @@ function renderDashboard() {
 }
 
 // Update billing view stats
+function getPlanPrice(planName, cycle = billingCycle) {
+    const rates = PLAN_RATES[getPlanCanonicalName(planName)] || PLAN_RATES["Standard Free Plan"];
+    const multiplier = cycle === "yearly" ? 12 : 1;
+    return {
+        promo: rates.promoMonthly * multiplier,
+        regular: rates.regularMonthly * multiplier,
+        suffix: cycle === "yearly" ? " / Year" : " / Month"
+    };
+}
+
+function updatePricingDisplay() {
+    document.querySelectorAll("[data-billing-cycle]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.billingCycle === billingCycle);
+    });
+
+    document.querySelectorAll("[data-plan-price]").forEach((priceEl) => {
+        const planName = priceEl.dataset.planPrice;
+        const rate = getPlanPrice(planName);
+        priceEl.innerHTML = `PHP ${rate.promo.toLocaleString("en-PH")}<span>${rate.suffix}</span>`;
+        document.querySelectorAll(`[data-plan-action="${planName}"]`).forEach((button) => {
+            button.dataset.price = String(rate.promo);
+            button.dataset.regularPrice = String(rate.regular);
+            button.dataset.billingCycle = billingCycle;
+        });
+    });
+
+    document.querySelectorAll("[data-regular-rate]").forEach((regularEl) => {
+        const rate = getPlanPrice(regularEl.dataset.regularRate);
+        regularEl.innerText = rate.regular === 0 ? "Free forever." : `Renews at PHP ${rate.regular.toLocaleString("en-PH")}${rate.suffix}.`;
+    });
+}
+
 function updateBillingTabUI() {
     const activeInvoiceCount = getActiveInvoices().length;
     document.getElementById("billing-invoice-count").innerText = activeInvoiceCount;
@@ -2460,11 +3193,13 @@ function updateBillingTabUI() {
         } else if (planName === "Starter Unlimited") {
             button.innerText = "Choose Starter";
         } else if (planName === "Pro Unlimited Plan") {
-            button.innerText = "Subscribe";
+            button.innerText = "Choose Pro";
         } else if (planName === "Business Unlimited") {
             button.innerText = "Choose Business";
         }
     });
+
+    updatePricingDisplay();
 }
 
 async function renderAdminDashboard() {
@@ -2559,14 +3294,15 @@ async function processMockPaymentUpgrade() {
     currentProfile.is_pro = true;
     const paymentModal = document.getElementById("payment-modal");
     currentProfile.plan = paymentModal.dataset.plan || "Pro Unlimited Plan";
+    currentProfile.billing_cycle = paymentModal.dataset.billingCycle || billingCycle;
     await recordPayment(
         paymentModal.dataset.plan || "Pro Unlimited Plan",
         paymentModal.dataset.price || 249,
-        gcashActive ? "GCash" : "Card"
+        `${gcashActive ? "GCash" : "Card"} (${currentProfile.billing_cycle})`
     );
     
     if (isCloudActive) {
-        await supabaseClient.from("profiles").update({ is_pro: true, plan: currentProfile.plan }).eq("id", currentUser.id);
+        await supabaseClient.from("profiles").update({ is_pro: true, plan: currentProfile.plan, billing_cycle: currentProfile.billing_cycle }).eq("id", currentUser.id);
     } else {
         saveLocalStorageProfile();
     }
@@ -2871,5 +3607,14 @@ Object.assign(window, {
     sendPasswordResetCode,
     configurePasswordResetForm,
     showPasswordResetForm,
-    submitFeatureRequest
+    submitFeatureRequest,
+    addBusinessProfile,
+    saveCatalogItem,
+    deleteCatalogItem,
+    maybeApplySavedItem,
+    createSupportTicket,
+    selectTicket,
+    selectAdminTicket,
+    sendTicketMessage,
+    updateTicketStatus
 });
