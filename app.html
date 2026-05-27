@@ -775,14 +775,14 @@
                         <button class="btn btn-primary" id="save-store-settings-btn" style="width: 100%;">Save Store Settings</button>
                     </div>
 
-                    <!-- Developer White-Label Settings (Monetization Center) -->
-                    <div class="panel-card" style="border: 2px dashed var(--primary);">
+                    <!-- Owner-only branding settings -->
+                    <div class="panel-card" id="owner-branding-card" style="border: 2px dashed var(--primary); display: none;">
                         <div class="panel-title" style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
                             🔧 White-Label & Branding Partner Center
                         </div>
                         
                         <p style="font-size: 13px; color: var(--text-medium);">
-                            DEVELOPER ZONE: Update the app branding and selling configuration for your own software platform.
+                            Owner-only controls for the Valora EM product name, app accent color, and selling setup.
                         </p>
 
                         <div class="form-group">
@@ -802,24 +802,20 @@
                         </div>
 
                         <div class="form-group" style="margin-top: 15px;">
-                            <label>Monetization Rules Dashboard</label>
+                            <label>Plan Rules Summary</label>
                             <div style="background-color: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 13px; display: flex; flex-direction: column; gap: 10px;">
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Trial Limit:</span>
                                     <strong>5 Invoices Maximum</strong>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
-                                    <span>Payment Destination:</span>
-                                    <strong id="wl-gcash-num">Mock PayMongo/Stripe Integration</strong>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>License Keys Generated:</span>
-                                    <strong style="color: var(--accent);">Crypto MD5 Algorithmic (Auto-Active)</strong>
+                                    <span>Payment Gateway:</span>
+                                    <strong id="wl-gcash-num">Configured in Admin</strong>
                                 </div>
                             </div>
                         </div>
 
-                        <button class="btn btn-accent" id="save-wl-settings-btn" style="width: 100%;">Apply White-Label System Settings</button>
+                        <button class="btn btn-accent" id="save-wl-settings-btn" style="width: 100%;">Save Owner Branding Settings</button>
                     </div>
                 </div>
             </div>

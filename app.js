@@ -589,6 +589,11 @@ function updateAdminVisibility() {
         adminNav.style.display = isAdminUser() ? "block" : "none";
     }
 
+    const ownerBrandingCard = document.getElementById("owner-branding-card");
+    if (ownerBrandingCard) {
+        ownerBrandingCard.style.display = isAdminUser() ? "flex" : "none";
+    }
+
     const featureRequestsNav = document.getElementById("feature-requests-nav-item");
     if (featureRequestsNav) {
         featureRequestsNav.dataset.tab = isAdminUser() ? "admin-feature-inbox-tab" : "feature-requests-tab";
@@ -1371,6 +1376,11 @@ function initAppEventListeners() {
 
     // Developer Branding Save
     document.getElementById("save-wl-settings-btn").addEventListener("click", () => {
+        if (!isAdminUser()) {
+            alert("Owner branding settings are only available to the Valora EM admin account.");
+            return;
+        }
+
         const customName = document.getElementById("wl-app-name").value.trim();
         if (customName) {
             whitelabelConfig.appName = customName;
