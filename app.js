@@ -538,7 +538,7 @@ async function checkAuthSession() {
 
 // Switch between tab screens
 function switchTab(tabId) {
-    if (tabId === "admin-tab" && !isAdminUser()) {
+    if ((tabId === "admin-tab" || tabId === "admin-feature-inbox-tab") && !isAdminUser()) {
         alert("Admin access is only available for the owner account.");
         return;
     }
@@ -578,6 +578,8 @@ function switchTab(tabId) {
         updateBillingTabUI();
     } else if (tabId === "admin-tab") {
         renderAdminDashboard();
+    } else if (tabId === "admin-feature-inbox-tab") {
+        renderAdminFeatureInbox();
     }
 }
 
@@ -589,7 +591,7 @@ function updateAdminVisibility() {
 
     const featureRequestsNav = document.getElementById("feature-requests-nav-item");
     if (featureRequestsNav) {
-        featureRequestsNav.dataset.tab = isAdminUser() ? "admin-tab" : "feature-requests-tab";
+        featureRequestsNav.dataset.tab = isAdminUser() ? "admin-feature-inbox-tab" : "feature-requests-tab";
         const label = featureRequestsNav.querySelector(".nav-link");
         if (label) {
             let textNode = Array.from(label.childNodes).find((node) => node.nodeType === 3 && node.textContent.trim());
@@ -2155,8 +2157,10 @@ async function renderAdminDashboard() {
             tbody.appendChild(row);
         });
     }
+}
 
-    const requestsBody = document.querySelector("#admin-feature-requests-table tbody");
+async function renderFeatureRequestsTable(tableSelector) {
+    const requestsBody = document.querySelector(tableSelector);
     if (requestsBody) {
         const requests = await getAdminFeatureRequests();
         requestsBody.innerHTML = "";
@@ -2174,6 +2178,11 @@ async function renderAdminDashboard() {
             });
         }
     }
+}
+
+async function renderAdminFeatureInbox() {
+    if (!isAdminUser()) return;
+    await renderFeatureRequestsTable("#feature-inbox-table tbody");
 }
 
 // ==================== MOCK PAYMENT GATEWAY PROCESSOR ====================
@@ -2486,6 +2495,7 @@ Object.assign(window, {
     deleteInvoice,
     setupAuthenticatedUser,
     renderAdminDashboard,
+    renderAdminFeatureInbox,
     savePaymentSettings,
     sendPasswordResetCode,
     configurePasswordResetForm,

@@ -991,25 +991,36 @@
                         </div>
                     </div>
 
-                    <div class="panel-card admin-feature-requests-card">
-                        <div class="panel-title">Customer Feature Requests</div>
-                        <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Requests submitted from customer accounts are collected here for product planning.</p>
-                        <div class="table-wrapper" style="max-height: 420px; overflow-y: auto;">
-                            <table class="custom-table" id="admin-feature-requests-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Customer</th>
-                                        <th>Request</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td colspan="3" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                </div>
+            </div>
+
+            <!-- ==================== ADMIN FEATURE INBOX TAB ==================== -->
+            <div id="admin-feature-inbox-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Feature Inbox</h1>
+                        <p>Review customer feature requests and bug reports submitted from all user accounts.</p>
+                    </div>
+                </div>
+
+                <div class="panel-card admin-feature-requests-card">
+                    <div class="panel-title">Customer Feature Requests</div>
+                    <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Only customer requests belong here. Payment settings and app revenue stay inside the Admin tab.</p>
+                    <div class="table-wrapper" style="max-height: 620px; overflow-y: auto;">
+                        <table class="custom-table" id="feature-inbox-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Request</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
