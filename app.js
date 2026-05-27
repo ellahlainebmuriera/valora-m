@@ -586,6 +586,20 @@ function updateAdminVisibility() {
     if (adminNav) {
         adminNav.style.display = isAdminUser() ? "block" : "none";
     }
+
+    const featureRequestsNav = document.getElementById("feature-requests-nav-item");
+    if (featureRequestsNav) {
+        featureRequestsNav.dataset.tab = isAdminUser() ? "admin-tab" : "feature-requests-tab";
+        const label = featureRequestsNav.querySelector(".nav-link");
+        if (label) {
+            let textNode = Array.from(label.childNodes).find((node) => node.nodeType === 3 && node.textContent.trim());
+            if (!textNode) {
+                textNode = document.createTextNode("");
+                label.appendChild(textNode);
+            }
+            textNode.textContent = isAdminUser() ? " Feature Inbox" : " Feature Requests";
+        }
+    }
 }
 
 // Display auth form
