@@ -112,6 +112,7 @@ let invoices = [];
 let currentInvoiceItems = []; // List of { id, description, quantity, unit_price }
 let currentDocumentPhotos = [];
 let activeEditingInvoiceId = null;
+let thermalEcoModeEnabled = false;
 let paymentSettings = {
     paymongoPublicKey: "",
     paymongoSecretKey: "",
@@ -1689,6 +1690,10 @@ function initAppEventListeners() {
         if (document.getElementById("print-layout")) document.getElementById("print-layout").value = currentProfile.print_layout;
         applyInvoiceThemeColor();
     });
+    document.getElementById("thermal-eco-mode-toggle").addEventListener("change", (event) => {
+        thermalEcoModeEnabled = event.target.checked;
+        applyInvoiceThemeColor();
+    });
     document.getElementById("document-photo-file").addEventListener("change", handleDocumentPhotos);
 
     // Add line item row click
@@ -1717,8 +1722,12 @@ function initAppEventListeners() {
 
     // Print Invoice trigger
     document.getElementById("print-invoice-btn").addEventListener("click", () => {
+        applyInvoiceThemeColor();
         window.print();
     });
+
+    window.addEventListener("beforeprint", applyInvoiceThemeColor);
+    window.addEventListener("afterprint", applyInvoiceThemeColor);
 
     // Subscription upgrading popup
     document.querySelectorAll(".checkout-plan-btn").forEach((button) => {
@@ -2803,19 +2812,25 @@ function applyInvoiceThemeColor() {
     const printable = document.getElementById("invoice-printable-area");
     const previewContainer = document.querySelector(".invoice-preview-container");
     const previewModeLabel = document.getElementById("preview-mode-label");
+    const ecoToggle = document.getElementById("thermal-eco-mode-toggle");
+    if (ecoToggle) ecoToggle.checked = thermalEcoModeEnabled;
+
     if (printable) {
         printable.style.setProperty('--invoice-accent', thermal ? "#000000" : color);
         printable.style.setProperty('--invoice-text', thermal ? "#000000" : textColor);
         printable.classList.remove("print-layout-pdf", "print-layout-thermal-80", "print-layout-thermal-58");
         printable.classList.add(`print-layout-${printLayout}`);
+        printable.classList.toggle("thermal-eco-mode", thermalEcoModeEnabled);
     }
 
     if (previewContainer) {
         previewContainer.classList.toggle("thermal-preview", thermal);
+        previewContainer.classList.toggle("thermal-eco-mode", thermalEcoModeEnabled);
     }
 
     if (previewModeLabel) {
-        previewModeLabel.textContent = thermal ? "\ud83d\udcdf Thermal Receipt Preview" : "\ud83d\udcc4 PDF / A4 Layout Preview";
+        const baseLabel = thermal ? "\ud83d\udcdf Thermal Receipt Preview" : "\ud83d\udcc4 PDF / A4 Layout Preview";
+        previewModeLabel.textContent = thermalEcoModeEnabled ? `${baseLabel} - Eco Mode` : baseLabel;
     }
     
     // Apply selected class to settings presets

@@ -927,6 +927,133 @@ textarea:focus {
     font-weight: 700;
 }
 
+.toggle-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    color: var(--text-medium);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-field input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.toggle-switch {
+    width: 42px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    position: relative;
+    flex: 0 0 auto;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.toggle-switch::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.toggle-field input:checked + .toggle-switch {
+    background: #111827;
+    border-color: #ffffff;
+}
+
+.toggle-field input:checked + .toggle-switch::after {
+    transform: translateX(18px);
+    background: #ffffff;
+}
+
+.thermal-eco-mode {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.thermal-eco-mode *,
+.thermal-eco-mode *::before,
+.thermal-eco-mode *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.thermal-eco-mode thead,
+.thermal-eco-mode th,
+.thermal-eco-mode .summary-row,
+.thermal-eco-mode .badge-container,
+.thermal-eco-mode .preview-logo-placeholder,
+.thermal-eco-mode .preview-math,
+.thermal-eco-mode .preview-math-row,
+.thermal-eco-mode .invoice-photo-preview,
+.thermal-eco-mode .badge,
+.thermal-eco-mode .badge-paid,
+.thermal-eco-mode .badge-unpaid,
+.thermal-eco-mode .badge-draft,
+.thermal-eco-mode .badge-overdue {
+    background: transparent !important;
+    background-color: #ffffff !important;
+}
+
+.thermal-eco-mode p,
+.thermal-eco-mode span,
+.thermal-eco-mode strong,
+.thermal-eco-mode th,
+.thermal-eco-mode td,
+.thermal-eco-mode h1,
+.thermal-eco-mode h2,
+.thermal-eco-mode h3,
+.thermal-eco-mode h4,
+.thermal-eco-mode .text-muted,
+.thermal-eco-mode .preview-address-block,
+.thermal-eco-mode .preview-meta,
+.thermal-eco-mode .preview-math-row,
+.thermal-eco-mode .preview-math-row.total,
+.thermal-eco-mode .invoice-signature-preview-box span {
+    color: #000000 !important;
+    opacity: 1 !important;
+}
+
+.thermal-eco-mode hr,
+.thermal-eco-mode th,
+.thermal-eco-mode td,
+.thermal-eco-mode table,
+.thermal-eco-mode .preview-table,
+.thermal-eco-mode .preview-table th,
+.thermal-eco-mode .preview-table td,
+.thermal-eco-mode .preview-math,
+.thermal-eco-mode .preview-math-row,
+.thermal-eco-mode .invoice-signature-preview-box img,
+.thermal-eco-mode .signature-line,
+.thermal-eco-mode .invoice-photo-preview {
+    border-color: #000000 !important;
+    border-style: solid !important;
+}
+
+.thermal-eco-mode .preview-table th,
+.thermal-eco-mode .preview-table td {
+    border-width: 1px !important;
+}
+
+.thermal-eco-mode img {
+    filter: grayscale(100%) contrast(200%) !important;
+}
+
 .invoice-preview-container.thermal-preview {
     display: flex;
     flex-direction: column;
@@ -1647,6 +1774,9 @@ textarea:focus {
         top: 0 !important;
         width: 100% !important;
     }
+    .preview-mode-label {
+        display: none !important;
+    }
     .invoice-paper {
         border: none !important;
         box-shadow: none !important;
@@ -1673,6 +1803,34 @@ textarea:focus {
     }
     .preview-table td {
         border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .thermal-eco-mode,
+    .thermal-eco-mode * {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        opacity: 1 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    .thermal-eco-mode th,
+    .thermal-eco-mode td,
+    .thermal-eco-mode table,
+    .thermal-eco-mode .preview-table,
+    .thermal-eco-mode .preview-math,
+    .thermal-eco-mode .preview-math-row,
+    .thermal-eco-mode .invoice-signature-preview-box img,
+    .thermal-eco-mode .signature-line,
+    .thermal-eco-mode .invoice-photo-preview {
+        border-color: #000000 !important;
+        border-style: solid !important;
+    }
+    .thermal-eco-mode .preview-table th,
+    .thermal-eco-mode .preview-table td {
+        border-width: 1px !important;
+    }
+    .thermal-eco-mode img {
+        filter: grayscale(100%) contrast(200%) !important;
     }
 }
 /* Temporarily hide auth options that need paid/reliable email or provider setup before launch. */
