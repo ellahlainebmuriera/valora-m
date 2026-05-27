@@ -641,7 +641,8 @@ textarea:focus {
 }
 
 .settings-layout,
-.admin-layout {
+.admin-layout,
+.feature-request-page-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(320px, 0.75fr);
     gap: 30px;
@@ -666,7 +667,8 @@ textarea:focus {
 @media (max-width: 1024px) {
     .grid-panels,
     .settings-layout,
-    .admin-layout {
+    .admin-layout,
+    .feature-request-page-layout {
         grid-template-columns: 1fr;
     }
 

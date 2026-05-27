@@ -154,6 +154,14 @@
                         Settings
                     </a>
                 </li>
+                <li class="nav-item" data-tab="feature-requests-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.77 9.77 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                        </svg>
+                        Feature Requests
+                    </a>
+                </li>
                 <li class="nav-item" data-tab="offline-tab">
                     <a class="nav-link">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -767,16 +775,6 @@
                         <button class="btn btn-primary" id="save-store-settings-btn" style="width: 100%;">Save Store Settings</button>
                     </div>
 
-                    <div class="panel-card feature-request-settings-card">
-                        <div class="panel-title">Send Feature Request</div>
-                        <p style="font-size: 13px; color: var(--text-medium);">Tell the Valora EM owner what feature you want next.</p>
-                        <div class="form-group">
-                            <label for="feature-request-text">Feature Request</label>
-                            <textarea id="feature-request-text" rows="4" placeholder="Example: Please add invoice reminder emails."></textarea>
-                        </div>
-                        <button class="btn btn-secondary" id="submit-feature-request-btn" type="button">Send Feature Request</button>
-                    </div>
-
                     <!-- Developer White-Label Settings (Monetization Center) -->
                     <div class="panel-card" style="border: 2px dashed var(--primary);">
                         <div class="panel-title" style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
@@ -822,6 +820,46 @@
                         </div>
 
                         <button class="btn btn-accent" id="save-wl-settings-btn" style="width: 100%;">Apply White-Label System Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== FEATURE REQUESTS TAB ==================== -->
+            <div id="feature-requests-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Feature Requests</h1>
+                        <p>Send ideas, bug reports, and improvement requests directly to the Valora EM owner.</p>
+                    </div>
+                </div>
+
+                <div class="feature-request-page-layout">
+                    <div class="panel-card feature-request-settings-card">
+                        <div class="panel-title">Send Feature Request</div>
+                        <p style="font-size: 13px; color: var(--text-medium);">Tell us what you want improved or added next.</p>
+                        <div class="form-group">
+                            <label for="feature-request-text">Feature Request</label>
+                            <textarea id="feature-request-text" rows="7" placeholder="Example: Please add invoice reminder emails, customer read receipts, or automatic monthly reports."></textarea>
+                        </div>
+                        <button class="btn btn-primary" id="submit-feature-request-btn" type="button">Send Feature Request</button>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-title">What to include</div>
+                        <div class="feature-list" style="display: grid; gap: 14px;">
+                            <div>
+                                <strong>What happened?</strong>
+                                <p style="color: var(--text-muted); font-size: 14px;">Tell us what you were doing when the issue happened.</p>
+                            </div>
+                            <div>
+                                <strong>What do you want changed?</strong>
+                                <p style="color: var(--text-muted); font-size: 14px;">Describe the feature or improvement you want in simple words.</p>
+                            </div>
+                            <div>
+                                <strong>Which device did you use?</strong>
+                                <p style="color: var(--text-muted); font-size: 14px;">Mention if you were using phone, tablet, or computer.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
