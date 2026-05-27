@@ -110,6 +110,36 @@ body {
     min-height: 100vh;
 }
 
+.mobile-topbar,
+.mobile-drawer-overlay {
+    display: none;
+}
+
+.mobile-menu-button,
+.mobile-drawer-close {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-card);
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 22px;
+    font-weight: 800;
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-title);
+    font-weight: 800;
+    color: var(--text-main);
+}
+
 /* Sidebar Navigation */
 .sidebar {
     width: var(--sidebar-width);
@@ -300,6 +330,8 @@ body {
     flex-grow: 1;
     padding: 40px;
     min-height: 100vh;
+    min-width: 0;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     gap: 30px;
@@ -456,6 +488,7 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
+    min-width: 0;
 }
 
 .metric-card {
@@ -1003,6 +1036,7 @@ textarea:focus {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-width: 0;
 }
 
 .panel-title {
@@ -1014,8 +1048,16 @@ textarea:focus {
 }
 
 /* Dynamic Line Item Editor Table */
+.items-editor-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .items-editor-table {
     width: 100%;
+    min-width: 640px;
     border-collapse: collapse;
     margin-top: 10px;
 }
@@ -1056,12 +1098,16 @@ textarea:focus {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     box-shadow: var(--card-shadow);
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 .custom-table {
     width: 100%;
+    min-width: 720px;
     border-collapse: collapse;
     text-align: left;
 }
@@ -1550,6 +1596,10 @@ textarea:focus {
     .pricing-plans {
         grid-template-columns: 1fr;
     }
+
+    .pricing-plans-matrix .plan-card {
+        min-height: auto;
+    }
 }
 
 .plan-card {
@@ -1808,43 +1858,103 @@ textarea:focus {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+    html,
     body {
-        flex-direction: column;
-    }
-    .sidebar {
         width: 100%;
-        height: auto;
-        position: relative;
-        padding: 15px;
-        border-right: none;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    body.mobile-drawer-open {
+        overflow: hidden;
+    }
+    #app-root {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+    .mobile-topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        padding: 10px 14px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        z-index: 180;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .mobile-topbar .logo-icon,
+    .mobile-drawer .logo-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        font-size: 16px;
+    }
+    .mobile-drawer-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 260;
+        background: rgba(2, 6, 23, 0.68);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        pointer-events: none;
+        display: block;
+        transition: opacity 0.2s ease;
+    }
+    .mobile-drawer-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .mobile-drawer {
+        width: min(86vw, 340px);
+        height: 100%;
+        background: var(--bg-secondary);
+        border-right: 1px solid var(--border-color);
+        box-shadow: 24px 0 60px rgba(0, 0, 0, 0.35);
+        padding: 18px;
+        transform: translateX(-102%);
+        transition: transform 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: auto;
+    }
+    .mobile-drawer-overlay.open .mobile-drawer {
+        transform: translateX(0);
+    }
+    .mobile-drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 12px;
         border-bottom: 1px solid var(--border-color);
     }
-    .logo-container {
-        margin-bottom: 15px;
+    .mobile-drawer .nav-menu {
+        flex: 0 0 auto;
+        overflow: visible;
     }
-    .nav-menu {
-        flex-direction: column;
-        overflow-x: hidden;
-        overflow-y: visible;
-        padding-bottom: 0;
-        flex-grow: 0;
-        width: 100%;
-    }
-    .nav-link {
-        padding: 8px 12px;
-        font-size: 13px;
+    .mobile-drawer .nav-link {
+        padding: 11px 12px;
+        font-size: 14px;
         white-space: normal;
-        width: 100%;
-        justify-content: flex-start;
     }
-    .user-widget {
-        display: flex;
-        padding-top: 12px;
-        margin-top: 12px;
+    .mobile-drawer .btn-logout {
+        margin-top: auto;
+        width: 100%;
+    }
+    .sidebar {
+        display: none;
     }
     .main-content {
         margin-left: 0;
-        padding: 16px;
+        padding: 88px 14px 18px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
     }
     .tab-header {
         flex-direction: column;
@@ -1853,9 +1963,27 @@ textarea:focus {
     }
     .tab-header > div:last-child {
         flex-wrap: wrap;
+        width: 100%;
+    }
+    .tab-header .btn,
+    .tab-header > div:last-child .btn {
+        width: 100%;
     }
     .form-group.row {
         flex-direction: column;
+    }
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .pricing-plans {
+        grid-template-columns: 1fr;
+    }
+    .pricing-plans-matrix .plan-card {
+        min-height: auto;
+    }
+    .metric-card {
+        padding: 18px;
     }
     .items-editor-table,
     .custom-table {
@@ -1863,6 +1991,12 @@ textarea:focus {
     }
     .table-wrapper {
         overflow-x: auto;
+        overflow-y: hidden;
+        max-width: 100%;
+    }
+    .items-editor-scroll {
+        margin-inline: -2px;
+        padding-bottom: 4px;
     }
     .invoice-paper {
         padding: 22px;

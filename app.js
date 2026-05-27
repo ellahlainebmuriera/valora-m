@@ -746,6 +746,7 @@ function switchTab(tabId) {
     } else if (tabId === "feature-requests-tab" || tabId === "bug-report-tab") {
         renderSupportTickets();
     }
+    closeMobileDrawer();
 }
 
 function updateAdminVisibility() {
@@ -772,6 +773,7 @@ function updateAdminVisibility() {
             textNode.textContent = isAdminUser() ? " Feature Inbox" : " Feature Requests";
         }
     }
+    renderMobileNavigation();
 }
 
 function showAdminScreen(screenId) {
@@ -786,6 +788,42 @@ function showAdminScreen(screenId) {
     } else if (screenId === "admin-gateway-screen") {
         renderAdminDashboard();
     }
+}
+
+function openMobileDrawer() {
+    const overlay = document.getElementById("mobile-drawer-overlay");
+    if (!overlay) return;
+    renderMobileNavigation();
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("mobile-drawer-open");
+}
+
+function closeMobileDrawer() {
+    const overlay = document.getElementById("mobile-drawer-overlay");
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("mobile-drawer-open");
+}
+
+function renderMobileNavigation() {
+    const source = document.querySelector(".sidebar .nav-menu");
+    const target = document.getElementById("mobile-nav-menu");
+    if (!source || !target) return;
+
+    target.innerHTML = "";
+    source.querySelectorAll(".nav-item").forEach((item) => {
+        if (item.style.display === "none") return;
+        const clone = item.cloneNode(true);
+        clone.removeAttribute("id");
+        clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+        clone.addEventListener("click", () => {
+            switchTab(clone.dataset.tab);
+            closeMobileDrawer();
+        });
+        target.appendChild(clone);
+    });
 }
 
 // Display auth form
@@ -2185,6 +2223,16 @@ function initAppEventListeners() {
     if (mobileLogoutNav) {
         mobileLogoutNav.addEventListener("click", logoutCurrentUser);
     }
+    document.getElementById("mobile-menu-btn").addEventListener("click", openMobileDrawer);
+    document.getElementById("mobile-drawer-close").addEventListener("click", closeMobileDrawer);
+    document.getElementById("mobile-drawer-logout").addEventListener("click", async () => {
+        await logoutCurrentUser();
+        closeMobileDrawer();
+    });
+    document.getElementById("mobile-drawer-overlay").addEventListener("click", (event) => {
+        if (event.target.id === "mobile-drawer-overlay") closeMobileDrawer();
+    });
+    renderMobileNavigation();
 
     // Navigation item click links
     document.querySelectorAll(".nav-item").forEach(item => {

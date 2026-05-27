@@ -546,6 +546,12 @@
             font-size: 14px;
         }
 
+        @media (max-width: 1180px) {
+            .price-grid {
+                grid-template-columns: repeat(2, minmax(220px, 1fr));
+            }
+        }
+
         @media (max-width: 860px) {
             .nav-actions .secondary {
                 display: none;
@@ -568,6 +574,11 @@
 
             .preview-side {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .price-card {
+                min-height: auto;
+                width: 100%;
             }
         }
     </style>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "valora-em-v3";
+const CACHE_NAME = "valora-em-v4";
 const APP_ASSETS = [
   "/",
   "/index.html",
