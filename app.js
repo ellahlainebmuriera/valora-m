@@ -33,6 +33,57 @@ try {
 window.valoraemIsCloudActive = isCloudActive;
 window.valoraemSupabaseClient = supabaseClient;
 
+const CURRENCY_SYMBOLS = {
+    PHP: "\u20b1",
+    USD: "$",
+    EUR: "\u20ac",
+    JPY: "\u00a5",
+    GBP: "\u00a3",
+    AUD: "A$",
+    CAD: "C$",
+    SGD: "S$",
+    HKD: "HK$",
+    CNY: "\u00a5",
+    KRW: "\u20a9",
+    INR: "\u20b9",
+    THB: "\u0e3f",
+    IDR: "Rp",
+    MYR: "RM",
+    VND: "\u20ab",
+    AED: "AED"
+};
+
+const CURRENCY_ALIASES = {
+    US: "USD",
+    USA: "USD",
+    DOLLAR: "USD",
+    PH: "PHP",
+    PESO: "PHP",
+    YEN: "JPY"
+};
+
+function normalizeCurrencyCode(code) {
+    const normalized = String(code || "PHP").trim().toUpperCase();
+    const mapped = CURRENCY_ALIASES[normalized] || normalized;
+    return CURRENCY_SYMBOLS[mapped] ? mapped : "PHP";
+}
+
+function getCurrencySymbol(code) {
+    return CURRENCY_SYMBOLS[normalizeCurrencyCode(code)] || CURRENCY_SYMBOLS.PHP;
+}
+
+function syncCurrencySymbolFromCode() {
+    const currencySelect = document.getElementById("store-currency");
+    const symbolInput = document.getElementById("store-currency-symbol");
+    if (!currencySelect || !symbolInput) return;
+
+    const code = normalizeCurrencyCode(currencySelect.value);
+    currencySelect.value = code;
+    symbolInput.value = getCurrencySymbol(code);
+    symbolInput.readOnly = true;
+    symbolInput.disabled = true;
+}
+
 // ==================== STATE MANAGEMENT ====================
 let currentUser = null;
 let currentProfile = {
@@ -42,7 +93,7 @@ let currentProfile = {
     address: "",
     logo_url: "",
     currency: "PHP",
-    currency_symbol: "₱",
+    currency_symbol: getCurrencySymbol("PHP"),
     default_tax_rate: 12.0,
     is_pro: false,
     invoice_count: 0,
@@ -383,7 +434,7 @@ function seedTestAccount() {
             address: "",
             logo_url: "",
             currency: "PHP",
-            currency_symbol: "PHP",
+            currency_symbol: getCurrencySymbol("PHP"),
             default_tax_rate: 12.0,
             is_pro: true,
             invoice_count: 0,
@@ -413,7 +464,7 @@ function seedTestAccount() {
             address: "Manila, Philippines",
             logo_url: "",
             currency: "PHP",
-            currency_symbol: "PHP",
+            currency_symbol: getCurrencySymbol("PHP"),
             default_tax_rate: 12.0,
             is_pro: true,
             invoice_count: 1,
@@ -673,8 +724,11 @@ async function setupAuthenticatedUser(user) {
     document.getElementById("store-email").value = currentProfile.email || "";
     document.getElementById("store-phone").value = currentProfile.phone || "";
     document.getElementById("store-address").value = currentProfile.address || "";
-    document.getElementById("store-currency").value = currentProfile.currency || "PHP";
-    document.getElementById("store-currency-symbol").value = currentProfile.currency_symbol || "₱";
+    currentProfile.currency = normalizeCurrencyCode(currentProfile.currency);
+    currentProfile.currency_symbol = getCurrencySymbol(currentProfile.currency);
+    document.getElementById("store-currency").value = currentProfile.currency;
+    document.getElementById("store-currency-symbol").value = currentProfile.currency_symbol || getCurrencySymbol("PHP");
+    syncCurrencySymbolFromCode();
     document.getElementById("inv-tax-rate").value = currentProfile.default_tax_rate;
     if (document.getElementById("preferred-language")) {
         document.getElementById("preferred-language").value = currentProfile.preferred_language || "en";
@@ -723,7 +777,7 @@ function getLocalStorageProfile(email) {
         address: "",
         logo_url: "",
         currency: "PHP",
-        currency_symbol: "₱",
+        currency_symbol: getCurrencySymbol("PHP"),
         default_tax_rate: 12.0,
         is_pro: false,
         invoice_count: 0,
@@ -1252,7 +1306,7 @@ function initAppEventListeners() {
                 phone: document.getElementById("register-phone").value.trim(),
                 is_pro: false,
                 currency: "PHP",
-                currency_symbol: "PHP",
+                currency_symbol: getCurrencySymbol("PHP"),
                 default_tax_rate: 12.0,
                 app_appearance: "dark",
                 preferred_language: "en",
@@ -1296,13 +1350,25 @@ function initAppEventListeners() {
         });
     });
 
+    document.getElementById("store-currency").addEventListener("change", (event) => {
+        currentProfile.currency = normalizeCurrencyCode(event.target.value);
+        currentProfile.currency_symbol = getCurrencySymbol(currentProfile.currency);
+        event.target.value = currentProfile.currency;
+        syncCurrencySymbolFromCode();
+        renderDashboard();
+        renderEditorItems();
+        renderInvoicesTable();
+        updateInvoicePreview();
+    });
+
     // Store Settings Save
     document.getElementById("save-store-settings-btn").addEventListener("click", async () => {
         currentProfile.company_name = document.getElementById("store-name").value.trim();
         currentProfile.phone = document.getElementById("store-phone").value.trim();
         currentProfile.address = document.getElementById("store-address").value.trim();
-        currentProfile.currency = document.getElementById("store-currency").value.trim();
-        currentProfile.currency_symbol = document.getElementById("store-currency-symbol").value.trim();
+        currentProfile.currency = normalizeCurrencyCode(document.getElementById("store-currency").value);
+        currentProfile.currency_symbol = getCurrencySymbol(currentProfile.currency);
+        syncCurrencySymbolFromCode();
         currentProfile.preferred_language = hasBusinessUnlimited() ? document.getElementById("preferred-language").value : "en";
         currentProfile.custom_language_name = hasBusinessUnlimited() ? document.getElementById("custom-language-name").value.trim() : "";
         currentProfile.invoice_text_color = document.getElementById("invoice-text-color").value || "#1e293b";
