@@ -640,9 +640,39 @@ textarea:focus {
     gap: 30px;
 }
 
+.settings-layout,
+.admin-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.75fr);
+    gap: 30px;
+    align-items: start;
+}
+
+.settings-layout .panel-card:first-child,
+.admin-layout .panel-card:first-child {
+    grid-row: span 2;
+}
+
+.feature-request-settings-card,
+.admin-feature-requests-card {
+    border-left: 4px solid var(--accent);
+}
+
+.admin-payments-card,
+.admin-feature-requests-card {
+    min-width: 0;
+}
+
 @media (max-width: 1024px) {
-    .grid-panels {
+    .grid-panels,
+    .settings-layout,
+    .admin-layout {
         grid-template-columns: 1fr;
+    }
+
+    .settings-layout .panel-card:first-child,
+    .admin-layout .panel-card:first-child {
+        grid-row: auto;
     }
 }
 

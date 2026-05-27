@@ -162,6 +162,10 @@ CREATE POLICY "Users can submit feature requests."
     ON public.feature_requests FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
+CREATE POLICY "Owner admin can view all feature requests."
+    ON public.feature_requests FOR SELECT
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
 -- 5. Automate Profile Creation on Sign Up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$

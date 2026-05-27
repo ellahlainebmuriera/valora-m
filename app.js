@@ -838,6 +838,28 @@ function saveFeatureRequests(requests) {
     localStorage.setItem("valoraem_feature_requests", JSON.stringify(requests));
 }
 
+async function getAdminFeatureRequests() {
+    if (hasCloudConnection()) {
+        const { data, error } = await supabaseClient
+            .from("feature_requests")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        if (!error && data) {
+            return data.map((request) => ({
+                id: request.id,
+                customer_email: request.customer_email || "Unknown customer",
+                text: request.request_text || "",
+                created_at: request.created_at
+            }));
+        }
+
+        console.error("Unable to load cloud feature requests:", error);
+    }
+
+    return getFeatureRequests();
+}
+
 async function submitFeatureRequest() {
     const textarea = document.getElementById("feature-request-text");
     const text = textarea.value.trim();
@@ -853,12 +875,21 @@ async function submitFeatureRequest() {
         created_at: new Date().toISOString()
     };
 
-    if (isCloudActive) {
-        await supabaseClient.from("feature_requests").insert({
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient.from("feature_requests").insert({
             user_id: currentUser.id,
             customer_email: currentUser.email,
             request_text: text
         });
+
+        if (error) {
+            console.error("Unable to submit cloud feature request:", error);
+            alert("Unable to send the feature request to the admin dashboard right now. Please try again when your connection is stable.");
+            return;
+        }
+    } else if (isCloudActive) {
+        alert("You are offline. Please reconnect before sending a feature request to the admin dashboard.");
+        return;
     }
 
     const requests = getFeatureRequests();
@@ -2113,12 +2144,12 @@ async function renderAdminDashboard() {
 
     const requestsBody = document.querySelector("#admin-feature-requests-table tbody");
     if (requestsBody) {
-        const requests = getFeatureRequests();
+        const requests = await getAdminFeatureRequests();
         requestsBody.innerHTML = "";
         if (requests.length === 0) {
             requestsBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td></tr>';
         } else {
-            requests.slice().reverse().forEach((request) => {
+            requests.forEach((request) => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${new Date(request.created_at).toLocaleString()}</td>
