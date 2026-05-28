@@ -437,9 +437,10 @@
         }
 
         .price {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 900;
             color: var(--navy);
+            white-space: nowrap;
         }
 
         .price span {
@@ -476,7 +477,8 @@
             display: flex;
             align-items: flex-start;
             gap: 8px;
-            min-height: 36px;
+            min-height: 44px;
+            height: 44px;
         }
 
         .price-card li::before {
@@ -515,11 +517,26 @@
             font-size: 11px;
         }
 
-        .regular-rate,
-        .promo-note {
+        .regular-rate {
             color: var(--muted);
             font-size: 12px;
-            line-height: 1.45;
+            line-height: 1.2;
+            text-decoration: line-through;
+        }
+
+        .regular-rate.free-rate {
+            text-decoration: none;
+        }
+
+        .promo-note {
+            color: #059669;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .promo-spacer {
+            visibility: hidden;
         }
 
         .faq {
@@ -604,6 +621,11 @@
             .price-card {
                 min-height: auto;
                 width: 100%;
+            }
+
+            .price-card li {
+                height: auto;
+                min-height: 44px;
             }
         }
     </style>
@@ -723,8 +745,9 @@
             <div class="price-grid">
                 <div class="price-card">
                     <h3>Standard Free Plan</h3>
+                    <p class="regular-rate free-rate" data-landing-regular="Standard Free Plan">Free forever.</p>
                     <div class="price" data-landing-price="Standard Free Plan">PHP 0<span> / month</span></div>
-                    <p class="regular-rate" data-landing-regular="Standard Free Plan">Free forever.</p>
+                    <p class="promo-note promo-spacer">50% off your first month.</p>
                     <ul>
                         <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>5 free documents</small></span></li>
                         <li class="locked"><span class="feature-icon">-</span><span>Customer Directory & Advanced History</span></li>
@@ -738,10 +761,10 @@
                     <a class="btn secondary" href="app.html">Open Free Plan</a>
                 </div>
                 <div class="price-card">
-                    <h3>Starter Unlimited</h3>
-                    <div class="price" data-landing-price="Starter Unlimited">PHP 149<span> / month</span></div>
-                    <p class="regular-rate" data-landing-regular="Starter Unlimited">Renews at PHP 298 / month.</p>
-                    <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
+                    <h3>Starter Plan</h3>
+                    <p class="regular-rate" data-landing-regular="Starter Plan">PHP 298 / month</p>
+                    <div class="price" data-landing-price="Starter Plan">PHP 149<span> / month</span></div>
+                    <p class="promo-note">50% off your first month.</p>
                     <ul>
                         <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
                         <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
@@ -756,9 +779,9 @@
                 </div>
                 <div class="price-card featured">
                     <h3>Pro Unlimited Plan</h3>
+                    <p class="regular-rate" data-landing-regular="Pro Unlimited Plan">PHP 498 / month</p>
                     <div class="price" data-landing-price="Pro Unlimited Plan">PHP 249<span> / month</span></div>
-                    <p class="regular-rate" data-landing-regular="Pro Unlimited Plan">Renews at PHP 498 / month.</p>
-                    <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
+                    <p class="promo-note">50% off your first month.</p>
                     <ul>
                         <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
                         <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
@@ -773,9 +796,9 @@
                 </div>
                 <div class="price-card business">
                     <h3>Business Unlimited</h3>
+                    <p class="regular-rate" data-landing-regular="Business Unlimited">PHP 898 / month</p>
                     <div class="price" data-landing-price="Business Unlimited">PHP 449<span> / month</span></div>
-                    <p class="regular-rate" data-landing-regular="Business Unlimited">Renews at PHP 898 / month.</p>
-                    <p class="promo-note">Promo rate valid for first cycle only. Automatic renewal at regular rate applies thereafter.</p>
+                    <p class="promo-note">50% off your first month.</p>
                     <ul>
                         <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>Unlimited</small></span></li>
                         <li><span class="feature-icon">✓</span><span>Customer Directory & Advanced History</span></li>
@@ -840,7 +863,7 @@
     <script>
         const landingRates = {
             "Standard Free Plan": { promo: 0, regular: 0 },
-            "Starter Unlimited": { promo: 149, regular: 298 },
+            "Starter Plan": { promo: 149, regular: 298 },
             "Pro Unlimited Plan": { promo: 249, regular: 498 },
             "Business Unlimited": { promo: 449, regular: 898 }
         };
@@ -859,9 +882,10 @@
             document.querySelectorAll("[data-landing-regular]").forEach((regular) => {
                 const plan = regular.dataset.landingRegular;
                 const rate = landingRates[plan] || landingRates["Standard Free Plan"];
+                regular.classList.toggle("free-rate", rate.regular === 0);
                 regular.textContent = rate.regular === 0
                     ? "Free forever."
-                    : `Renews at PHP ${(rate.regular * multiplier).toLocaleString("en-PH")}${suffix}.`;
+                    : `PHP ${(rate.regular * multiplier).toLocaleString("en-PH")}${suffix}`;
             });
         }
 

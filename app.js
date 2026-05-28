@@ -86,15 +86,15 @@ const BUSINESS_PROFILE_FIELDS = [
 
 const PLAN_RATES = {
     "Standard Free Plan": { promoMonthly: 0, regularMonthly: 0 },
-    "Starter Unlimited": { promoMonthly: 149, regularMonthly: 298 },
+    "Starter Plan": { promoMonthly: 149, regularMonthly: 298 },
     "Pro Unlimited Plan": { promoMonthly: 249, regularMonthly: 498 },
     "Business Unlimited": { promoMonthly: 449, regularMonthly: 898 }
 };
 
 const PRICING_FEATURES = [
-    { label: "Create Invoices & Estimates", allowed: ["Standard Free Plan", "Starter Unlimited", "Pro Unlimited Plan", "Business Unlimited"] },
-    { label: "Customer Directory & Advanced History", allowed: ["Starter Unlimited", "Pro Unlimited Plan", "Business Unlimited"] },
-    { label: "Print / Save as PDF", allowed: ["Starter Unlimited", "Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Create Invoices & Estimates", allowed: ["Standard Free Plan", "Starter Plan", "Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Customer Directory & Advanced History", allowed: ["Starter Plan", "Pro Unlimited Plan", "Business Unlimited"] },
+    { label: "Print / Save as PDF", allowed: ["Starter Plan", "Pro Unlimited Plan", "Business Unlimited"] },
     { label: "Store Logo Upload", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
     { label: "Signature & Receipt Customization", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
     { label: "Multi-Store Business Profiles", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
@@ -224,7 +224,7 @@ function isAdminUser() {
 }
 
 function hasBusinessUnlimited() {
-    return isAdminUser() || currentProfile.plan === "Business Unlimited";
+    return isAdminUser() || getPlanCanonicalName(currentProfile.plan) === "Business Unlimited";
 }
 
 function getCurrentPlanName() {
@@ -245,13 +245,13 @@ function getPlanCanonicalName(planName) {
     const key = getPlanKey(planName);
     if (key.includes("business")) return "Business Unlimited";
     if (key.includes("pro")) return "Pro Unlimited Plan";
-    if (key.includes("starter")) return "Starter Unlimited";
+    if (key.includes("starter")) return "Starter Plan";
     return "Standard Free Plan";
 }
 
 function isFreeOrStarterPlan() {
     const planName = getPlanCanonicalName(getCurrentPlanName());
-    return !isAdminUser() && (planName === "Standard Free Plan" || planName === "Starter Unlimited");
+    return !isAdminUser() && (planName === "Standard Free Plan" || planName === "Starter Plan");
 }
 
 function getBusinessProfileLimit() {
@@ -2064,7 +2064,7 @@ function updateUserTierUI() {
         currentTierStatus.style.color = "var(--accent)";
         if (banner) banner.style.display = "none";
     } else if (currentProfile.is_pro) {
-        const planName = getCurrentPlanName();
+        const planName = getPlanCanonicalName(getCurrentPlanName());
         tierDisplay.innerText = planName.toUpperCase();
         tierDisplay.style.color = "var(--accent)";
         tierDisplay.style.backgroundColor = "var(--accent-glow)";
@@ -3539,14 +3539,15 @@ function updatePricingDisplay() {
 
     document.querySelectorAll("[data-regular-rate]").forEach((regularEl) => {
         const rate = getPlanPrice(regularEl.dataset.regularRate);
-        regularEl.innerText = rate.regular === 0 ? "Free forever." : `Renews at PHP ${rate.regular.toLocaleString("en-PH")}${rate.suffix}.`;
+        regularEl.classList.toggle("free-rate", rate.regular === 0);
+        regularEl.innerText = rate.regular === 0 ? "Free forever." : `PHP ${rate.regular.toLocaleString("en-PH")}${rate.suffix}`;
     });
 }
 
 function updateBillingTabUI() {
     const activeInvoiceCount = getActiveInvoices().length;
     document.getElementById("billing-invoice-count").innerText = activeInvoiceCount;
-    const currentPlan = getCurrentPlanName();
+    const currentPlan = getPlanCanonicalName(getCurrentPlanName());
     const currentPlanKey = getPlanKey(currentPlan);
     const line = document.getElementById("billing-invoice-count-line");
     if (line) {
@@ -3569,7 +3570,7 @@ function updateBillingTabUI() {
             button.innerText = "Active Plan";
         } else if (planName === "Standard Free Plan") {
             button.innerText = currentProfile.is_pro ? "Downgrade" : "Free Plan";
-        } else if (planName === "Starter Unlimited") {
+        } else if (planName === "Starter Plan") {
             button.innerText = "Choose Starter";
         } else if (planName === "Pro Unlimited Plan") {
             button.innerText = "Choose Pro";

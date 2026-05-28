@@ -1620,6 +1620,11 @@ textarea:focus {
     .pricing-plans-matrix .plan-card {
         min-height: auto;
     }
+
+    .pricing-plans-matrix .plan-features li {
+        height: auto;
+        min-height: 44px;
+    }
 }
 
 .plan-card {
@@ -1675,6 +1680,7 @@ textarea:focus {
     font-size: 28px;
     font-weight: 800;
     font-family: var(--font-title);
+    white-space: nowrap;
 }
 
 .plan-price span {
@@ -1683,15 +1689,28 @@ textarea:focus {
     font-weight: normal;
 }
 
-.regular-rate,
-.promo-note {
+.regular-rate {
     font-size: 12px;
     color: var(--text-muted);
-    margin-top: -12px;
+    margin: -8px 0 -18px;
+    text-decoration: line-through;
+}
+
+.regular-rate.free-rate {
+    margin: -12px 0 0;
+    text-decoration: none;
 }
 
 .promo-note {
-    line-height: 1.45;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-top: -14px;
+    line-height: 1.25;
+}
+
+.promo-spacer {
+    visibility: hidden;
 }
 
 .plan-features {
@@ -1706,7 +1725,11 @@ textarea:focus {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    min-height: 34px;
+    min-height: 44px;
+}
+
+.pricing-plans-matrix .plan-features li {
+    height: 44px;
 }
 
 .plan-features li svg {
