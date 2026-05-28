@@ -15,7 +15,7 @@
     <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=tutorial-v1">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -150,6 +150,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
                         </svg>
                         Dashboard
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="learning-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25A8.967 8.967 0 0 1 18 3.75c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                        </svg>
+                        Learning
                     </a>
                 </li>
                 <li class="nav-item" data-tab="creator-tab">
@@ -290,6 +298,18 @@
                     </div>
                 </div>
 
+                <div class="onboarding-banner">
+                    <div>
+                        <span class="learning-kicker">Quick start</span>
+                        <h3>New to Valora EM?</h3>
+                        <p>Take the short tutorial or open the Learning Center to see how to set up your store, create invoices, print PDFs, and track profit.</p>
+                    </div>
+                    <div class="onboarding-banner-actions">
+                        <button class="btn btn-primary" type="button" data-tutorial-start>Begin Tutorial</button>
+                        <button class="btn btn-secondary" type="button" data-learning-go="learning-tab">Open Learning Center</button>
+                    </div>
+                </div>
+
                 <!-- Metrics Grid -->
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -374,6 +394,79 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== LEARNING TAB ==================== -->
+            <div id="learning-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Learning Center</h1>
+                        <p>Simple guided steps for setting up Valora EM, creating documents, and tracking your business.</p>
+                    </div>
+                    <button class="btn btn-primary" id="learning-start-tutorial-btn" type="button">Begin Interactive Tutorial</button>
+                </div>
+
+                <div class="learning-hero panel-card">
+                    <div>
+                        <span class="learning-kicker">New user guide</span>
+                        <h2>Start here if this is your first time.</h2>
+                        <p>Follow the steps below from business setup to printing your first invoice. You can always come back to this tab when you need help.</p>
+                    </div>
+                    <div class="learning-hero-actions">
+                        <button class="btn btn-accent" type="button" data-learning-go="settings-tab">Set Up Business</button>
+                        <button class="btn btn-secondary" type="button" data-learning-go="creator-tab">Create Document</button>
+                    </div>
+                </div>
+
+                <div class="learning-grid">
+                    <div class="learning-card">
+                        <div class="learning-step-number">1</div>
+                        <h3>Set up your business profile</h3>
+                        <p>Add your store name, contact details, currency, receipt colors, print style, and logo if your plan supports it.</p>
+                        <button class="btn btn-secondary btn-sm" type="button" data-learning-go="settings-tab">Open Settings</button>
+                    </div>
+                    <div class="learning-card">
+                        <div class="learning-step-number">2</div>
+                        <h3>Add customers</h3>
+                        <p>Create a client list so invoices and estimates can be filled faster with saved customer details.</p>
+                        <button class="btn btn-secondary btn-sm" type="button" data-learning-go="clients-tab">Open Clients</button>
+                    </div>
+                    <div class="learning-card">
+                        <div class="learning-step-number">3</div>
+                        <h3>Create an invoice or estimate</h3>
+                        <p>Choose a document type, add line items, discount, tax, shipping, notes, photos, and optional signatures.</p>
+                        <button class="btn btn-secondary btn-sm" type="button" data-learning-go="creator-tab">Open Creator</button>
+                    </div>
+                    <div class="learning-card">
+                        <div class="learning-step-number">4</div>
+                        <h3>Preview and print</h3>
+                        <p>Switch between PDF/A4 and thermal receipt styles, then use Print / Save PDF when the document looks right.</p>
+                        <button class="btn btn-secondary btn-sm" type="button" data-learning-go="creator-tab">View Preview</button>
+                    </div>
+                    <div class="learning-card">
+                        <div class="learning-step-number">5</div>
+                        <h3>Track payments and history</h3>
+                        <p>Use Invoice History to review saved documents, filter by date or status, and update records when customers pay.</p>
+                        <button class="btn btn-secondary btn-sm" type="button" data-learning-go="invoices-tab">Open History</button>
+                    </div>
+                    <div class="learning-card">
+                        <div class="learning-step-number">6</div>
+                        <h3>Monitor profit</h3>
+                        <p>Add expenses so the dashboard can show net profit instead of only total sales.</p>
+                        <button class="btn btn-secondary btn-sm" type="button" data-learning-go="expenses-tab">Open Expenses</button>
+                    </div>
+                </div>
+
+                <div class="panel-card learning-checklist-card">
+                    <div class="panel-title">Quick Checklist</div>
+                    <div class="learning-checklist">
+                        <label><input type="checkbox" disabled> Business name and contact details are complete</label>
+                        <label><input type="checkbox" disabled> Currency and tax settings are correct</label>
+                        <label><input type="checkbox" disabled> At least one client is saved</label>
+                        <label><input type="checkbox" disabled> First invoice or estimate is saved</label>
+                        <label><input type="checkbox" disabled> PDF or thermal print style is tested</label>
                     </div>
                 </div>
             </div>
@@ -1613,6 +1706,28 @@
         </main>
     </div>
 
+    <!-- ==================== NEW USER TUTORIAL MODAL ==================== -->
+    <div class="tutorial-modal-overlay" id="tutorial-modal" aria-hidden="true">
+        <div class="tutorial-modal-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+            <button class="tutorial-close-btn" id="tutorial-close-btn" type="button" aria-label="Close tutorial">&times;</button>
+            <div class="tutorial-progress-track">
+                <div class="tutorial-progress-fill" id="tutorial-progress-fill"></div>
+            </div>
+            <p class="tutorial-step-label" id="tutorial-step-label">Welcome</p>
+            <h2 id="tutorial-title">Welcome to Valora EM</h2>
+            <p id="tutorial-body">Would you like a quick guided tour before you start creating invoices?</p>
+            <div class="tutorial-focus-card" id="tutorial-focus-card">
+                <strong id="tutorial-focus-title">What you will learn</strong>
+                <span id="tutorial-focus-text">Business setup, clients, invoice creation, printing, history, expenses, and support.</span>
+            </div>
+            <div class="tutorial-actions">
+                <button class="btn btn-secondary" id="tutorial-back-btn" type="button">Back</button>
+                <button class="btn btn-secondary" id="tutorial-skip-btn" type="button">Skip</button>
+                <button class="btn btn-primary" id="tutorial-primary-btn" type="button">Begin Tutorial</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== AUTOMATED PAYMENT MODAL ==================== -->
     <div class="modal-overlay" id="payment-modal">
         <div class="modal-card">
@@ -1692,7 +1807,7 @@
         }
     </style>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=tutorial-v1"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>
