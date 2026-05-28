@@ -102,6 +102,65 @@ const PRICING_FEATURES = [
     { label: "Offline Mode & Item Catalog", allowed: ["Business Unlimited"] }
 ];
 
+const TUTORIAL_STEPS = [
+    {
+        tab: "dashboard-tab",
+        label: "Step 1 of 7",
+        title: "Dashboard overview",
+        body: "This is your business overview. You can track revenue, paid invoices, unpaid balance, expenses, net profit, and recent documents here.",
+        focusTitle: "Best first habit",
+        focusText: "Check the dashboard after creating invoices or adding expenses so you know where your business stands."
+    },
+    {
+        tab: "settings-tab",
+        label: "Step 2 of 7",
+        title: "Set up your business profile",
+        body: "Add your store name, address, phone, currency, receipt colors, print layout, and logo if your plan supports logo upload.",
+        focusTitle: "Before creating documents",
+        focusText: "Complete Settings first so every invoice already has the correct business identity."
+    },
+    {
+        tab: "clients-tab",
+        label: "Step 3 of 7",
+        title: "Save your customers",
+        body: "Add clients once, then reuse them whenever you create an invoice, estimate, delivery note, or purchase order.",
+        focusTitle: "Time saver",
+        focusText: "Client details appear automatically on the document preview after you select a saved client."
+    },
+    {
+        tab: "creator-tab",
+        label: "Step 4 of 7",
+        title: "Create an invoice or estimate",
+        body: "Choose the document type, enter line items, add tax, discount, shipping, notes, photos, and optional signatures.",
+        focusTitle: "Live preview",
+        focusText: "The right preview updates while you type, so you can check the final look before printing."
+    },
+    {
+        tab: "invoices-tab",
+        label: "Step 5 of 7",
+        title: "Track document history",
+        body: "Invoice History keeps your saved documents organized. Filter by status or date, edit records, and recover deleted invoices from Trash Bin.",
+        focusTitle: "Payment tracking",
+        focusText: "Update invoice status when a customer pays so the dashboard totals stay accurate."
+    },
+    {
+        tab: "expenses-tab",
+        label: "Step 6 of 7",
+        title: "Track expenses and net profit",
+        body: "Add business expenses so Valora EM can calculate profit, not just sales. This is useful for owners who want clearer reports.",
+        focusTitle: "Upgrade note",
+        focusText: "Expense Tracking is a premium business feature, but users can still learn where it lives."
+    },
+    {
+        tab: "learning-tab",
+        label: "Step 7 of 7",
+        title: "Return to Learning anytime",
+        body: "Use this Learning Center whenever you or your staff need a quick refresher on the app workflow.",
+        focusTitle: "Support path",
+        focusText: "For issues, use Bug Report. For ideas, use Feature Requests so the owner can review them."
+    }
+];
+
 function normalizeCurrencyCode(code) {
     const normalized = String(code || "PHP").trim().toUpperCase();
     const mapped = CURRENCY_ALIASES[normalized] || normalized;
@@ -164,6 +223,8 @@ let currentDocumentPhotos = [];
 let activeEditingInvoiceId = null;
 let thermalEcoModeEnabled = false;
 let billingCycle = "monthly";
+let tutorialStepIndex = 0;
+let tutorialIntroActive = false;
 let paymentSettings = {
     paymongoPublicKey: "",
     paymongoSecretKey: "",
@@ -776,7 +837,8 @@ function switchTab(tabId) {
     }
 
     // Don't show premium features if user is on Free Tier and trying to write too many invoices
-    if (tabId === "creator-tab" && !currentProfile.is_pro && getActiveInvoices().length >= 5) {
+    const tutorialOpen = document.getElementById("tutorial-modal")?.style.display === "flex";
+    if (tabId === "creator-tab" && !tutorialOpen && !currentProfile.is_pro && getActiveInvoices().length >= 5) {
         alert("Trial limit reached: Free accounts can create up to 5 invoices. Please subscribe to continue.");
         switchTab("billing-tab");
         return;
@@ -900,8 +962,140 @@ function renderMobileNavigation() {
     });
 }
 
+function getTutorialStorageKey() {
+    const identifier = currentUser?.id || currentUser?.email || "guest";
+    return `valoraem_tutorial_seen_${identifier}`;
+}
+
+function markTutorialSeen() {
+    localStorage.setItem(getTutorialStorageKey(), "true");
+}
+
+function maybeShowOnboardingPrompt() {
+    if (!currentUser || localStorage.getItem(getTutorialStorageKey()) === "true") return;
+    showTutorialIntro();
+}
+
+function showTutorialModal() {
+    const modal = document.getElementById("tutorial-modal");
+    if (!modal) return;
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden", "false");
+}
+
+function hideTutorialModal() {
+    const modal = document.getElementById("tutorial-modal");
+    if (!modal) return;
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+}
+
+function showTutorialIntro() {
+    tutorialIntroActive = true;
+    tutorialStepIndex = 0;
+    showTutorialModal();
+    updateTutorialContent({
+        label: "Welcome",
+        title: "Welcome to Valora EM",
+        body: "Would you like a quick guided tour before you start creating invoices?",
+        focusTitle: "What you will learn",
+        focusText: "Business setup, clients, invoice creation, printing, history, expenses, and support.",
+        progress: 0,
+        primaryText: "Begin Tutorial",
+        backVisible: false
+    });
+}
+
+function updateTutorialContent({ label, title, body, focusTitle, focusText, progress, primaryText, backVisible }) {
+    const labelEl = document.getElementById("tutorial-step-label");
+    const titleEl = document.getElementById("tutorial-title");
+    const bodyEl = document.getElementById("tutorial-body");
+    const focusTitleEl = document.getElementById("tutorial-focus-title");
+    const focusTextEl = document.getElementById("tutorial-focus-text");
+    const progressEl = document.getElementById("tutorial-progress-fill");
+    const primaryBtn = document.getElementById("tutorial-primary-btn");
+    const backBtn = document.getElementById("tutorial-back-btn");
+
+    if (labelEl) labelEl.innerText = label;
+    if (titleEl) titleEl.innerText = title;
+    if (bodyEl) bodyEl.innerText = body;
+    if (focusTitleEl) focusTitleEl.innerText = focusTitle;
+    if (focusTextEl) focusTextEl.innerText = focusText;
+    if (progressEl) progressEl.style.width = `${progress}%`;
+    if (primaryBtn) primaryBtn.innerText = primaryText;
+    if (backBtn) backBtn.style.display = backVisible ? "inline-flex" : "none";
+}
+
+function startTutorial() {
+    tutorialIntroActive = false;
+    tutorialStepIndex = 0;
+    renderTutorialStep();
+}
+
+function renderTutorialStep() {
+    const step = TUTORIAL_STEPS[tutorialStepIndex];
+    if (!step) return;
+    showTutorialModal();
+    switchTab(step.tab);
+
+    const isLastStep = tutorialStepIndex === TUTORIAL_STEPS.length - 1;
+    const progress = Math.round(((tutorialStepIndex + 1) / TUTORIAL_STEPS.length) * 100);
+    updateTutorialContent({
+        label: step.label,
+        title: step.title,
+        body: step.body,
+        focusTitle: step.focusTitle,
+        focusText: step.focusText,
+        progress,
+        primaryText: isLastStep ? "Finish Tutorial" : "Next",
+        backVisible: tutorialStepIndex > 0
+    });
+}
+
+function nextTutorialStep() {
+    if (tutorialIntroActive) {
+        startTutorial();
+        return;
+    }
+
+    if (tutorialStepIndex >= TUTORIAL_STEPS.length - 1) {
+        finishTutorial();
+        return;
+    }
+
+    tutorialStepIndex += 1;
+    renderTutorialStep();
+}
+
+function previousTutorialStep() {
+    if (tutorialIntroActive || tutorialStepIndex === 0) {
+        showTutorialIntro();
+        return;
+    }
+
+    tutorialStepIndex -= 1;
+    renderTutorialStep();
+}
+
+function skipTutorial() {
+    markTutorialSeen();
+    hideTutorialModal();
+}
+
+function finishTutorial() {
+    markTutorialSeen();
+    hideTutorialModal();
+    switchTab("learning-tab");
+}
+
+function restartTutorial() {
+    localStorage.removeItem(getTutorialStorageKey());
+    showTutorialIntro();
+}
+
 // Display auth form
 function showAuthScreen() {
+    hideTutorialModal();
     document.getElementById("auth-container").style.display = "flex";
     document.getElementById("app-root").style.display = "none";
 }
@@ -911,6 +1105,7 @@ function showAppScreen() {
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-root").style.display = "flex";
     switchTab("dashboard-tab");
+    setTimeout(maybeShowOnboardingPrompt, 350);
 }
 
 async function logoutCurrentUser() {
@@ -2361,6 +2556,25 @@ function initAppEventListeners() {
         if (event.target.id === "mobile-drawer-overlay") closeMobileDrawer();
     });
     renderMobileNavigation();
+
+    const tutorialPrimaryBtn = document.getElementById("tutorial-primary-btn");
+    if (tutorialPrimaryBtn) tutorialPrimaryBtn.addEventListener("click", nextTutorialStep);
+
+    const tutorialBackBtn = document.getElementById("tutorial-back-btn");
+    if (tutorialBackBtn) tutorialBackBtn.addEventListener("click", previousTutorialStep);
+
+    const tutorialSkipBtn = document.getElementById("tutorial-skip-btn");
+    if (tutorialSkipBtn) tutorialSkipBtn.addEventListener("click", skipTutorial);
+
+    const tutorialCloseBtn = document.getElementById("tutorial-close-btn");
+    if (tutorialCloseBtn) tutorialCloseBtn.addEventListener("click", skipTutorial);
+
+    const learningStartBtn = document.getElementById("learning-start-tutorial-btn");
+    if (learningStartBtn) learningStartBtn.addEventListener("click", restartTutorial);
+
+    document.querySelectorAll("[data-learning-go]").forEach((button) => {
+        button.addEventListener("click", () => switchTab(button.dataset.learningGo));
+    });
 
     // Navigation item click links
     document.querySelectorAll(".nav-item").forEach(item => {
@@ -3997,5 +4211,7 @@ Object.assign(window, {
     selectTicket,
     selectAdminTicket,
     sendTicketMessage,
-    updateTicketStatus
+    updateTicketStatus,
+    restartTutorial,
+    showTutorialIntro
 });
