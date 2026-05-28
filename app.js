@@ -98,7 +98,7 @@ const PRICING_FEATURES = [
     { label: "Store Logo Upload", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
     { label: "Signature & Receipt Customization", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
     { label: "Multi-Store Business Profiles", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
-    { label: "Preferred Language Receipts", allowed: ["Business Unlimited"] },
+    { label: "Expense Tracking & Net Profit", allowed: ["Pro Unlimited Plan", "Business Unlimited"] },
     { label: "Offline Mode & Item Catalog", allowed: ["Business Unlimited"] }
 ];
 
@@ -151,6 +151,7 @@ let currentProfile = {
 
 let clients = [];
 let invoices = [];
+let expenses = [];
 let businessProfiles = [];
 let activeBusinessProfileId = null;
 let savedItems = [];
@@ -191,6 +192,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Set default dates in invoice form
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("inv-date").value = today;
+    const expenseDate = document.getElementById("expense-date");
+    if (expenseDate) expenseDate.value = today;
     
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -272,6 +275,11 @@ function hasCatalogAccess() {
     return isAdminUser() || getPlanCanonicalName(getCurrentPlanName()) === "Business Unlimited";
 }
 
+function hasExpenseAccess() {
+    const planName = getPlanCanonicalName(getCurrentPlanName());
+    return isAdminUser() || planName === "Pro Unlimited Plan" || planName === "Business Unlimited";
+}
+
 function hasCloudConnection() {
     return isCloudActive && (!window.navigator || window.navigator.onLine !== false);
 }
@@ -295,6 +303,10 @@ function createToast(message, isError = false) {
         toast.classList.remove("visible");
         setTimeout(() => toast.remove(), 250);
     }, 4200);
+}
+
+function formatCurrency(amount) {
+    return `${currentProfile.currency_symbol}${(Number(amount) || 0).toFixed(2)}`;
 }
 
 function logSupabaseError(context, error, payload = null) {
@@ -785,6 +797,8 @@ function switchTab(tabId) {
         renderDashboard();
     } else if (tabId === "invoices-tab") {
         renderInvoicesTable();
+    } else if (tabId === "expenses-tab") {
+        renderExpensesTable();
     } else if (tabId === "trash-tab") {
         renderTrashBin();
     } else if (tabId === "clients-tab") {
@@ -1098,6 +1112,10 @@ function getLocalBusinessProfilesKey() {
 
 function getLocalSavedItemsKey() {
     return `valoraem_saved_items_${currentUser.email}`;
+}
+
+function getLocalExpensesKey() {
+    return `valoraem_expenses_${currentUser.email}`;
 }
 
 function getLocalTicketsKey() {
@@ -1917,6 +1935,17 @@ async function fetchCloudData() {
         const { data: dbInvoices } = await supabaseClient.from("invoices").select("*").order("created_at", { ascending: false });
         invoices = dbInvoices || [];
 
+        const { data: dbExpenses, error: expensesError } = await supabaseClient
+            .from("expenses")
+            .select("*")
+            .order("expense_date", { ascending: false });
+        if (!expensesError && dbExpenses) {
+            expenses = dbExpenses;
+        } else if (expensesError) {
+            console.warn("Expenses table not ready yet:", expensesError.message);
+            expenses = [];
+        }
+
         const { data: dbBusinessProfiles, error: businessProfileError } = await supabaseClient
             .from("business_profiles")
             .select("*")
@@ -1948,6 +1977,7 @@ function loadLocalData() {
     const suffix = currentUser.email;
     clients = JSON.parse(localStorage.getItem(`valoraem_clients_${suffix}`)) || [];
     invoices = JSON.parse(localStorage.getItem(`valoraem_invoices_${suffix}`)) || [];
+    expenses = JSON.parse(localStorage.getItem(getLocalExpensesKey())) || [];
     businessProfiles = JSON.parse(localStorage.getItem(getLocalBusinessProfilesKey())) || [];
     savedItems = JSON.parse(localStorage.getItem(getLocalSavedItemsKey())) || [];
     supportTickets = JSON.parse(localStorage.getItem(getLocalTicketsKey())) || [];
@@ -1959,6 +1989,7 @@ function saveLocalData() {
     const suffix = currentUser.email;
     localStorage.setItem(`valoraem_clients_${suffix}`, JSON.stringify(clients));
     localStorage.setItem(`valoraem_invoices_${suffix}`, JSON.stringify(invoices));
+    localStorage.setItem(getLocalExpensesKey(), JSON.stringify(expenses));
     localStorage.setItem(getLocalBusinessProfilesKey(), JSON.stringify(businessProfiles));
     localStorage.setItem(getLocalSavedItemsKey(), JSON.stringify(savedItems));
     localStorage.setItem(getLocalTicketsKey(), JSON.stringify(supportTickets));
@@ -2014,15 +2045,8 @@ function getPresetDateRange(preset) {
 }
 
 function getDashboardFilteredInvoices() {
-    const preset = document.getElementById("dashboard-date-filter")?.value || "all";
-    if (preset === "all") return getActiveInvoices();
-
-    const customStart = document.getElementById("dashboard-custom-start")?.value;
-    const customEnd = document.getElementById("dashboard-custom-end")?.value;
-    const range = preset === "custom"
-        ? { start: customStart ? new Date(customStart) : null, end: customEnd ? new Date(customEnd) : null }
-        : getPresetDateRange(preset);
-
+    const range = getDashboardDateRange();
+    if (!range.start && !range.end) return getActiveInvoices();
     return getActiveInvoices().filter((invoice) => isDateInRange(getInvoiceDate(invoice), range.start, range.end));
 }
 
@@ -2515,6 +2539,8 @@ function initAppEventListeners() {
         populateClientDropdown();
     });
 
+    document.getElementById("new-expense-form").addEventListener("submit", saveExpenseToDatabase);
+
     // Live update preview outputs on invoice inputs edit
     document.getElementById("inv-number").addEventListener("input", (e) => {
         document.getElementById("preview-inv-number").innerText = e.target.value;
@@ -2576,6 +2602,8 @@ function initAppEventListeners() {
     document.getElementById("invoice-filter-start").addEventListener("change", renderInvoicesTable);
     document.getElementById("invoice-filter-end").addEventListener("change", renderInvoicesTable);
     document.getElementById("client-search-input").addEventListener("input", renderClientsTable);
+    document.getElementById("expense-search-input").addEventListener("input", renderExpensesTable);
+    document.getElementById("expense-filter-category").addEventListener("change", renderExpensesTable);
 
     document.getElementById("dashboard-date-filter").addEventListener("change", () => {
         const custom = document.getElementById("dashboard-date-filter").value === "custom";
@@ -2701,6 +2729,172 @@ async function deleteClient(id) {
     }
     renderClientsTable();
     populateClientDropdown();
+}
+
+function getExpenseDate(expense) {
+    return expense.expense_date || expense.created_at || "";
+}
+
+function getDashboardDateRange() {
+    const preset = document.getElementById("dashboard-date-filter")?.value || "all";
+    if (preset === "all") return { start: null, end: null };
+
+    const customStart = document.getElementById("dashboard-custom-start")?.value;
+    const customEnd = document.getElementById("dashboard-custom-end")?.value;
+    return preset === "custom"
+        ? { start: customStart ? new Date(customStart) : null, end: customEnd ? new Date(customEnd) : null }
+        : getPresetDateRange(preset);
+}
+
+function getDashboardFilteredExpenses() {
+    const range = getDashboardDateRange();
+    if (!range.start && !range.end) return expenses;
+    return expenses.filter((expense) => isDateInRange(getExpenseDate(expense), range.start, range.end));
+}
+
+function getFilteredExpenses() {
+    const query = document.getElementById("expense-search-input")?.value.toLowerCase() || "";
+    const category = document.getElementById("expense-filter-category")?.value || "";
+
+    return expenses.filter((expense) => {
+        const haystack = [
+            expense.category,
+            expense.description,
+            expense.vendor,
+            expense.notes
+        ].join(" ").toLowerCase();
+        const matchesQuery = !query || haystack.includes(query);
+        const matchesCategory = !category || expense.category === category;
+        return matchesQuery && matchesCategory;
+    });
+}
+
+function getTopExpenseCategory(sourceExpenses) {
+    const totals = sourceExpenses.reduce((acc, expense) => {
+        const key = expense.category || "Other";
+        acc[key] = (acc[key] || 0) + (Number(expense.amount) || 0);
+        return acc;
+    }, {});
+    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    return sorted.length ? sorted[0][0] : "None";
+}
+
+async function saveExpenseToDatabase(event) {
+    event.preventDefault();
+    if (!hasExpenseAccess()) {
+        alert("Expense Tracking is available on Pro Unlimited and Business Unlimited plans.");
+        switchTab("billing-tab");
+        return;
+    }
+
+    const expenseDate = document.getElementById("expense-date").value;
+    const category = document.getElementById("expense-category").value;
+    const vendor = document.getElementById("expense-vendor").value.trim();
+    const description = document.getElementById("expense-description").value.trim();
+    const amount = parseFloat(document.getElementById("expense-amount").value) || 0;
+    const notes = document.getElementById("expense-notes").value.trim();
+
+    if (!description || amount <= 0) {
+        alert("Please enter an expense description and amount.");
+        return;
+    }
+
+    const expenseData = {
+        expense_date: expenseDate,
+        category,
+        vendor,
+        description,
+        amount,
+        notes,
+        business_profile_id: activeBusinessProfileId || null
+    };
+
+    if (hasCloudConnection()) {
+        const payload = { ...expenseData, user_id: currentUser.id };
+        const { data, error } = await supabaseClient.from("expenses").insert(payload).select();
+        if (error) {
+            logSupabaseError("expenses insert", error, payload);
+            alert(`Failed: ${error.message}`);
+            return;
+        }
+        if (data && data[0]) expenses.unshift(data[0]);
+    } else {
+        expenses.unshift({
+            ...expenseData,
+            id: `expense-${Date.now()}`,
+            user_id: currentUser?.id || null,
+            created_at: new Date().toISOString()
+        });
+        saveLocalData();
+    }
+
+    document.getElementById("new-expense-form").reset();
+    document.getElementById("expense-date").value = new Date().toISOString().split("T")[0];
+    createToast("Expense saved. Net profit dashboard updated.");
+    renderExpensesTable();
+    renderDashboard();
+}
+
+function renderExpensesTable() {
+    const tbody = document.querySelector("#expenses-table tbody");
+    if (!tbody) return;
+    const allowed = hasExpenseAccess();
+    const lockedNote = document.getElementById("expense-locked-note");
+    if (lockedNote) lockedNote.style.display = allowed ? "none" : "flex";
+    document.querySelectorAll("#new-expense-form input, #new-expense-form select, #new-expense-form textarea, #new-expense-form button")
+        .forEach((element) => {
+            element.disabled = !allowed;
+        });
+
+    const filtered = getFilteredExpenses();
+    const total = filtered.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+    document.getElementById("expenses-total-value").innerText = formatCurrency(total);
+    document.getElementById("expenses-entry-count").innerText = filtered.length;
+    document.getElementById("expenses-top-category").innerText = getTopExpenseCategory(filtered);
+
+    tbody.innerHTML = "";
+    if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No expenses found.</td></tr>';
+        return;
+    }
+
+    filtered.forEach((expense) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${escapeHtml(getExpenseDate(expense))}</td>
+            <td>${escapeHtml(expense.category || "Other")}</td>
+            <td><strong>${escapeHtml(expense.description || "Expense")}</strong></td>
+            <td>${escapeHtml(expense.vendor || "-")}</td>
+            <td style="font-weight: 700;">${formatCurrency(expense.amount)}</td>
+            <td style="text-align: right;">
+                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteExpense('${expense.id}')">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+async function deleteExpense(id) {
+    if (!hasExpenseAccess()) {
+        alert("Expense Tracking is available on Pro Unlimited and Business Unlimited plans.");
+        return;
+    }
+
+    if (!confirm("Delete this expense record?")) return;
+
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient.from("expenses").delete().eq("id", id);
+        if (error) {
+            logSupabaseError("expenses delete", error, { id });
+            alert(`Failed: ${error.message}`);
+            return;
+        }
+    }
+
+    expenses = expenses.filter((expense) => expense.id !== id);
+    saveLocalData();
+    renderExpensesTable();
+    renderDashboard();
 }
 
 // Add blank item line in Creator Form
@@ -3257,6 +3451,8 @@ function renderDashboard() {
     let totalPaid = 0;
     let totalUnpaid = 0;
     const dashboardInvoices = getDashboardFilteredInvoices();
+    const dashboardExpenses = getDashboardFilteredExpenses();
+    const totalExpenses = dashboardExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     
     dashboardInvoices.forEach(inv => {
         const total = parseFloat(inv.total) || 0;
@@ -3268,11 +3464,16 @@ function renderDashboard() {
             totalRevenue += total;
         }
     });
+    const netProfit = totalPaid - totalExpenses;
+    const profitMargin = totalPaid > 0 ? (netProfit / totalPaid) * 100 : 0;
     
-    document.getElementById("dash-total-revenue").innerText = `${currentProfile.currency_symbol}${totalRevenue.toFixed(2)}`;
-    document.getElementById("dash-total-paid").innerText = `${currentProfile.currency_symbol}${totalPaid.toFixed(2)}`;
-    document.getElementById("dash-total-unpaid").innerText = `${currentProfile.currency_symbol}${totalUnpaid.toFixed(2)}`;
+    document.getElementById("dash-total-revenue").innerText = formatCurrency(totalRevenue);
+    document.getElementById("dash-total-paid").innerText = formatCurrency(totalPaid);
+    document.getElementById("dash-total-unpaid").innerText = formatCurrency(totalUnpaid);
     document.getElementById("dash-total-count").innerText = dashboardInvoices.length;
+    document.getElementById("dash-total-expenses").innerText = formatCurrency(totalExpenses);
+    document.getElementById("dash-net-profit").innerText = formatCurrency(netProfit);
+    document.getElementById("dash-profit-margin").innerText = `${profitMargin.toFixed(1)}%`;
     
     // Render recent invoices (Limit to first 5)
     const tbody = document.querySelector("#recent-invoices-table tbody");
@@ -3775,6 +3976,7 @@ Object.assign(window, {
     saveInvoiceToDatabase,
     editInvoice,
     deleteInvoice,
+    deleteExpense,
     restoreInvoice,
     permanentlyDeleteInvoice,
     setupAuthenticatedUser,

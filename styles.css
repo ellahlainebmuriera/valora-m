@@ -563,6 +563,19 @@ body {
     font-weight: 700;
 }
 
+.metric-value-small {
+    font-size: 22px;
+    line-height: 1.15;
+    word-break: break-word;
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
 /* Authentication Page */
 .auth-page {
     width: 100%;
@@ -1005,6 +1018,7 @@ textarea:focus {
 
 @media (max-width: 768px) {
     .business-profile-toolbar,
+    .filters-row,
     .ticket-create-grid,
     .ticket-workspace,
     .ticket-reply-row {

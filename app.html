@@ -168,6 +168,14 @@
                         Invoice History
                     </a>
                 </li>
+                <li class="nav-item" data-tab="expenses-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75h19.5m-18-7.5 7.5-7.5 4.5 4.5 3-3m-3 0h3v3M4.5 18.75v-5.25m5.25 5.25v-8.25m5.25 8.25v-6m5.25 6v-9.75" />
+                        </svg>
+                        Expenses
+                    </a>
+                </li>
                 <li class="nav-item" data-tab="trash-tab">
                     <a class="nav-link">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -311,6 +319,27 @@
                             <span class="metric-icon">📑</span>
                         </div>
                         <div class="metric-value" id="dash-total-count">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Expenses</span>
+                            <span class="metric-icon">-</span>
+                        </div>
+                        <div class="metric-value" id="dash-total-expenses">PHP 0.00</div>
+                    </div>
+                    <div class="metric-card accent">
+                        <div class="metric-header">
+                            <span class="metric-title">Net Profit</span>
+                            <span class="metric-icon">=</span>
+                        </div>
+                        <div class="metric-value" id="dash-net-profit">PHP 0.00</div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <span class="metric-title">Profit Margin</span>
+                            <span class="metric-icon">%</span>
+                        </div>
+                        <div class="metric-value" id="dash-profit-margin">0%</div>
                     </div>
                 </div>
 
@@ -692,6 +721,133 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== EXPENSES TAB ==================== -->
+            <div id="expenses-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Expense Tracking</h1>
+                        <p>Track operating costs and see true net profit instead of revenue only.</p>
+                    </div>
+                </div>
+
+                <div class="subscription-card" id="expense-locked-note" style="display: none;">
+                    <div>
+                        <h3 style="font-family: var(--font-title); font-size: 18px; margin-bottom: 4px;">Pro Business Feature</h3>
+                        <p style="color: var(--text-medium); font-size: 14px;">Expense Tracking and Net Profit Analytics are available on Pro Unlimited and Business Unlimited plans.</p>
+                    </div>
+                    <button class="btn btn-accent btn-sm" onclick="switchTab('billing-tab')">View Plans</button>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Expenses This View</span>
+                            <span class="metric-icon">-</span>
+                        </div>
+                        <div class="metric-value" id="expenses-total-value">PHP 0.00</div>
+                    </div>
+                    <div class="metric-card accent">
+                        <div class="metric-header">
+                            <span class="metric-title">Expense Entries</span>
+                            <span class="metric-icon">#</span>
+                        </div>
+                        <div class="metric-value" id="expenses-entry-count">0</div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="metric-header">
+                            <span class="metric-title">Top Category</span>
+                            <span class="metric-icon">%</span>
+                        </div>
+                        <div class="metric-value metric-value-small" id="expenses-top-category">None</div>
+                    </div>
+                </div>
+
+                <div class="grid-panels">
+                    <div class="panel-card">
+                        <div class="panel-title">Add Business Expense</div>
+                        <form id="new-expense-form">
+                            <div class="form-group row">
+                                <div class="form-group">
+                                    <label for="expense-date">Date</label>
+                                    <input type="date" id="expense-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="expense-category">Category</label>
+                                    <select id="expense-category" required>
+                                        <option value="Inventory / Cost of Goods">Inventory / Cost of Goods</option>
+                                        <option value="Rent">Rent</option>
+                                        <option value="Utilities">Utilities</option>
+                                        <option value="Internet / Load">Internet / Load</option>
+                                        <option value="Staff / Payroll">Staff / Payroll</option>
+                                        <option value="Delivery / Transport">Delivery / Transport</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Supplies">Supplies</option>
+                                        <option value="Software / Subscription">Software / Subscription</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="expense-vendor">Vendor / Payee</label>
+                                <input type="text" id="expense-vendor" placeholder="e.g. Meralco, supplier, delivery rider">
+                            </div>
+                            <div class="form-group">
+                                <label for="expense-description">Description</label>
+                                <input type="text" id="expense-description" required placeholder="e.g. Electricity bill, product inventory, packaging">
+                            </div>
+                            <div class="form-group">
+                                <label for="expense-amount">Amount</label>
+                                <input type="number" id="expense-amount" min="0" step="0.01" required placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="expense-notes">Notes</label>
+                                <textarea id="expense-notes" rows="3" placeholder="Optional notes for bookkeeping reference"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Save Expense</button>
+                        </form>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-title">Expense History</div>
+                        <div class="filters-row">
+                            <input type="text" id="expense-search-input" placeholder="Search expenses...">
+                            <select id="expense-filter-category">
+                                <option value="">All Categories</option>
+                                <option value="Inventory / Cost of Goods">Inventory / Cost of Goods</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Internet / Load">Internet / Load</option>
+                                <option value="Staff / Payroll">Staff / Payroll</option>
+                                <option value="Delivery / Transport">Delivery / Transport</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Supplies">Supplies</option>
+                                <option value="Software / Subscription">Software / Subscription</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="table-wrapper" style="max-height: 460px; overflow-y: auto;">
+                            <table class="custom-table" id="expenses-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                        <th>Vendor</th>
+                                        <th>Amount</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; color: var(--text-muted);">No expenses yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1287,7 +1443,7 @@
                             <li class="locked"><span class="feature-icon">−</span><span>Store Logo Upload</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Signature & Receipt Customization</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Multi-Store Business Profiles</span></li>
-                            <li class="locked"><span class="feature-icon">−</span><span>Preferred Language Receipts</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Expense Tracking & Net Profit</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Offline Mode & Item Catalog</span></li>
                         </ul>
                         <button class="btn btn-secondary plan-action-btn" data-plan-action="Standard Free Plan" style="width: 100%; margin-top: auto;" disabled>Active Plan</button>
@@ -1305,7 +1461,7 @@
                             <li class="locked"><span class="feature-icon">−</span><span>Store Logo Upload</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Signature & Receipt Customization</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Multi-Store Business Profiles</span></li>
-                            <li class="locked"><span class="feature-icon">−</span><span>Preferred Language Receipts</span></li>
+                            <li class="locked"><span class="feature-icon">−</span><span>Expense Tracking & Net Profit</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Offline Mode & Item Catalog</span></li>
                         </ul>
                         <button class="btn btn-secondary checkout-plan-btn plan-action-btn" data-plan="Starter Unlimited" data-plan-action="Starter Unlimited" data-price="149" data-regular-price="298" data-billing-cycle="monthly" style="width: 100%; margin-top: auto;">Choose Starter</button>
@@ -1324,7 +1480,7 @@
                             <li><span class="feature-icon">✓</span><span>Store Logo Upload</span></li>
                             <li><span class="feature-icon">✓</span><span>Signature & Receipt Customization</span></li>
                             <li><span class="feature-icon">✓</span><span>Multi-Store Business Profiles <small>Up to 2 stores</small></span></li>
-                            <li class="locked"><span class="feature-icon">−</span><span>Preferred Language Receipts</span></li>
+                            <li><span class="feature-icon">✓</span><span>Expense Tracking & Net Profit</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Offline Mode & Item Catalog</span></li>
                         </ul>
                         <button class="btn btn-primary checkout-plan-btn plan-action-btn" id="checkout-pro-btn" data-plan="Pro Unlimited Plan" data-plan-action="Pro Unlimited Plan" data-price="249" data-regular-price="498" data-billing-cycle="monthly" style="width: 100%; margin-top: auto;">Choose Pro</button>
@@ -1342,7 +1498,7 @@
                             <li><span class="feature-icon">✓</span><span>Store Logo Upload</span></li>
                             <li><span class="feature-icon">✓</span><span>Signature & Receipt Customization</span></li>
                             <li><span class="feature-icon">✓</span><span>Multi-Store Business Profiles <small>Unlimited stores</small></span></li>
-                            <li><span class="feature-icon">✓</span><span>Preferred Language Receipts</span></li>
+                            <li><span class="feature-icon">✓</span><span>Expense Tracking & Net Profit</span></li>
                             <li><span class="feature-icon">✓</span><span>Offline Mode & Item Catalog</span></li>
                         </ul>
                         <button class="btn btn-accent checkout-plan-btn plan-action-btn" data-plan="Business Unlimited" data-plan-action="Business Unlimited" data-price="449" data-regular-price="898" data-billing-cycle="monthly" style="width: 100%; margin-top: auto;">Choose Business</button>

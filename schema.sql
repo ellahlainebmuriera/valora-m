@@ -133,7 +133,29 @@ CREATE POLICY "Users can CRUD their own invoice items."
         )
     );
 
--- 5. Feature Requests (customer requests visible to owner/admin)
+-- 5. Expenses Table (Operating costs for net profit reporting)
+CREATE TABLE IF NOT EXISTS public.expenses (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+    business_profile_id TEXT,
+    expense_date DATE DEFAULT CURRENT_DATE,
+    category TEXT DEFAULT 'Other',
+    vendor TEXT,
+    description TEXT NOT NULL,
+    amount NUMERIC DEFAULT 0,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can CRUD their own expenses." ON public.expenses;
+CREATE POLICY "Users can CRUD their own expenses."
+    ON public.expenses FOR ALL
+    USING (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+    WITH CHECK (auth.uid() = user_id OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+-- 6. Feature Requests (customer requests visible to owner/admin)
 CREATE TABLE public.app_payments (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -177,7 +199,7 @@ CREATE POLICY "Owner admin can view all feature requests."
     ON public.feature_requests FOR SELECT
     USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
 
--- 6. Multi-store business profiles, per-store catalog, and support tickets
+-- 7. Multi-store business profiles, per-store catalog, and support tickets
 CREATE TABLE IF NOT EXISTS public.business_profiles (
     id TEXT PRIMARY KEY,
     user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -296,7 +318,7 @@ CREATE POLICY "Users and owner can send ticket messages."
         )
     );
 
--- 7. Automate Profile Creation on Sign Up
+-- 8. Automate Profile Creation on Sign Up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
