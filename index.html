@@ -132,8 +132,58 @@
                 linear-gradient(135deg, #080f1d 0%, #102033 46%, #111827 100%);
         }
 
+        .hero-shell {
+            width: min(1240px, 100%);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 0.94fr) minmax(360px, 1.06fr);
+            gap: clamp(28px, 5vw, 64px);
+            align-items: center;
+        }
+
         .hero-inner {
             width: min(760px, 100%);
+        }
+
+        .hero-showcase {
+            min-width: 0;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .hero-showcase .app-preview {
+            width: min(100%, 620px);
+            transform: rotate(1deg);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.38);
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .hero-stat-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
+            background: #f8fafc;
+        }
+
+        .hero-stat-card span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .hero-stat-card strong {
+            display: block;
+            color: var(--navy);
+            font-size: 20px;
+            margin-top: 4px;
         }
 
         .eyebrow {
@@ -601,6 +651,24 @@
 
             .hero {
                 min-height: 88vh;
+                padding-top: 92px;
+            }
+
+            .hero-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-showcase {
+                justify-content: stretch;
+            }
+
+            .hero-showcase .app-preview {
+                width: 100%;
+                transform: none;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
             }
 
             .hero-proof,
@@ -645,29 +713,80 @@
 
     <main id="top">
         <section class="hero">
-            <div class="hero-inner">
-                <div class="hero-logo" role="img" aria-label="Valora EM logo"></div>
-                <span class="eyebrow">Effortless Billing for Entrepreneurs</span>
-                <h1>Valora EM</h1>
-                <p class="motto">Valuing every transaction.</p>
-                <p>Create invoices, estimates, client records, signature-ready receipts, and print-ready PDFs without spreadsheet headaches.</p>
-                <div class="hero-actions">
-                    <a class="btn primary" href="app.html">Try The App</a>
-                    <button class="btn secondary install-app-btn" type="button" data-install-app>Install App</button>
-                    <a class="btn secondary" href="#pricing">View Plans</a>
+            <div class="hero-shell">
+                <div class="hero-inner">
+                    <div class="hero-logo" role="img" aria-label="Valora EM logo"></div>
+                    <span class="eyebrow">Effortless Billing for Entrepreneurs</span>
+                    <h1>Valora EM</h1>
+                    <p class="motto">Valuing every transaction.</p>
+                    <p>Create invoices, estimates, client records, signature-ready receipts, and print-ready PDFs without spreadsheet headaches.</p>
+                    <div class="hero-actions">
+                        <a class="btn primary" href="app.html">Try The App</a>
+                        <button class="btn secondary install-app-btn" type="button" data-install-app>Install App</button>
+                        <a class="btn secondary" href="#pricing">View Plans</a>
+                    </div>
+                    <div class="hero-proof" aria-label="Product highlights">
+                        <div class="proof-item">
+                            <strong>Unlimited</strong>
+                            <span>Invoices on paid plans</span>
+                        </div>
+                        <div class="proof-item">
+                            <strong>PDF</strong>
+                            <span>Print and save support</span>
+                        </div>
+                        <div class="proof-item">
+                            <strong>Logo</strong>
+                            <span>Custom business branding</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="hero-proof" aria-label="Product highlights">
-                    <div class="proof-item">
-                        <strong>Unlimited</strong>
-                        <span>Invoices on paid plans</span>
-                    </div>
-                    <div class="proof-item">
-                        <strong>PDF</strong>
-                        <span>Print and save support</span>
-                    </div>
-                    <div class="proof-item">
-                        <strong>Logo</strong>
-                        <span>Custom business branding</span>
+
+                <div class="hero-showcase">
+                    <div class="app-preview" aria-label="Valora EM dashboard preview">
+                        <div class="preview-top">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                        <div class="preview-body">
+                            <div class="preview-side">
+                                <div class="preview-nav active">Dashboard</div>
+                                <div class="preview-nav">Invoices</div>
+                                <div class="preview-nav">Expenses</div>
+                                <div class="preview-nav">Reports</div>
+                            </div>
+                            <div class="invoice-mini">
+                                <h3>Business Snapshot</h3>
+                                <div class="hero-stats">
+                                    <div class="hero-stat-card">
+                                        <span>Paid</span>
+                                        <strong>PHP 48.6k</strong>
+                                    </div>
+                                    <div class="hero-stat-card">
+                                        <span>Expenses</span>
+                                        <strong>PHP 12.4k</strong>
+                                    </div>
+                                    <div class="hero-stat-card">
+                                        <span>Profit</span>
+                                        <strong>PHP 36.2k</strong>
+                                    </div>
+                                </div>
+                                <table class="mini-table">
+                                    <thead>
+                                        <tr><th>Document</th><th>Status</th><th>Total</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>INV-1024</td><td>Paid</td><td>PHP 5,500</td></tr>
+                                        <tr><td>EST-204</td><td>Sent</td><td>PHP 8,750</td></tr>
+                                        <tr><td>INV-1025</td><td>Overdue</td><td>PHP 2,950</td></tr>
+                                    </tbody>
+                                </table>
+                                <div class="mini-total">
+                                    <span>Net Profit</span>
+                                    <span>PHP 36,200</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
