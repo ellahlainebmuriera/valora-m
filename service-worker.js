@@ -1,4 +1,4 @@
-const CACHE_NAME = "valora-em-v8";
+const CACHE_NAME = "valora-em-v9";
 const APP_ASSETS = [
   "/",
   "/app",
@@ -10,6 +10,7 @@ const APP_ASSETS = [
   "/styles.css",
   "/app.js",
   "/auth-fallback.js",
+  "/pwa-install.js",
   "/manifest.json",
   "/manifest.webmanifest",
   "/icons/valora-em-logo-192.png",
@@ -20,7 +21,9 @@ const APP_ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(APP_ASSETS.map((asset) => cache.add(asset)))
+    )
   );
   self.skipWaiting();
 });
@@ -41,7 +44,7 @@ self.addEventListener("fetch", (event) => {
     fetch(event.request)
       .then((response) => {
         const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
         return response;
       })
       .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html")))

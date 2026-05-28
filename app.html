@@ -29,6 +29,7 @@
                 <h2 class="auth-title" id="auth-app-name">Valora EM</h2>
                 <p style="color: var(--text-muted); font-size: 14px;">Professional Invoicing & Estimates</p>
                 <p style="color: var(--accent); font-size: 13px; font-weight: 700; margin-top: 6px;">Valuing every transaction.</p>
+                <button class="btn btn-secondary install-app-auth-btn" type="button" data-install-app>Install App</button>
             </div>
 
             <!-- Login Form -->
@@ -1536,6 +1537,7 @@
 
     <script src="app.js"></script>
     <script src="auth-fallback.js"></script>
+    <script src="pwa-install.js"></script>
     <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {

@@ -613,6 +613,7 @@
         </a>
         <nav class="nav-actions" aria-label="Main navigation">
             <a class="btn secondary" href="#pricing">Pricing</a>
+            <button class="btn secondary install-app-btn" type="button" data-install-app>Install App</button>
             <a class="btn primary" href="app.html">Open App</a>
         </nav>
     </header>
@@ -627,6 +628,7 @@
                 <p>Create invoices, estimates, client records, signature-ready receipts, and print-ready PDFs without spreadsheet headaches.</p>
                 <div class="hero-actions">
                     <a class="btn primary" href="app.html">Try The App</a>
+                    <button class="btn secondary install-app-btn" type="button" data-install-app>Install App</button>
                     <a class="btn secondary" href="#pricing">View Plans</a>
                 </div>
                 <div class="hero-proof" aria-label="Product highlights">
@@ -864,6 +866,9 @@
             button.addEventListener("click", () => updateLandingPricing(button.dataset.landingCycle));
         });
 
+    </script>
+    <script src="pwa-install.js"></script>
+    <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
                 navigator.serviceWorker.register("service-worker.js", { scope: "/" }).catch(() => {});

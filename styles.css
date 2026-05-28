@@ -461,6 +461,11 @@ body {
     border-radius: 8px;
 }
 
+.install-app-auth-btn {
+    margin-top: 16px;
+    width: 100%;
+}
+
 .icon-action {
     width: 34px;
     height: 34px;
