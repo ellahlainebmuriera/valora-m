@@ -380,6 +380,86 @@ function logSupabaseError(context, error, payload = null) {
     });
 }
 
+function isMissingSchemaColumnError(error, columnName) {
+    const text = [
+        error?.message,
+        error?.details,
+        error?.hint,
+        error?.code
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return text.includes(columnName.toLowerCase()) && (
+        text.includes("schema cache") ||
+        text.includes("could not find") ||
+        text.includes("column")
+    );
+}
+
+function withoutKeys(source, keys) {
+    const clone = { ...source };
+    keys.forEach((key) => delete clone[key]);
+    return clone;
+}
+
+async function updateCloudProfileSettings(payload) {
+    let { error } = await supabaseClient
+        .from("profiles")
+        .update(payload)
+        .eq("id", currentUser.id);
+
+    if (error && isMissingSchemaColumnError(error, "last_business_info_updated_at")) {
+        logSupabaseError("profiles update missing optional profile lock column", error, payload);
+        const fallbackPayload = withoutKeys(payload, ["last_business_info_updated_at"]);
+        const fallbackResult = await supabaseClient
+            .from("profiles")
+            .update(fallbackPayload)
+            .eq("id", currentUser.id);
+        error = fallbackResult.error;
+    }
+
+    return { error };
+}
+
+async function saveCloudInvoiceRecord(invoiceData) {
+    let payload = { ...invoiceData };
+    let result;
+
+    if (activeEditingInvoiceId) {
+        result = await supabaseClient
+            .from("invoices")
+            .update(payload)
+            .eq("id", activeEditingInvoiceId);
+    } else {
+        result = await supabaseClient
+            .from("invoices")
+            .insert(payload)
+            .select();
+    }
+
+    if (result.error && isMissingSchemaColumnError(result.error, "business_profile_id")) {
+        logSupabaseError("invoices save missing optional business profile column", result.error, payload);
+        payload = withoutKeys(payload, ["business_profile_id"]);
+        result = activeEditingInvoiceId
+            ? await supabaseClient.from("invoices").update(payload).eq("id", activeEditingInvoiceId)
+            : await supabaseClient.from("invoices").insert(payload).select();
+    }
+
+    return result;
+}
+
+async function insertCloudExpenseRecord(expenseData) {
+    let payload = { ...expenseData, user_id: currentUser.id };
+    let result = await supabaseClient.from("expenses").insert(payload).select();
+
+    if (result.error && isMissingSchemaColumnError(result.error, "business_profile_id")) {
+        logSupabaseError("expenses insert missing optional business profile column", result.error, payload);
+        payload = withoutKeys(payload, ["business_profile_id"]);
+        result = await supabaseClient.from("expenses").insert(payload).select();
+    }
+
+    return result;
+}
+
 async function getAuthenticatedCloudUser() {
     if (!hasCloudConnection() || !supabaseClient?.auth?.getUser) return currentUser;
     const { data, error } = await supabaseClient.auth.getUser();
@@ -2572,6 +2652,10 @@ function initAppEventListeners() {
     const learningStartBtn = document.getElementById("learning-start-tutorial-btn");
     if (learningStartBtn) learningStartBtn.addEventListener("click", restartTutorial);
 
+    document.querySelectorAll("[data-tutorial-start]").forEach((button) => {
+        button.addEventListener("click", restartTutorial);
+    });
+
     document.querySelectorAll("[data-learning-go]").forEach((button) => {
         button.addEventListener("click", () => switchTab(button.dataset.learningGo));
     });
@@ -2646,24 +2730,23 @@ function initAppEventListeners() {
             updatedBusinessProfile.last_business_info_updated_at = currentProfile.last_business_info_updated_at;
         }
         
-        if (isCloudActive) {
-            const { error } = await supabaseClient.from("profiles")
-                .update({
-                    company_name: currentProfile.company_name,
-                    email: currentProfile.email,
-                    phone: currentProfile.phone,
-                    address: currentProfile.address,
-                    currency: currentProfile.currency,
-                    currency_symbol: currentProfile.currency_symbol,
-                    preferred_language: currentProfile.preferred_language,
-                    custom_language_name: currentProfile.custom_language_name,
-                    invoice_theme_color: currentProfile.invoice_theme_color,
-                    invoice_text_color: currentProfile.invoice_text_color,
-                    print_layout: currentProfile.print_layout,
-                    app_appearance: currentProfile.app_appearance,
-                    last_business_info_updated_at: currentProfile.last_business_info_updated_at
-                })
-                .eq("id", currentUser.id);
+        if (hasCloudConnection()) {
+            const profilePayload = {
+                company_name: currentProfile.company_name,
+                email: currentProfile.email,
+                phone: currentProfile.phone,
+                address: currentProfile.address,
+                currency: currentProfile.currency,
+                currency_symbol: currentProfile.currency_symbol,
+                preferred_language: currentProfile.preferred_language,
+                custom_language_name: currentProfile.custom_language_name,
+                invoice_theme_color: currentProfile.invoice_theme_color,
+                invoice_text_color: currentProfile.invoice_text_color,
+                print_layout: currentProfile.print_layout,
+                app_appearance: currentProfile.app_appearance,
+                last_business_info_updated_at: currentProfile.last_business_info_updated_at
+            };
+            const { error } = await updateCloudProfileSettings(profilePayload);
             if (error) alert("Error updating settings: " + error.message);
             else {
                 await persistActiveBusinessProfile();
@@ -3024,10 +3107,9 @@ async function saveExpenseToDatabase(event) {
     };
 
     if (hasCloudConnection()) {
-        const payload = { ...expenseData, user_id: currentUser.id };
-        const { data, error } = await supabaseClient.from("expenses").insert(payload).select();
+        const { data, error } = await insertCloudExpenseRecord(expenseData);
         if (error) {
-            logSupabaseError("expenses insert", error, payload);
+            logSupabaseError("expenses insert", error, expenseData);
             alert(`Failed: ${error.message}`);
             return;
         }
@@ -3391,7 +3473,7 @@ async function saveInvoiceToDatabase() {
             let invResultId = null;
             if (activeEditingInvoiceId) {
                 // Update
-                const { error } = await supabaseClient.from("invoices").update(invoiceData).eq("id", activeEditingInvoiceId);
+                const { error } = await saveCloudInvoiceRecord(invoiceData);
                 if (error) {
                     alert("Error saving: " + error.message);
                     return;
@@ -3401,7 +3483,7 @@ async function saveInvoiceToDatabase() {
                 await supabaseClient.from("invoice_items").delete().eq("invoice_id", activeEditingInvoiceId);
             } else {
                 // Insert
-                const { data, error } = await supabaseClient.from("invoices").insert(invoiceData).select();
+                const { data, error } = await saveCloudInvoiceRecord(invoiceData);
                 if (error) {
                     alert("Error saving: " + error.message);
                     return;
