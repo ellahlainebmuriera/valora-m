@@ -1,6 +1,8 @@
-const CACHE_NAME = "valora-em-v4";
+const CACHE_NAME = "valora-em-v8";
 const APP_ASSETS = [
   "/",
+  "/app",
+  "/refund-policy",
   "/index.html",
   "/official-website.html",
   "/refund-policy.html",
@@ -8,7 +10,12 @@ const APP_ASSETS = [
   "/styles.css",
   "/app.js",
   "/auth-fallback.js",
-  "/manifest.webmanifest"
+  "/manifest.json",
+  "/manifest.webmanifest",
+  "/icons/valora-em-logo-192.png",
+  "/icons/valora-em-logo-512.png",
+  "/icons/valora-em-mark-192.png",
+  "/icons/valora-em-mark-512.png"
 ];
 
 self.addEventListener("install", (event) => {

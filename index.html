@@ -5,7 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valora EM | Invoice Maker for Small Businesses</title>
     <meta name="description" content="Create invoices, estimates, client records, and print-ready PDFs for Philippine small businesses.">
-    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Valora EM">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <meta property="og:title" content="Valora EM">
+    <meta property="og:description" content="Effortless billing for entrepreneurs. Create invoices, estimates, and print-ready receipts.">
+    <meta property="og:image" content="/icons/valora-em-logo-512.png">
+    <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/valora-em-logo-192.png">
+    <link rel="apple-touch-icon" href="icons/valora-em-logo-192.png">
     <style>
         :root {
             --ink: #172033;
@@ -67,11 +78,13 @@
             width: 34px;
             height: 34px;
             border-radius: 8px;
-            background: var(--brand);
-            color: #fff;
+            background: #20245f url("icons/valora-em-mark-192.png") center / cover no-repeat;
+            color: transparent;
             display: grid;
             place-items: center;
+            font-size: 0;
             font-weight: 900;
+            overflow: hidden;
         }
 
         .nav-actions {
@@ -132,6 +145,15 @@
             font-size: 13px;
             font-weight: 800;
             background: rgba(255, 255, 255, 0.08);
+        }
+
+        .hero-logo {
+            width: clamp(116px, 18vw, 172px);
+            height: clamp(116px, 18vw, 172px);
+            display: block;
+            margin-bottom: 18px;
+            border-radius: 28px;
+            box-shadow: 0 24px 70px rgba(5, 8, 25, 0.36);
         }
 
         h1 {
@@ -598,6 +620,7 @@
     <main id="top">
         <section class="hero">
             <div class="hero-inner">
+                <img class="hero-logo" src="icons/valora-em-logo-512.png" alt="Valora EM logo">
                 <span class="eyebrow">Effortless Billing for Entrepreneurs</span>
                 <h1>Valora EM</h1>
                 <p class="motto">Valuing every transaction.</p>
@@ -843,7 +866,7 @@
 
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
-                navigator.serviceWorker.register("service-worker.js").catch(() => {});
+                navigator.serviceWorker.register("service-worker.js", { scope: "/" }).catch(() => {});
             });
         }
     </script>

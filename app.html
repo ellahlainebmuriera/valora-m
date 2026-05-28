@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="app-title-tag">Valora EM - Professional Invoicing SaaS</title>
     <meta name="description" content="Generate professional estimates and invoices with a fully custom white-labeled system. Build client lists, track earnings, and run your business.">
-    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Valora EM">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <meta property="og:image" content="/icons/valora-em-logo-512.png">
+    <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/valora-em-logo-192.png">
+    <link rel="apple-touch-icon" href="icons/valora-em-logo-192.png">
     <link rel="stylesheet" href="styles.css">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1530,7 +1539,7 @@
     <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", () => {
-                navigator.serviceWorker.register("service-worker.js").catch(() => {});
+                navigator.serviceWorker.register("service-worker.js", { scope: "/" }).catch(() => {});
             });
         }
     </script>
