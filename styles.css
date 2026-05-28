@@ -165,7 +165,7 @@ body {
 .logo-icon {
     width: 40px;
     height: 40px;
-    background: #20245f url("icons/valora-em-mark-192.png") center / cover no-repeat;
+    background: #20245f url("/icons/valora-em-mark-192.png") center / cover no-repeat;
     border-radius: 12px;
     display: flex;
     align-items: center;

@@ -15,8 +15,8 @@
     <meta property="og:description" content="Effortless billing for entrepreneurs. Create invoices, estimates, and print-ready receipts.">
     <meta property="og:image" content="/icons/valora-em-logo-512.png">
     <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/valora-em-logo-192.png">
-    <link rel="apple-touch-icon" href="icons/valora-em-logo-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
+    <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
     <style>
         :root {
             --ink: #172033;
@@ -78,7 +78,7 @@
             width: 34px;
             height: 34px;
             border-radius: 8px;
-            background: #20245f url("icons/valora-em-mark-192.png") center / cover no-repeat;
+            background: #20245f url("/icons/valora-em-mark-192.png") center / cover no-repeat;
             color: transparent;
             display: grid;
             place-items: center;
@@ -153,6 +153,9 @@
             display: block;
             margin-bottom: 18px;
             border-radius: 28px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0)),
+                #20245f url("/icons/valora-em-logo-512.png") center / cover no-repeat;
             box-shadow: 0 24px 70px rgba(5, 8, 25, 0.36);
         }
 
@@ -621,7 +624,7 @@
     <main id="top">
         <section class="hero">
             <div class="hero-inner">
-                <img class="hero-logo" src="icons/valora-em-logo-512.png" alt="Valora EM logo">
+                <div class="hero-logo" role="img" aria-label="Valora EM logo"></div>
                 <span class="eyebrow">Effortless Billing for Entrepreneurs</span>
                 <h1>Valora EM</h1>
                 <p class="motto">Valuing every transaction.</p>
