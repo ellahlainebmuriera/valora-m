@@ -540,10 +540,19 @@
 
         .feature-icon {
             width: 18px;
+            height: 18px;
             flex: 0 0 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             color: #16a34a;
             font-weight: 900;
             text-align: center;
+        }
+
+        .feature-icon svg {
+            width: 18px;
+            height: 18px;
         }
 
         .price-card.featured .feature-icon {
@@ -1016,6 +1025,16 @@
         document.querySelectorAll("[data-landing-cycle]").forEach((button) => {
             button.addEventListener("click", () => updateLandingPricing(button.dataset.landingCycle));
         });
+
+        function enhanceLandingFeatureIcons() {
+            const checkSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+            const lockedSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>';
+            document.querySelectorAll(".price-card .feature-icon").forEach((icon) => {
+                icon.innerHTML = icon.closest("li")?.classList.contains("locked") ? lockedSvg : checkSvg;
+            });
+        }
+
+        enhanceLandingFeatureIcons();
 
     </script>
     <script src="pwa-install.js"></script>

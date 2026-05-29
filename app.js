@@ -64,6 +64,11 @@ const CURRENCY_ALIASES = {
 
 const PROFILE_LOCK_MESSAGE = "Profile Lock active. Free and Starter tiers can only modify business profile settings once every 7 days. Upgrade to Pro or Business Plan to manage multiple stores instantly.";
 const FREE_WEEKLY_INVOICE_LIMIT = 5;
+const LIVE_LAUNCH_CONFIG = {
+    active: false,
+    launchDate: "",
+    trialDays: 7
+};
 
 const BUSINESS_PROFILE_FIELDS = [
     "company_name",
@@ -77,6 +82,8 @@ const BUSINESS_PROFILE_FIELDS = [
     "invoice_theme_color",
     "invoice_text_color",
     "preferred_language",
+    "document_language",
+    "app_interface_language",
     "custom_language_name",
     "print_layout",
     "app_appearance",
@@ -200,13 +207,21 @@ let currentProfile = {
     invoice_theme_color: "#6366f1",
     invoice_text_color: "#1e293b",
     preferred_language: "en",
+    document_language: "en",
+    app_interface_language: "en",
     custom_language_name: "",
     print_layout: "pdf",
     app_appearance: "dark",
     saved_signature_data_url: "",
     save_signature_permission: false,
     last_business_info_updated_at: null,
-    billing_cycle: "monthly"
+    billing_cycle: "monthly",
+    auto_renewal_enabled: false,
+    billing_status: "manual",
+    subscription_expires_at: null,
+    is_deleted: false,
+    deletion_requested_at: null,
+    hard_delete_after: null
 };
 
 let clients = [];
@@ -246,6 +261,7 @@ let whitelabelConfig = {
 document.addEventListener("DOMContentLoaded", () => {
     seedTestAccount();
     loadWhiteLabelSettings();
+    enhancePricingFeatureIcons();
     initAppEventListeners();
     initSignaturePad();
     initPasswordRecoveryFlow();
@@ -393,6 +409,16 @@ function hasExpenseAccess() {
     return isAdminUser() || planName === "Pro Unlimited Plan" || planName === "Business Unlimited";
 }
 
+function getSubscriptionExpiryDate(cycle = "monthly") {
+    const expiry = new Date();
+    if (cycle === "yearly") {
+        expiry.setFullYear(expiry.getFullYear() + 1);
+    } else {
+        expiry.setMonth(expiry.getMonth() + 1);
+    }
+    return expiry.toISOString();
+}
+
 function hasCloudConnection() {
     return isCloudActive && (!window.navigator || window.navigator.onLine !== false);
 }
@@ -416,6 +442,23 @@ function createToast(message, isError = false) {
         toast.classList.remove("visible");
         setTimeout(() => toast.remove(), 250);
     }, 4200);
+}
+
+function enhancePricingFeatureIcons() {
+    const checkSvg = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    `;
+    const lockedSvg = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+        </svg>
+    `;
+    document.querySelectorAll(".plan-features .feature-icon").forEach((icon) => {
+        const locked = icon.closest("li")?.classList.contains("locked");
+        icon.innerHTML = locked ? lockedSvg : checkSvg;
+    });
 }
 
 function formatCurrency(amount) {
@@ -454,19 +497,33 @@ function withoutKeys(source, keys) {
 }
 
 async function updateCloudProfileSettings(payload) {
-    let { error } = await supabaseClient
-        .from("profiles")
-        .update(payload)
-        .eq("id", currentUser.id);
+    const optionalProfileColumns = [
+        "last_business_info_updated_at",
+        "document_language",
+        "app_interface_language",
+        "auto_renewal_enabled",
+        "billing_status",
+        "subscription_expires_at",
+        "is_deleted",
+        "deletion_requested_at",
+        "hard_delete_after",
+        "deletion_type"
+    ];
+    let workingPayload = { ...payload };
+    let error = null;
 
-    if (error && isMissingSchemaColumnError(error, "last_business_info_updated_at")) {
-        logSupabaseError("profiles update missing optional profile lock column", error, payload);
-        const fallbackPayload = withoutKeys(payload, ["last_business_info_updated_at"]);
-        const fallbackResult = await supabaseClient
+    for (let attempt = 0; attempt <= optionalProfileColumns.length; attempt += 1) {
+        const result = await supabaseClient
             .from("profiles")
-            .update(fallbackPayload)
+            .update(workingPayload)
             .eq("id", currentUser.id);
-        error = fallbackResult.error;
+        error = result.error;
+        if (!error) break;
+
+        const missingColumn = optionalProfileColumns.find((column) => isMissingSchemaColumnError(error, column) && column in workingPayload);
+        if (!missingColumn) break;
+        logSupabaseError(`profiles update missing optional column ${missingColumn}`, error, workingPayload);
+        workingPayload = withoutKeys(workingPayload, [missingColumn]);
     }
 
     return { error };
@@ -826,7 +883,7 @@ const documentTypeLabels = {
 };
 
 function getReceiptText(key) {
-    const lang = currentProfile.preferred_language || "en";
+    const lang = currentProfile.document_language || currentProfile.preferred_language || "en";
     const source = receiptTranslations[lang] || receiptTranslations.default;
     return source[key] || receiptTranslations.default[key] || key;
 }
@@ -853,12 +910,16 @@ function seedTestAccount() {
             invoice_theme_color: "#0d9488",
             invoice_text_color: "#1e293b",
             preferred_language: "en",
+            document_language: "en",
+            app_interface_language: "en",
             custom_language_name: "",
             print_layout: "pdf",
             app_appearance: "dark",
             saved_signature_data_url: "",
             save_signature_permission: false,
-            plan: "Business Unlimited"
+            plan: "Business Unlimited",
+            auto_renewal_enabled: false,
+            billing_status: "manual"
         }));
     }
 
@@ -883,11 +944,15 @@ function seedTestAccount() {
             invoice_theme_color: "#0d9488",
             invoice_text_color: "#1e293b",
             preferred_language: "en",
+            document_language: "en",
+            app_interface_language: "en",
             custom_language_name: "",
             print_layout: "pdf",
             app_appearance: "dark",
             saved_signature_data_url: "",
-            save_signature_permission: false
+            save_signature_permission: false,
+            auto_renewal_enabled: false,
+            billing_status: "manual"
         }));
     }
 
@@ -1281,10 +1346,111 @@ function hideInvoiceLimitUpgradeModal() {
     modal.setAttribute("aria-hidden", "true");
 }
 
+function showAccountDeleteModal() {
+    const modal = document.getElementById("account-delete-modal");
+    if (!modal) return;
+    const confirmInput = document.getElementById("delete-confirm-text");
+    const immediateCheckbox = document.getElementById("immediate-delete-checkbox");
+    if (confirmInput) confirmInput.value = "";
+    if (immediateCheckbox) immediateCheckbox.checked = false;
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden", "false");
+}
+
+function hideAccountDeleteModal() {
+    const modal = document.getElementById("account-delete-modal");
+    if (!modal) return;
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+}
+
+function clearLocalUserData(email = currentUser?.email) {
+    if (!email) return;
+    [
+        `valoraem_account_${email}`,
+        `valoraem_profile_${email}`,
+        `valoraem_clients_${email}`,
+        `valoraem_invoices_${email}`,
+        `valoraem_expenses_${email}`,
+        `valoraem_business_profiles_${email}`,
+        `valoraem_saved_items_${email}`,
+        `valoraem_active_business_profile_${email}`,
+        `valoraem_tutorial_seen_${currentUser?.id || email}`
+    ].forEach((key) => localStorage.removeItem(key));
+}
+
+async function insertAccountDeletionRequest(payload) {
+    if (!hasCloudConnection()) return { error: null };
+    let { error } = await supabaseClient.from("account_deletion_requests").insert(payload);
+    if (error && /does not exist|schema cache|relation/i.test(`${error.message} ${error.details || ""}`)) {
+        logSupabaseError("account_deletion_requests table missing", error, payload);
+        error = null;
+    }
+    return { error };
+}
+
+async function markProfileForDeletion(payload) {
+    if (!hasCloudConnection()) return { error: null };
+    const { error } = await updateCloudProfileSettings(payload);
+    return { error };
+}
+
+async function submitAccountDeletionRequest() {
+    const confirmText = document.getElementById("delete-confirm-text")?.value.trim();
+    const immediate = !!document.getElementById("immediate-delete-checkbox")?.checked;
+    if (confirmText !== "DELETE") {
+        createToast("Please type DELETE to confirm this account deletion request.", true);
+        return;
+    }
+
+    const now = new Date();
+    const hardDeleteDate = immediate ? now : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const deletionPayload = {
+        is_deleted: true,
+        deletion_requested_at: now.toISOString(),
+        hard_delete_after: hardDeleteDate.toISOString(),
+        deletion_type: immediate ? "immediate" : "soft_7_day"
+    };
+
+    if (hasCloudConnection()) {
+        const requestPayload = {
+            user_id: currentUser.id,
+            customer_email: currentUser.email,
+            deletion_type: deletionPayload.deletion_type,
+            requested_at: deletionPayload.deletion_requested_at,
+            hard_delete_after: deletionPayload.hard_delete_after,
+            status: immediate ? "PENDING_IMMEDIATE_PURGE" : "SOFT_DELETE_PENDING"
+        };
+        const requestResult = await insertAccountDeletionRequest(requestPayload);
+        if (requestResult.error) {
+            logSupabaseError("account deletion request insert", requestResult.error, requestPayload);
+            createToast(`Deletion request could not be saved: ${requestResult.error.message}`, true);
+            return;
+        }
+
+        const profileResult = await markProfileForDeletion(deletionPayload);
+        if (profileResult.error) {
+            logSupabaseError("profile deletion flag update", profileResult.error, deletionPayload);
+            createToast(`Deletion flag could not be saved: ${profileResult.error.message}`, true);
+            return;
+        }
+    }
+
+    currentProfile = { ...currentProfile, ...deletionPayload };
+    saveLocalStorageProfile();
+    if (immediate) clearLocalUserData(currentUser.email);
+    hideAccountDeleteModal();
+    createToast(immediate
+        ? "Immediate deletion request saved. Cloud Auth hard delete requires the Supabase service-role purge job."
+        : "Account scheduled for deletion. You have 7 days before permanent purge.");
+    await logoutCurrentUser();
+}
+
 // Display auth form
 function showAuthScreen() {
     hideTutorialModal();
     hideInvoiceLimitUpgradeModal();
+    hideAccountDeleteModal();
     document.getElementById("auth-container").style.display = "flex";
     document.getElementById("app-root").style.display = "none";
 }
@@ -1294,7 +1460,41 @@ function showAppScreen() {
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-root").style.display = "flex";
     switchTab("dashboard-tab");
+    renderLaunchNotification();
     setTimeout(maybeShowOnboardingPrompt, 350);
+}
+
+function getLaunchState() {
+    const stored = localStorage.getItem("valoraem_live_launch_notice");
+    if (stored) {
+        try {
+            return { ...LIVE_LAUNCH_CONFIG, ...JSON.parse(stored) };
+        } catch (err) {
+            console.warn("Invalid launch notice config ignored:", err);
+        }
+    }
+    return LIVE_LAUNCH_CONFIG;
+}
+
+function renderLaunchNotification() {
+    const banner = document.getElementById("launch-notice-banner");
+    if (!banner) return;
+
+    const launchState = getLaunchState();
+    if (!launchState.active) {
+        banner.style.display = "none";
+        return;
+    }
+
+    const launchDate = launchState.launchDate ? new Date(launchState.launchDate) : new Date();
+    const trialEnd = new Date(launchDate);
+    trialEnd.setDate(trialEnd.getDate() + (Number(launchState.trialDays) || 7));
+    const daysLeft = Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86400000));
+    const text = document.getElementById("launch-notice-text");
+    if (text) {
+        text.innerText = `Beta accounts now have ${daysLeft} day${daysLeft === 1 ? "" : "s"} left in the launch trial. Upgrade manually before ${trialEnd.toLocaleDateString()} to keep premium access.`;
+    }
+    banner.style.display = "grid";
 }
 
 async function logoutCurrentUser() {
@@ -1359,14 +1559,7 @@ async function setupAuthenticatedUser(user) {
     document.getElementById("store-currency-symbol").value = currentProfile.currency_symbol || getCurrencySymbol("PHP");
     syncCurrencySymbolFromCode();
     document.getElementById("inv-tax-rate").value = currentProfile.default_tax_rate;
-    if (document.getElementById("preferred-language")) {
-        document.getElementById("preferred-language").value = currentProfile.preferred_language || "en";
-        document.getElementById("preferred-language").disabled = !hasBusinessUnlimited();
-    }
-    if (document.getElementById("custom-language-name")) {
-        document.getElementById("custom-language-name").value = currentProfile.custom_language_name || "";
-        document.getElementById("custom-language-name").disabled = !hasBusinessUnlimited();
-    }
+    syncLanguageControls();
     if (document.getElementById("invoice-text-color")) {
         document.getElementById("invoice-text-color").value = currentProfile.invoice_text_color || "#1e293b";
     }
@@ -1416,11 +1609,19 @@ function getLocalStorageProfile(email) {
         invoice_theme_color: "#6366f1",
         invoice_text_color: "#1e293b",
         preferred_language: "en",
+        document_language: "en",
+        app_interface_language: "en",
         custom_language_name: "",
         print_layout: "pdf",
         app_appearance: "dark",
         saved_signature_data_url: "",
-        save_signature_permission: false
+        save_signature_permission: false,
+        auto_renewal_enabled: false,
+        billing_status: "manual",
+        subscription_expires_at: null,
+        is_deleted: false,
+        deletion_requested_at: null,
+        hard_delete_after: null
     };
 }
 
@@ -1431,6 +1632,22 @@ function applyAppearance() {
     document.body.dataset.theme = mode === "light" ? "light" : "dark";
     const appearanceSelect = document.getElementById("app-appearance");
     if (appearanceSelect) appearanceSelect.value = mode;
+}
+
+function syncLanguageControls() {
+    const appLanguage = currentProfile.app_interface_language || "en";
+    const documentLanguage = currentProfile.document_language || currentProfile.preferred_language || "en";
+    const appLanguageSelect = document.getElementById("app-interface-language");
+    const documentLanguageSelect = document.getElementById("preferred-language");
+    const customLanguageInput = document.getElementById("custom-language-name");
+
+    currentProfile.app_interface_language = appLanguage;
+    currentProfile.document_language = documentLanguage;
+    currentProfile.preferred_language = documentLanguage;
+
+    if (appLanguageSelect) appLanguageSelect.value = appLanguage;
+    if (documentLanguageSelect) documentLanguageSelect.value = documentLanguage;
+    if (customLanguageInput) customLanguageInput.value = currentProfile.custom_language_name || "";
 }
 
 function renderLogoAccessUI() {
@@ -1526,7 +1743,9 @@ function normalizeBusinessProfile(profile = {}) {
         default_tax_rate: Number(profile.default_tax_rate ?? currentProfile.default_tax_rate ?? 12),
         invoice_theme_color: profile.invoice_theme_color || currentProfile.invoice_theme_color || "#6366f1",
         invoice_text_color: profile.invoice_text_color || currentProfile.invoice_text_color || "#1e293b",
-        preferred_language: profile.preferred_language || currentProfile.preferred_language || "en",
+        preferred_language: profile.document_language || profile.preferred_language || currentProfile.document_language || currentProfile.preferred_language || "en",
+        document_language: profile.document_language || profile.preferred_language || currentProfile.document_language || currentProfile.preferred_language || "en",
+        app_interface_language: profile.app_interface_language || currentProfile.app_interface_language || "en",
         custom_language_name: profile.custom_language_name || currentProfile.custom_language_name || "",
         print_layout: profile.print_layout || currentProfile.print_layout || "pdf",
         app_appearance: profile.app_appearance || currentProfile.app_appearance || "dark",
@@ -1561,8 +1780,10 @@ function syncActiveBusinessProfileFromCurrentForm() {
     profile.currency = normalizeCurrencyCode(document.getElementById("store-currency")?.value || "PHP");
     profile.currency_symbol = getCurrencySymbol(profile.currency);
     profile.default_tax_rate = parseFloat(document.getElementById("inv-tax-rate")?.value) || currentProfile.default_tax_rate || 12;
-    profile.preferred_language = hasBusinessUnlimited() ? document.getElementById("preferred-language")?.value || "en" : "en";
-    profile.custom_language_name = hasBusinessUnlimited() ? document.getElementById("custom-language-name")?.value.trim() || "" : "";
+    profile.app_interface_language = document.getElementById("app-interface-language")?.value || "en";
+    profile.document_language = document.getElementById("preferred-language")?.value || "en";
+    profile.preferred_language = profile.document_language;
+    profile.custom_language_name = document.getElementById("custom-language-name")?.value.trim() || "";
     profile.invoice_theme_color = currentProfile.invoice_theme_color || profile.invoice_theme_color || "#6366f1";
     profile.invoice_text_color = document.getElementById("invoice-text-color")?.value || "#1e293b";
     profile.print_layout = document.getElementById("print-layout")?.value || "pdf";
@@ -1631,8 +1852,7 @@ function applyActiveBusinessProfileToForms() {
     document.getElementById("store-address").value = currentProfile.address || "";
     document.getElementById("store-currency").value = currentProfile.currency || "PHP";
     syncCurrencySymbolFromCode();
-    if (document.getElementById("preferred-language")) document.getElementById("preferred-language").value = currentProfile.preferred_language || "en";
-    if (document.getElementById("custom-language-name")) document.getElementById("custom-language-name").value = currentProfile.custom_language_name || "";
+    syncLanguageControls();
     if (document.getElementById("invoice-text-color")) document.getElementById("invoice-text-color").value = currentProfile.invoice_text_color || "#1e293b";
     if (document.getElementById("print-layout")) document.getElementById("print-layout").value = currentProfile.print_layout || "pdf";
     if (document.getElementById("creator-print-layout")) document.getElementById("creator-print-layout").value = currentProfile.print_layout || "pdf";
@@ -1662,9 +1882,16 @@ async function persistActiveBusinessProfile() {
 
     if (hasCloudConnection()) {
         const payload = { ...profile, user_id: currentUser.id };
-        const { error } = await supabaseClient
+        let { error } = await supabaseClient
             .from("business_profiles")
             .upsert(payload, { onConflict: "id" });
+        if (error && (isMissingSchemaColumnError(error, "document_language") || isMissingSchemaColumnError(error, "app_interface_language"))) {
+            const fallbackPayload = withoutKeys(payload, ["document_language", "app_interface_language"]);
+            const fallbackResult = await supabaseClient
+                .from("business_profiles")
+                .upsert(fallbackPayload, { onConflict: "id" });
+            error = fallbackResult.error;
+        }
         if (error) {
             console.warn("Business profile cloud save skipped:", error.message);
         }
@@ -1734,6 +1961,8 @@ async function getPaymentRecords() {
                 plan: record.plan,
                 price: Number(record.amount) || 0,
                 method: record.method,
+                billing_mode: record.billing_mode || "Manual Renewal",
+                auto_renewal_enabled: !!record.auto_renewal_enabled,
                 customer_email: record.customer_email,
                 created_at: record.created_at,
                 status: record.status || "paid"
@@ -1744,25 +1973,37 @@ async function getPaymentRecords() {
     return getLocalPaymentRecords();
 }
 
-async function recordPayment(plan, price, method) {
+async function recordPayment(plan, price, method, options = {}) {
+    const billingMode = options.autoRenewalEnabled ? "EasyPay Auto-Renewal" : "Manual Renewal";
     const record = {
         id: `pay-${Date.now()}`,
         plan,
         price: Number(price) || 0,
         method,
+        billing_mode: billingMode,
+        auto_renewal_enabled: !!options.autoRenewalEnabled,
         customer_email: currentUser?.email || "local-customer",
         created_at: new Date().toISOString()
     };
 
-    if (isCloudActive) {
-        const { error } = await supabaseClient.from("app_payments").insert({
+    if (hasCloudConnection()) {
+        const paymentPayload = {
             user_id: currentUser.id,
             customer_email: currentUser.email,
             plan,
             method,
             amount: Number(price) || 0,
-            status: "paid"
-        });
+            status: "paid",
+            billing_mode: billingMode,
+            auto_renewal_enabled: !!options.autoRenewalEnabled
+        };
+        let { error } = await supabaseClient.from("app_payments").insert(paymentPayload);
+        if (error && (isMissingSchemaColumnError(error, "billing_mode") || isMissingSchemaColumnError(error, "auto_renewal_enabled"))) {
+            logSupabaseError("app_payments insert missing beta billing columns", error, paymentPayload);
+            const fallbackPayload = withoutKeys(paymentPayload, ["billing_mode", "auto_renewal_enabled"]);
+            const fallback = await supabaseClient.from("app_payments").insert(fallbackPayload);
+            error = fallback.error;
+        }
         if (error) {
             console.error("Unable to save cloud payment record:", error);
         }
@@ -1840,6 +2081,47 @@ async function submitFeatureRequest() {
     saveFeatureRequests(requests);
     textarea.value = "";
     alert("Feature request sent to the admin dashboard.");
+}
+
+async function submitBetaFeedback() {
+    const textarea = document.getElementById("beta-feedback-text");
+    if (!textarea) return;
+    const text = textarea.value.trim();
+    if (!text) {
+        createToast("Please type your beta feedback first.", true);
+        return;
+    }
+
+    const requestText = `[Beta Feedback] ${text}`;
+    const request = {
+        id: `feedback-${Date.now()}`,
+        customer_email: currentUser?.email || "local-customer",
+        text: requestText,
+        created_at: new Date().toISOString()
+    };
+
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient.from("feature_requests").insert({
+            user_id: currentUser.id,
+            customer_email: currentUser.email,
+            request_text: requestText
+        });
+
+        if (error) {
+            logSupabaseError("beta feedback insert", error, request);
+            createToast(`Feedback could not sync to Supabase: ${error.message}`, true);
+            return;
+        }
+    } else if (isCloudActive) {
+        createToast("You are offline. Please reconnect before sending beta feedback.", true);
+        return;
+    }
+
+    const requests = getFeatureRequests();
+    requests.push(request);
+    saveFeatureRequests(requests);
+    textarea.value = "";
+    createToast("Beta feedback sent. Thank you for testing Valora EM.");
 }
 
 function handleDocumentPhotos(event) {
@@ -2694,6 +2976,10 @@ function initAppEventListeners() {
                 default_tax_rate: 12.0,
                 app_appearance: "dark",
                 preferred_language: "en",
+                document_language: "en",
+                app_interface_language: "en",
+                auto_renewal_enabled: false,
+                billing_status: "manual",
                 print_layout: "pdf"
             };
             localStorage.setItem(`valoraem_profile_${email}`, JSON.stringify(newProfile));
@@ -2832,8 +3118,10 @@ function initAppEventListeners() {
         currentProfile.currency = normalizeCurrencyCode(document.getElementById("store-currency").value);
         currentProfile.currency_symbol = getCurrencySymbol(currentProfile.currency);
         syncCurrencySymbolFromCode();
-        currentProfile.preferred_language = hasBusinessUnlimited() ? document.getElementById("preferred-language").value : "en";
-        currentProfile.custom_language_name = hasBusinessUnlimited() ? document.getElementById("custom-language-name").value.trim() : "";
+        currentProfile.app_interface_language = document.getElementById("app-interface-language")?.value || "en";
+        currentProfile.document_language = document.getElementById("preferred-language")?.value || "en";
+        currentProfile.preferred_language = currentProfile.document_language;
+        currentProfile.custom_language_name = document.getElementById("custom-language-name")?.value.trim() || "";
         currentProfile.invoice_text_color = document.getElementById("invoice-text-color").value || "#1e293b";
         currentProfile.print_layout = document.getElementById("print-layout").value || "pdf";
         currentProfile.app_appearance = document.getElementById("app-appearance").value || "dark";
@@ -2852,6 +3140,8 @@ function initAppEventListeners() {
                 currency: currentProfile.currency,
                 currency_symbol: currentProfile.currency_symbol,
                 preferred_language: currentProfile.preferred_language,
+                document_language: currentProfile.document_language,
+                app_interface_language: currentProfile.app_interface_language,
                 custom_language_name: currentProfile.custom_language_name,
                 invoice_theme_color: currentProfile.invoice_theme_color,
                 invoice_text_color: currentProfile.invoice_text_color,
@@ -3052,7 +3342,9 @@ function initAppEventListeners() {
             document.getElementById("payment-modal").dataset.billingCycle = cycle;
             document.getElementById("payment-plan-name").innerText = plan;
             document.getElementById("payment-plan-amount").innerText = `PHP ${Number(price).toLocaleString("en-PH")}.00 ${cycle === "yearly" ? "/ Year" : "/ Month"}`;
-            document.getElementById("submit-mock-payment-btn").innerText = `Pay PHP ${Number(price).toLocaleString("en-PH")}.00 Now`;
+            const easyPayCheckbox = document.getElementById("enable-easypay-checkbox");
+            if (easyPayCheckbox) easyPayCheckbox.checked = false;
+            document.getElementById("submit-mock-payment-btn").innerText = `Activate ${plan}`;
             document.getElementById("payment-modal").style.display = "flex";
         });
     });
@@ -3079,6 +3371,10 @@ function initAppEventListeners() {
 
     document.getElementById("save-admin-payment-settings-btn").addEventListener("click", savePaymentSettings);
     document.getElementById("submit-feature-request-btn").addEventListener("click", submitFeatureRequest);
+    document.getElementById("submit-beta-feedback-btn").addEventListener("click", submitBetaFeedback);
+    document.getElementById("open-account-delete-modal-btn").addEventListener("click", showAccountDeleteModal);
+    document.getElementById("close-account-delete-modal-btn").addEventListener("click", hideAccountDeleteModal);
+    document.getElementById("confirm-account-delete-btn").addEventListener("click", submitAccountDeletionRequest);
 }
 
 // ==================== RENDERING LOGIC ====================
@@ -3868,6 +4164,7 @@ function renderTrashBin() {
 
 // Load stats metrics on Dashboard tab
 function renderDashboard() {
+    renderLaunchNotification();
     let totalRevenue = 0;
     let totalPaid = 0;
     let totalUnpaid = 0;
@@ -4039,7 +4336,7 @@ async function renderAdminDashboard() {
                 <td>${new Date(record.created_at).toLocaleString()}</td>
                 <td>${record.customer_email}</td>
                 <td>${record.plan}</td>
-                <td>${record.method}</td>
+                <td>${record.method}<br><span style="color: var(--text-muted); font-size: 11px;">${record.billing_mode || "Manual Renewal"}</span></td>
                 <td style="font-weight: 700;">PHP ${(Number(record.price) || 0).toFixed(2)}</td>
             `;
             tbody.appendChild(row);
@@ -4079,9 +4376,10 @@ async function processMockPaymentUpgrade() {
     const accountNum = gcashActive 
         ? document.getElementById("payment-phone").value.trim()
         : document.getElementById("card-num").value.trim();
+    const easyPayEnabled = !!document.getElementById("enable-easypay-checkbox")?.checked;
         
     if (!accountNum) {
-        alert("Please enter payment account details.");
+        createToast("Please enter dummy beta payment details first.", true);
         return;
     }
     
@@ -4097,14 +4395,31 @@ async function processMockPaymentUpgrade() {
     const paymentModal = document.getElementById("payment-modal");
     currentProfile.plan = paymentModal.dataset.plan || "Pro Unlimited Plan";
     currentProfile.billing_cycle = paymentModal.dataset.billingCycle || billingCycle;
+    currentProfile.auto_renewal_enabled = easyPayEnabled;
+    currentProfile.billing_status = easyPayEnabled ? "easypay_auto_renewal" : "manual_renewal";
+    currentProfile.subscription_expires_at = getSubscriptionExpiryDate(currentProfile.billing_cycle);
     await recordPayment(
         paymentModal.dataset.plan || "Pro Unlimited Plan",
         paymentModal.dataset.price || 249,
-        `${gcashActive ? "GCash" : "Card"} (${currentProfile.billing_cycle})`
+        `${gcashActive ? "Wallet/Banking" : "Card"} (${currentProfile.billing_cycle})`,
+        { autoRenewalEnabled: easyPayEnabled }
     );
     
-    if (isCloudActive) {
-        await supabaseClient.from("profiles").update({ is_pro: true, plan: currentProfile.plan, billing_cycle: currentProfile.billing_cycle }).eq("id", currentUser.id);
+    if (hasCloudConnection()) {
+        const { error } = await updateCloudProfileSettings({
+            is_pro: true,
+            plan: currentProfile.plan,
+            billing_cycle: currentProfile.billing_cycle,
+            auto_renewal_enabled: currentProfile.auto_renewal_enabled,
+            billing_status: currentProfile.billing_status,
+            subscription_expires_at: currentProfile.subscription_expires_at
+        });
+        if (error) {
+            logSupabaseError("profiles beta plan activation", error, {
+                plan: currentProfile.plan,
+                billing_cycle: currentProfile.billing_cycle
+            });
+        }
     } else {
         saveLocalStorageProfile();
     }
@@ -4112,10 +4427,11 @@ async function processMockPaymentUpgrade() {
     // Visual success alerts
     overlay.style.display = "none";
     document.getElementById("payment-modal").style.display = "none";
-    alert(`Success! Your subscription is now active. A payment receipt email will be sent automatically after live email/payment integration is connected.`);
+    createToast(`Beta plan activated: ${currentProfile.plan}. ${easyPayEnabled ? "EasyPay auto-renewal is enabled." : "Manual renewal only. No auto-charge."}`);
     
     // Refresh GUI details
     updateUserTierUI();
+    updateBillingTabUI();
     switchTab("dashboard-tab");
 }
 
@@ -4195,8 +4511,17 @@ function initSignaturePad() {
     const languageSelect = document.getElementById("preferred-language");
     if (languageSelect) {
         languageSelect.addEventListener("change", (event) => {
-            currentProfile.preferred_language = event.target.value || "en";
+            currentProfile.document_language = event.target.value || "en";
+            currentProfile.preferred_language = currentProfile.document_language;
             updateInvoicePreview();
+        });
+    }
+
+    const appLanguageSelect = document.getElementById("app-interface-language");
+    if (appLanguageSelect) {
+        appLanguageSelect.addEventListener("change", (event) => {
+            currentProfile.app_interface_language = event.target.value || "en";
+            createToast("App language preference saved locally. Full interface translation will roll out after beta.");
         });
     }
 
@@ -4210,7 +4535,7 @@ function initSignaturePad() {
 }
 
 function applyReceiptLanguage() {
-    const lang = currentProfile.preferred_language || "en";
+    const lang = currentProfile.document_language || currentProfile.preferred_language || "en";
     const meta = receiptLanguageMeta[lang] || { dir: "ltr", font: "var(--font-sans)" };
     const printable = document.getElementById("invoice-printable-area");
     if (printable) {
@@ -4411,6 +4736,9 @@ Object.assign(window, {
     configurePasswordResetForm,
     showPasswordResetForm,
     submitFeatureRequest,
+    submitBetaFeedback,
+    showAccountDeleteModal,
+    submitAccountDeletionRequest,
     addBusinessProfile,
     saveCatalogItem,
     deleteCatalogItem,

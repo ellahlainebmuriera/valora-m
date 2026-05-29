@@ -797,6 +797,137 @@ textarea:focus {
     cursor: pointer;
 }
 
+.beta-feedback-card,
+.launch-notice-banner {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(260px, 1fr);
+    gap: 18px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--accent);
+}
+
+.launch-notice-banner {
+    align-items: center;
+    padding: 18px;
+    border: 1px solid rgba(16, 185, 129, 0.26);
+    border-radius: var(--border-radius);
+    background:
+        linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(99, 102, 241, 0.08)),
+        var(--bg-card);
+    box-shadow: var(--card-shadow);
+}
+
+.beta-feedback-card h3,
+.launch-notice-banner h3 {
+    font-family: var(--font-title);
+    font-size: 18px;
+    margin: 4px 0 6px;
+}
+
+.beta-feedback-card p,
+.launch-notice-banner p {
+    color: var(--text-medium);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.beta-feedback-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.settings-focus-card {
+    border-left: 4px solid rgba(99, 102, 241, 0.65);
+}
+
+.danger-zone-card {
+    border-left: 4px solid rgba(239, 68, 68, 0.75);
+}
+
+.danger-zone-card .btn-danger,
+.danger-modal-card .btn-danger {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fecaca;
+}
+
+.danger-warning-box {
+    padding: 14px 16px;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.12);
+    color: #fecaca;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.5;
+}
+
+.checkout-trust-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 18px;
+}
+
+.payment-brand-icon {
+    min-width: 58px;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    color: #0f172a;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0;
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.14);
+}
+
+.payment-brand-icon.visa {
+    color: #1a1f71;
+}
+
+.payment-brand-icon.mastercard {
+    color: #eb001b;
+}
+
+.payment-brand-icon.paypal {
+    color: #003087;
+}
+
+.payment-brand-icon.gcash {
+    color: #005ce5;
+}
+
+.payment-brand-icon.maya {
+    color: #047857;
+}
+
+.payment-brand-icon.bank {
+    color: #334155;
+}
+
+.secure-payment-note {
+    padding: 12px 14px;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    border-radius: 12px;
+    background: rgba(16, 185, 129, 0.08);
+    color: var(--text-medium);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.easypay-row {
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
 .support-tickets-card,
 .admin-ticket-panel {
     margin-top: 24px;
@@ -1027,7 +1158,10 @@ textarea:focus {
     .filters-row,
     .ticket-create-grid,
     .ticket-workspace,
-    .ticket-reply-row {
+    .ticket-reply-row,
+    .beta-feedback-card,
+    .beta-feedback-form,
+    .launch-notice-banner {
         grid-template-columns: 1fr;
     }
 }

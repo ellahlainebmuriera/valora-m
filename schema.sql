@@ -18,6 +18,8 @@ CREATE TABLE public.profiles (
     invoice_theme_color TEXT DEFAULT '#6366f1',
     invoice_text_color TEXT DEFAULT '#1e293b',
     preferred_language TEXT DEFAULT 'en',
+    document_language TEXT DEFAULT 'en',
+    app_interface_language TEXT DEFAULT 'en',
     custom_language_name TEXT DEFAULT '',
     print_layout TEXT DEFAULT 'pdf',
     app_appearance TEXT DEFAULT 'dark',
@@ -25,7 +27,14 @@ CREATE TABLE public.profiles (
     save_signature_permission BOOLEAN DEFAULT FALSE,
     plan TEXT DEFAULT 'Standard Free Plan',
     billing_cycle TEXT DEFAULT 'monthly',
-    last_business_info_updated_at TIMESTAMP WITH TIME ZONE
+    auto_renewal_enabled BOOLEAN DEFAULT FALSE,
+    billing_status TEXT DEFAULT 'manual',
+    subscription_expires_at TIMESTAMP WITH TIME ZONE,
+    last_business_info_updated_at TIMESTAMP WITH TIME ZONE,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    deletion_requested_at TIMESTAMP WITH TIME ZONE,
+    hard_delete_after TIMESTAMP WITH TIME ZONE,
+    deletion_type TEXT
 );
 
 -- Enable RLS for Profiles
@@ -57,10 +66,18 @@ CREATE TABLE public.clients (
 -- Enable RLS for Clients
 ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can CRUD their own clients." ON public.clients;
 CREATE POLICY "Users can CRUD their own clients." 
-    ON public.clients FOR ALL 
-    USING (auth.uid() = user_id) 
-    WITH CHECK (auth.uid() = user_id);
+    ON public.clients FOR ALL
+    TO authenticated
+    USING (
+        auth.uid() = user_id
+        OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com'
+    ) 
+    WITH CHECK (
+        auth.uid() = user_id
+        OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com'
+    );
 
 -- 3. Invoices Table (List of invoices/estimates)
 CREATE TABLE public.invoices (
@@ -94,6 +111,15 @@ ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH T
 ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS business_profile_id TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS billing_cycle TEXT DEFAULT 'monthly';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_business_info_updated_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS document_language TEXT DEFAULT 'en';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS app_interface_language TEXT DEFAULT 'en';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS auto_renewal_enabled BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS billing_status TEXT DEFAULT 'manual';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS deletion_requested_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS hard_delete_after TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS deletion_type TEXT;
 
 -- Enable RLS for Invoices
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
@@ -164,8 +190,13 @@ CREATE TABLE public.app_payments (
     method TEXT NOT NULL,
     amount NUMERIC DEFAULT 0,
     status TEXT DEFAULT 'paid',
+    billing_mode TEXT DEFAULT 'Manual Renewal',
+    auto_renewal_enabled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
+
+ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS billing_mode TEXT DEFAULT 'Manual Renewal';
+ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS auto_renewal_enabled BOOLEAN DEFAULT FALSE;
 
 ALTER TABLE public.app_payments ENABLE ROW LEVEL SECURITY;
 
@@ -215,6 +246,8 @@ CREATE TABLE IF NOT EXISTS public.business_profiles (
     invoice_theme_color TEXT DEFAULT '#6366f1',
     invoice_text_color TEXT DEFAULT '#1e293b',
     preferred_language TEXT DEFAULT 'en',
+    document_language TEXT DEFAULT 'en',
+    app_interface_language TEXT DEFAULT 'en',
     custom_language_name TEXT DEFAULT '',
     print_layout TEXT DEFAULT 'pdf',
     app_appearance TEXT DEFAULT 'dark',
@@ -222,6 +255,9 @@ CREATE TABLE IF NOT EXISTS public.business_profiles (
     save_signature_permission BOOLEAN DEFAULT FALSE,
     last_business_info_updated_at TIMESTAMP WITH TIME ZONE
 );
+
+ALTER TABLE public.business_profiles ADD COLUMN IF NOT EXISTS document_language TEXT DEFAULT 'en';
+ALTER TABLE public.business_profiles ADD COLUMN IF NOT EXISTS app_interface_language TEXT DEFAULT 'en';
 
 ALTER TABLE public.business_profiles ENABLE ROW LEVEL SECURITY;
 
@@ -317,6 +353,65 @@ CREATE POLICY "Users and owner can send ticket messages."
             AND (public.tickets.user_id = auth.uid() OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
         )
     );
+
+-- Account deletion request queue.
+-- Browser code can request deletion, but final Auth user purging must run with a trusted service role.
+CREATE TABLE IF NOT EXISTS public.account_deletion_requests (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    customer_email TEXT,
+    deletion_type TEXT DEFAULT 'soft_7_day',
+    status TEXT DEFAULT 'SOFT_DELETE_PENDING',
+    requested_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    hard_delete_after TIMESTAMP WITH TIME ZONE NOT NULL,
+    completed_at TIMESTAMP WITH TIME ZONE
+);
+
+ALTER TABLE public.account_deletion_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can create their own deletion requests." ON public.account_deletion_requests;
+CREATE POLICY "Users can create their own deletion requests."
+    ON public.account_deletion_requests FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can read their own deletion requests." ON public.account_deletion_requests;
+CREATE POLICY "Users can read their own deletion requests."
+    ON public.account_deletion_requests FOR SELECT
+    USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Owner admin can view deletion requests." ON public.account_deletion_requests;
+CREATE POLICY "Owner admin can view deletion requests."
+    ON public.account_deletion_requests FOR SELECT
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+DROP POLICY IF EXISTS "Users can delete their own profile row." ON public.profiles;
+CREATE POLICY "Users can delete their own profile row."
+    ON public.profiles FOR DELETE
+    USING (auth.uid() = id);
+
+-- Optional scheduled purge helper.
+-- Schedule this with Supabase pg_cron or an Edge Function using service-role credentials after launch.
+CREATE OR REPLACE FUNCTION public.purge_due_deleted_accounts()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM auth.users
+  WHERE id IN (
+    SELECT id
+    FROM public.profiles
+    WHERE is_deleted = TRUE
+      AND hard_delete_after IS NOT NULL
+      AND hard_delete_after <= timezone('utc'::text, now())
+  );
+
+  UPDATE public.account_deletion_requests
+  SET status = 'COMPLETED',
+      completed_at = timezone('utc'::text, now())
+  WHERE completed_at IS NULL
+    AND hard_delete_after <= timezone('utc'::text, now());
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE ALL ON FUNCTION public.purge_due_deleted_accounts() FROM PUBLIC;
 
 -- 8. Automate Profile Creation on Sign Up
 CREATE OR REPLACE FUNCTION public.handle_new_user()

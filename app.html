@@ -15,7 +15,7 @@
     <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=pricing-readability-v1">
+    <link rel="stylesheet" href="styles.css?v=final-beta-v1">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -307,6 +307,27 @@
                     <div class="onboarding-banner-actions">
                         <button class="btn btn-primary" type="button" data-tutorial-start>Begin Tutorial</button>
                         <button class="btn btn-secondary" type="button" data-learning-go="learning-tab">Open Learning Center</button>
+                    </div>
+                </div>
+
+                <div class="launch-notice-banner" id="launch-notice-banner" style="display: none;">
+                    <div>
+                        <span class="learning-kicker">Official launch</span>
+                        <h3>Valora EM is now live</h3>
+                        <p id="launch-notice-text">Beta accounts have a 7-day active trial. Upgrade manually before the countdown ends to keep premium access.</p>
+                    </div>
+                    <button class="btn btn-accent btn-sm" type="button" onclick="switchTab('billing-tab')">View Plans</button>
+                </div>
+
+                <div class="panel-card beta-feedback-card">
+                    <div>
+                        <span class="learning-kicker">Beta feedback</span>
+                        <h3>Help improve Valora EM before launch</h3>
+                        <p>Tell us what feels confusing, broken, or missing. Your message goes to the owner dashboard/feature inbox for review.</p>
+                    </div>
+                    <div class="beta-feedback-form">
+                        <textarea id="beta-feedback-text" rows="3" placeholder="Example: The thermal print preview is hard to read on my phone."></textarea>
+                        <button class="btn btn-primary" id="submit-beta-feedback-btn" type="button">Send Feedback</button>
                     </div>
                 </div>
 
@@ -1093,43 +1114,6 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="app-appearance">App Appearance</label>
-                            <select id="app-appearance">
-                                <option value="dark">Dark Mode</option>
-                                <option value="light">Light Mode</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="preferred-language">Preferred Language (Business Unlimited)</label>
-                            <select id="preferred-language">
-                                <option value="en">English</option>
-                                <option value="fil">Filipino</option>
-                                <option value="es">Spanish</option>
-                                <option value="fr">French</option>
-                                <option value="de">German</option>
-                                <option value="it">Italian</option>
-                                <option value="pt">Portuguese</option>
-                                <option value="id">Indonesian</option>
-                                <option value="ms">Malay</option>
-                                <option value="vi">Vietnamese</option>
-                                <option value="th">Thai</option>
-                                <option value="ja">Japanese</option>
-                                <option value="ko">Korean</option>
-                                <option value="zh">Chinese</option>
-                                <option value="hi">Hindi</option>
-                                <option value="ar">Arabic</option>
-                                <option value="nl">Dutch</option>
-                                <option value="sv">Swedish</option>
-                                <option value="tr">Turkish</option>
-                                <option value="ru">Russian</option>
-                                <option value="other">Other / Custom</option>
-                            </select>
-                            <input type="text" id="custom-language-name" placeholder="Type another language if it is not listed" style="margin-top: 10px;">
-                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Default is English. Language preference is included in the Business Unlimited plan.</p>
-                        </div>
-
                         <!-- Store Settings Invoice Color Accent Picker -->
                         <div class="form-group">
                             <label>Receipt Accent Color</label>
@@ -1160,8 +1144,73 @@
                         <button class="btn btn-primary" id="save-store-settings-btn" style="width: 100%;">Save Store Settings</button>
                     </div>
 
+                    <div class="panel-card settings-focus-card">
+                        <div class="panel-title">2. Appearance / Theme</div>
+                        <p style="font-size: 13px; color: var(--text-medium);">Theme controls are separated from business details so users can find dark mode faster.</p>
+                        <div class="form-group">
+                            <label for="app-appearance">App Appearance</label>
+                            <select id="app-appearance">
+                                <option value="dark">Dark Mode</option>
+                                <option value="light">Light Mode</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="panel-card settings-focus-card">
+                        <div class="panel-title">3. Language Settings</div>
+                        <p style="font-size: 13px; color: var(--text-medium);">Choose one language for the app UI and another for invoices or receipts sent to clients.</p>
+                        <div class="form-group">
+                            <label for="app-interface-language">App Interface Language</label>
+                            <select id="app-interface-language">
+                                <option value="en">English</option>
+                                <option value="fil">Filipino</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                                <option value="zh">Chinese</option>
+                                <option value="other">Other / Custom</option>
+                            </select>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">English is the default during beta while full UI translation is being prepared.</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="preferred-language">Invoice / Receipt Language</label>
+                            <select id="preferred-language">
+                                <option value="en">English</option>
+                                <option value="fil">Filipino</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="it">Italian</option>
+                                <option value="pt">Portuguese</option>
+                                <option value="id">Indonesian</option>
+                                <option value="ms">Malay</option>
+                                <option value="vi">Vietnamese</option>
+                                <option value="th">Thai</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                                <option value="zh">Chinese</option>
+                                <option value="hi">Hindi</option>
+                                <option value="ar">Arabic</option>
+                                <option value="nl">Dutch</option>
+                                <option value="sv">Swedish</option>
+                                <option value="tr">Turkish</option>
+                                <option value="ru">Russian</option>
+                                <option value="other">Other / Custom</option>
+                            </select>
+                            <input type="text" id="custom-language-name" placeholder="Type another document language if it is not listed" style="margin-top: 10px;">
+                        </div>
+                    </div>
+
+                    <div class="panel-card danger-zone-card">
+                        <div class="panel-title">4. Account Privacy & Deletion</div>
+                        <p style="font-size: 13px; color: var(--text-medium);">Request a 7-day deletion grace period or explicitly request immediate data purge. Valora EM never stores card numbers or CVVs.</p>
+                        <button class="btn btn-secondary btn-danger" id="open-account-delete-modal-btn" type="button">Delete Account / Data</button>
+                    </div>
+
                     <div class="panel-card">
-                        <div class="panel-title">2. Per-Store Item Catalog</div>
+                        <div class="panel-title">5. Per-Store Item Catalog</div>
                         <p id="catalog-access-note" style="font-size: 13px; color: var(--text-medium);">Saved items are attached to the active business profile.</p>
                         <div class="form-group">
                             <label for="catalog-item-name">Item Name</label>
@@ -1750,8 +1799,17 @@
             </div>
             
             <p style="font-size: 13px; color: var(--text-medium);">
-                Choose a payment method to activate your subscription.
+                Beta checkout is in test mode. Enter dummy payment details such as 1111111 or a standard test card to activate the selected plan.
             </p>
+
+            <div class="checkout-trust-strip" aria-label="Supported payment methods">
+                <span class="payment-brand-icon visa">VISA</span>
+                <span class="payment-brand-icon mastercard">MC</span>
+                <span class="payment-brand-icon paypal">PayPal</span>
+                <span class="payment-brand-icon gcash">GCash</span>
+                <span class="payment-brand-icon maya">Maya</span>
+                <span class="payment-brand-icon bank">Bank</span>
+            </div>
 
             <div class="form-group">
                 <label>Choose Payment Method</label>
@@ -1779,7 +1837,7 @@
                 </div>
                 <div class="form-group">
                     <label for="payment-phone">Your GCash Registered Number</label>
-                    <input type="text" id="payment-phone" placeholder="0917XXXXXXX">
+                    <input type="text" id="payment-phone" placeholder="0917XXXXXXX or 1111111 for beta">
                 </div>
             </div>
 
@@ -1787,7 +1845,7 @@
             <div id="card-payment-details" style="display: none;">
                 <div class="form-group">
                     <label for="card-num">Card Number</label>
-                    <input type="text" id="card-num" placeholder="Card number">
+                    <input type="text" id="card-num" placeholder="4242 4242 4242 4242 or 1111111">
                 </div>
                 <div class="form-group row">
                     <div class="form-group">
@@ -1801,7 +1859,15 @@
                 </div>
             </div>
 
-            <button class="btn btn-accent" id="submit-mock-payment-btn" style="width: 100%;">Pay PHP 249.00 Now</button>
+            <label class="checkbox-row easypay-row">
+                <input type="checkbox" id="enable-easypay-checkbox">
+                Enable Auto-Renewal for EasyPay. Leave unchecked for manual renewal only.
+            </label>
+            <div class="secure-payment-note">
+                <strong>Secure beta rule:</strong> Valora EM does not store card numbers, expiry dates, CVCs, or wallet credentials. Live payments will be tokenized by Stripe or PayMongo.
+            </div>
+
+            <button class="btn btn-accent" id="submit-mock-payment-btn" style="width: 100%;">Activate Beta Plan</button>
             <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">No refund policy: subscription payments are final once account access is activated, except where required by law or payment provider rules.</p>
 
             <!-- Loading overlay inside modal during processing -->
@@ -1809,6 +1875,31 @@
                 <div style="border: 4px solid var(--border-color); border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
                 <p style="font-size: 14px; font-weight: 600; color: #fff;">Processing payment securely...</p>
             </div>
+        </div>
+    </div>
+
+    <!-- ==================== ACCOUNT DELETION MODAL ==================== -->
+    <div class="modal-overlay" id="account-delete-modal" aria-hidden="true">
+        <div class="modal-card danger-modal-card" role="dialog" aria-modal="true" aria-labelledby="account-delete-title">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="account-delete-title" style="font-family: var(--font-title); font-size: 18px;">Delete Account & Data</h3>
+                <span id="close-account-delete-modal-btn" style="cursor: pointer; color: var(--text-muted); font-size: 20px;">&times;</span>
+            </div>
+            <div class="danger-warning-box">
+                After 7 days, your data will be permanently wiped. There is NO WAY to restore your account—even our admin/dev team cannot recover it.
+            </div>
+            <p style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
+                Default deletion starts a 7-day grace period. Immediate permanent delete queues your account for hard deletion right away and removes local device data.
+            </p>
+            <label class="checkbox-row">
+                <input type="checkbox" id="immediate-delete-checkbox">
+                Permanently delete my data right now without waiting 7 days.
+            </label>
+            <div class="form-group">
+                <label for="delete-confirm-text">Type DELETE to confirm</label>
+                <input type="text" id="delete-confirm-text" placeholder="DELETE">
+            </div>
+            <button class="btn btn-secondary btn-danger" id="confirm-account-delete-btn" type="button" style="width: 100%;">Confirm Deletion Request</button>
         </div>
     </div>
 
@@ -1820,7 +1911,7 @@
         }
     </style>
 
-    <script src="app.js?v=pricing-readability-v1"></script>
+    <script src="app.js?v=final-beta-v1"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>
