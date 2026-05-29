@@ -169,6 +169,462 @@ const TUTORIAL_STEPS = [
     }
 ];
 
+const UI_TRANSLATIONS = {
+    en: {
+        sidebar: {
+            dashboard: "Dashboard",
+            learning: "Learning",
+            createInvoice: "Create Invoice",
+            invoiceHistory: "Invoice History",
+            expenses: "Expenses",
+            trashBin: "Trash Bin",
+            clientsList: "Clients List",
+            settings: "Settings",
+            appearance: "Appearance",
+            account: "Account",
+            featureRequests: "Feature Requests",
+            featureInbox: "Feature Inbox",
+            bugReport: "Bug Report",
+            offlineMode: "Offline Mode",
+            admin: "Admin",
+            subscription: "Subscription",
+            logoutAccount: "Logout Account"
+        },
+        dashboard: {
+            title: "SaaS Dashboard",
+            subtitle: "Track invoices, clients, and business income from one simple dashboard.",
+            quickStart: "Quick start",
+            newUserTitle: "New to Valora EM?",
+            newUserBody: "Take the short tutorial or open the Learning Center to see how to set up your store, create invoices, print PDFs, and track profit.",
+            betaFeedback: "Beta feedback",
+            feedbackTitle: "Help improve Valora EM before launch",
+            feedbackBody: "Tell us what feels confusing, broken, or missing. Your message goes to the owner dashboard/feature inbox for review.",
+            totalRevenue: "Total Revenue",
+            totalPaid: "Total Paid",
+            unpaidBalance: "Unpaid Balance",
+            totalInvoices: "Total Invoices"
+        },
+        learning: {
+            title: "Learning Center",
+            subtitle: "Follow a simple guided path to learn Valora EM faster."
+        },
+        settings: {
+            title: "Business Settings",
+            subtitle: "Set up your store profile, currency, customer-facing identity, and saved item catalog.",
+            businessDetails: "Business Details",
+            saveStore: "Save Store Settings"
+        },
+        appearance: {
+            title: "Appearance & Document Design",
+            subtitle: "Control dark mode, app language, receipt language, colors, and print layout in one clean screen.",
+            appTheme: "App Theme",
+            themeHelp: "Choose how the dashboard looks for the logged-in user.",
+            appAppearance: "App Appearance",
+            darkMode: "Dark Mode",
+            lightMode: "Light Mode",
+            languageControls: "Language Controls",
+            languageHelp: "App language is for the dashboard. Invoice/receipt language is for generated customer documents.",
+            appLanguage: "App Interface Language",
+            receiptLanguage: "Invoice / Receipt Language",
+            receiptStyling: "Receipt & Print Styling",
+            stylingHelp: "These settings affect the invoice/receipt preview and printed output, not the dashboard colors.",
+            accentColor: "Receipt Accent Color",
+            textColor: "Receipt Text Color",
+            printLayout: "Print Layout",
+            save: "Save Appearance Settings"
+        },
+        account: {
+            title: "Account & Privacy",
+            subtitle: "Manage privacy, deletion requests, and account-level data controls.",
+            deleteTitle: "Delete Account / Data",
+            deleteWarning: "After 7 days, your data will be permanently wiped. There is NO WAY to restore your account, even our admin/dev team cannot recover it.",
+            deleteHelp: "Use the button below to open the deletion modal. You can choose the default 7-day grace period or explicitly request immediate permanent deletion.",
+            deleteButton: "Delete Account",
+            paymentPolicy: "Payment Data Policy",
+            noCardStorage: "No local card storage",
+            noCardStorageBody: "Valora EM does not store card numbers, expiry dates, CVCs, or wallet credentials.",
+            manualRenewal: "Manual renewal by default",
+            manualRenewalBody: "Paid plans do not auto-charge unless the user explicitly opts into EasyPay auto-renewal at checkout."
+        },
+        featureRequests: {
+            title: "Feature Requests",
+            subtitle: "Send ideas, bug reports, and improvement requests directly to the Valora EM owner.",
+            sendTitle: "Send Feature Request",
+            sendHelp: "Tell us what you want improved or added next.",
+            label: "Feature Request",
+            submit: "Send Feature Request",
+            includeTitle: "What to include"
+        },
+        bugReport: {
+            title: "Bug Report",
+            subtitle: "Submit a support ticket and track replies from Valora EM support.",
+            panelTitle: "In-App Bug Reporting System",
+            help: "Send a new ticket with a subject and details, then check the conversation thread for responses.",
+            create: "Create Ticket",
+            sendReply: "Send Reply",
+            noTickets: "No tickets yet.",
+            selectTicket: "Select a ticket to view the conversation."
+        },
+        offline: {
+            title: "Offline Mode",
+            subtitle: "Create invoices and print PDFs even when internet is unstable.",
+            panelTitle: "How offline access works"
+        },
+        admin: {
+            title: "Owner Admin Dashboard",
+            subtitle: "Track app revenue, customer upgrades, payment gateway settings, and support requests.",
+            gatewayTab: "Dashboard & Gateway Settings",
+            ticketsTab: "Bug Reports / Support Tickets",
+            paymentsTitle: "Recent App Payments",
+            featureInboxTitle: "Customer Feature Requests"
+        },
+        billing: {
+            title: "Subscription",
+            subtitle: "Choose the plan that matches your store workflow.",
+            monthly: "Monthly",
+            yearly: "Yearly"
+        },
+        creator: {
+            saveInvoice: "Save Document",
+            printInvoice: "Print / Save PDF",
+            addLineItem: "Add Line Item"
+        },
+        common: {
+            beginTutorial: "Begin Tutorial",
+            openLearningCenter: "Open Learning Center",
+            newInvoiceEstimate: "New Invoice/Estimate",
+            sendFeedback: "Send Feedback",
+            viewPlans: "View Plans"
+        },
+        placeholders: {
+            betaFeedback: "Example: The thermal print preview is hard to read on my phone.",
+            featureRequest: "Example: Please add invoice reminder emails, customer read receipts, or automatic monthly reports.",
+            ticketSubject: "Subject",
+            ticketMessage: "Details: what happened, what page you were on, and what device you used.",
+            ticketReply: "Write a reply...",
+            customLanguage: "Type another document language if it is not listed"
+        },
+        messages: {
+            appearanceSaved: "Appearance and document settings saved.",
+            languageChanged: "App language updated. Click Save Appearance Settings to sync it to your account."
+        }
+    },
+    fil: {
+        sidebar: {
+            dashboard: "Dashboard",
+            learning: "Learning",
+            createInvoice: "Gumawa ng Invoice",
+            invoiceHistory: "History ng Invoice",
+            expenses: "Mga Gastos",
+            trashBin: "Basurahan",
+            clientsList: "Listahan ng Kliyente",
+            settings: "Mga Setting",
+            appearance: "Hitsura",
+            account: "Account",
+            featureRequests: "Feature Requests",
+            featureInbox: "Feature Inbox",
+            bugReport: "Bug Report",
+            offlineMode: "Offline Mode",
+            admin: "Admin",
+            subscription: "Subscription",
+            logoutAccount: "Logout Account"
+        },
+        dashboard: {
+            title: "Dashboard",
+            subtitle: "Subaybayan ang invoices, clients, at kita ng negosyo sa isang simpleng dashboard.",
+            quickStart: "Mabilisang simula",
+            newUserTitle: "Bago sa Valora EM?",
+            newUserBody: "Simulan ang maikling tutorial o buksan ang Learning Center para matutunan ang store setup, invoice creation, PDF printing, at profit tracking.",
+            betaFeedback: "Beta feedback",
+            feedbackTitle: "Tulungan pagandahin ang Valora EM bago ilaunch",
+            feedbackBody: "Sabihin kung ano ang nakakalito, sira, o kulang. Mapupunta ang message sa owner dashboard/feature inbox.",
+            totalRevenue: "Kabuuang Kita",
+            totalPaid: "Nabayaran",
+            unpaidBalance: "Hindi Pa Bayad",
+            totalInvoices: "Kabuuang Invoices"
+        },
+        learning: {
+            title: "Learning Center",
+            subtitle: "Sundin ang simpleng guide para mas mabilis matutunan ang Valora EM."
+        },
+        settings: {
+            title: "Business Settings",
+            subtitle: "I-set up ang store profile, currency, customer identity, at saved item catalog.",
+            businessDetails: "Detalye ng Negosyo",
+            saveStore: "I-save ang Store Settings"
+        },
+        appearance: {
+            title: "Hitsura at Disenyo ng Dokumento",
+            subtitle: "Kontrolin ang dark mode, app language, receipt language, kulay, at print layout.",
+            appTheme: "Tema ng App",
+            themeHelp: "Piliin kung paano titingnan ang dashboard ng naka-login na user.",
+            appAppearance: "App Appearance",
+            darkMode: "Dark Mode",
+            lightMode: "Light Mode",
+            languageControls: "Language Controls",
+            languageHelp: "Ang app language ay para sa dashboard. Ang invoice/receipt language ay para sa customer documents.",
+            appLanguage: "App Interface Language",
+            receiptLanguage: "Invoice / Receipt Language",
+            receiptStyling: "Receipt at Print Styling",
+            stylingHelp: "Ang settings na ito ay para sa invoice/receipt preview at print output, hindi dashboard colors.",
+            accentColor: "Receipt Accent Color",
+            textColor: "Receipt Text Color",
+            printLayout: "Print Layout",
+            save: "I-save ang Appearance Settings"
+        },
+        account: {
+            title: "Account at Privacy",
+            subtitle: "I-manage ang privacy, deletion requests, at account-level data controls.",
+            deleteTitle: "Delete Account / Data",
+            deleteWarning: "Pagkalipas ng 7 araw, permanenteng mabubura ang data mo. WALA nang paraan para ma-restore ito, kahit admin/dev team.",
+            deleteHelp: "Gamitin ang button sa ibaba para buksan ang deletion modal. Pwede kang pumili ng 7-day grace period o immediate permanent deletion.",
+            deleteButton: "Delete Account",
+            paymentPolicy: "Payment Data Policy",
+            noCardStorage: "Walang local card storage",
+            noCardStorageBody: "Hindi nagse-save ang Valora EM ng card numbers, expiry dates, CVCs, o wallet credentials.",
+            manualRenewal: "Manual renewal by default",
+            manualRenewalBody: "Hindi automatic ang charge ng paid plans maliban kung pinili ng user ang EasyPay auto-renewal sa checkout."
+        },
+        featureRequests: {
+            title: "Feature Requests",
+            subtitle: "Magpadala ng ideas, bug reports, at improvement requests diretso sa Valora EM owner.",
+            sendTitle: "Magpadala ng Feature Request",
+            sendHelp: "Sabihin kung ano ang gusto mong ma-improve o maidagdag.",
+            label: "Feature Request",
+            submit: "Send Feature Request",
+            includeTitle: "Ano ang isasama"
+        },
+        bugReport: {
+            title: "Bug Report",
+            subtitle: "Mag-submit ng support ticket at tingnan ang replies mula sa Valora EM support.",
+            panelTitle: "In-App Bug Reporting System",
+            help: "Gumawa ng ticket na may subject at details, tapos tingnan ang conversation thread para sa responses.",
+            create: "Create Ticket",
+            sendReply: "Send Reply",
+            noTickets: "Wala pang tickets.",
+            selectTicket: "Pumili ng ticket para makita ang conversation."
+        },
+        offline: {
+            title: "Offline Mode",
+            subtitle: "Gumawa ng invoices at mag-print ng PDFs kahit mahina ang internet.",
+            panelTitle: "Paano gumagana ang offline access"
+        },
+        admin: {
+            title: "Owner Admin Dashboard",
+            subtitle: "Subaybayan ang app revenue, customer upgrades, payment settings, at support requests.",
+            gatewayTab: "Dashboard at Gateway Settings",
+            ticketsTab: "Bug Reports / Support Tickets",
+            paymentsTitle: "Recent App Payments",
+            featureInboxTitle: "Customer Feature Requests"
+        },
+        billing: {
+            title: "Subscription",
+            subtitle: "Piliin ang plan na bagay sa workflow ng store mo.",
+            monthly: "Monthly",
+            yearly: "Yearly"
+        },
+        creator: {
+            saveInvoice: "I-save ang Dokumento",
+            printInvoice: "Print / Save PDF",
+            addLineItem: "Magdagdag ng Line Item"
+        },
+        common: {
+            beginTutorial: "Simulan ang Tutorial",
+            openLearningCenter: "Buksan ang Learning Center",
+            newInvoiceEstimate: "Bagong Invoice/Estimate",
+            sendFeedback: "Send Feedback",
+            viewPlans: "Tingnan ang Plans"
+        },
+        placeholders: {
+            betaFeedback: "Halimbawa: Mahirap basahin ang thermal print preview sa phone ko.",
+            featureRequest: "Halimbawa: Paki-add ang invoice reminder emails, customer read receipts, o automatic monthly reports.",
+            ticketSubject: "Subject",
+            ticketMessage: "Details: ano ang nangyari, anong page, at anong device ang ginamit mo.",
+            ticketReply: "Sumulat ng reply...",
+            customLanguage: "Mag-type ng ibang document language kung wala sa listahan"
+        },
+        messages: {
+            appearanceSaved: "Na-save ang appearance at document settings.",
+            languageChanged: "Na-update ang app language. I-click ang Save Appearance Settings para ma-sync sa account mo."
+        }
+    },
+    es: {},
+    fr: {},
+    de: {},
+    ja: {},
+    ko: {},
+    zh: {},
+    other: {}
+};
+
+const UI_TEXT_BINDINGS = [
+    { selector: '.nav-item[data-tab="dashboard-tab"] .nav-link', key: "sidebar.dashboard", preserveIcon: true },
+    { selector: '.nav-item[data-tab="learning-tab"] .nav-link', key: "sidebar.learning", preserveIcon: true },
+    { selector: '.nav-item[data-tab="creator-tab"] .nav-link', key: "sidebar.createInvoice", preserveIcon: true },
+    { selector: '.nav-item[data-tab="invoices-tab"] .nav-link', key: "sidebar.invoiceHistory", preserveIcon: true },
+    { selector: '.nav-item[data-tab="expenses-tab"] .nav-link', key: "sidebar.expenses", preserveIcon: true },
+    { selector: '.nav-item[data-tab="trash-tab"] .nav-link', key: "sidebar.trashBin", preserveIcon: true },
+    { selector: '.nav-item[data-tab="clients-tab"] .nav-link', key: "sidebar.clientsList", preserveIcon: true },
+    { selector: '.nav-item[data-tab="settings-tab"] .nav-link', key: "sidebar.settings", preserveIcon: true },
+    { selector: '.nav-item[data-tab="appearance-tab"] .nav-link', key: "sidebar.appearance", preserveIcon: true },
+    { selector: '.nav-item[data-tab="account-tab"] .nav-link', key: "sidebar.account", preserveIcon: true },
+    { selector: '.nav-item[data-tab="bug-report-tab"] .nav-link', key: "sidebar.bugReport", preserveIcon: true },
+    { selector: '.nav-item[data-tab="offline-tab"] .nav-link', key: "sidebar.offlineMode", preserveIcon: true },
+    { selector: '.nav-item[data-tab="admin-tab"] .nav-link', key: "sidebar.admin", preserveIcon: true },
+    { selector: '.nav-item[data-tab="billing-tab"] .nav-link', key: "sidebar.subscription", preserveIcon: true },
+    { selector: "#logout-btn", key: "sidebar.logoutAccount", preserveIcon: true },
+    { selector: "#mobile-drawer-logout", key: "sidebar.logoutAccount" },
+    { selector: "#dashboard-tab .tab-title-container h1", key: "dashboard.title" },
+    { selector: "#dashboard-tab .tab-title-container p", key: "dashboard.subtitle" },
+    { selector: ".dashboard-actions .btn-primary", key: "common.newInvoiceEstimate", preserveIcon: true },
+    { selector: ".onboarding-banner .learning-kicker", key: "dashboard.quickStart" },
+    { selector: ".onboarding-banner h3", key: "dashboard.newUserTitle" },
+    { selector: ".onboarding-banner p", key: "dashboard.newUserBody" },
+    { selector: "[data-tutorial-start]", key: "common.beginTutorial" },
+    { selector: "[data-learning-go]", key: "common.openLearningCenter" },
+    { selector: "#launch-notice-banner .btn", key: "common.viewPlans" },
+    { selector: ".beta-feedback-card .learning-kicker", key: "dashboard.betaFeedback" },
+    { selector: ".beta-feedback-card h3", key: "dashboard.feedbackTitle" },
+    { selector: ".beta-feedback-card p", key: "dashboard.feedbackBody" },
+    { selector: "#submit-beta-feedback-btn", key: "common.sendFeedback" },
+    { selector: ".metrics-grid .metric-card:nth-child(1) .metric-title", key: "dashboard.totalRevenue" },
+    { selector: ".metrics-grid .metric-card:nth-child(2) .metric-title", key: "dashboard.totalPaid" },
+    { selector: ".metrics-grid .metric-card:nth-child(3) .metric-title", key: "dashboard.unpaidBalance" },
+    { selector: ".metrics-grid .metric-card:nth-child(4) .metric-title", key: "dashboard.totalInvoices" },
+    { selector: "#learning-tab .tab-title-container h1", key: "learning.title" },
+    { selector: "#learning-tab .tab-title-container p", key: "learning.subtitle" },
+    { selector: "#settings-tab .tab-title-container h1", key: "settings.title" },
+    { selector: "#settings-tab .tab-title-container p", key: "settings.subtitle" },
+    { selector: "#settings-tab .panel-title:first-of-type", key: "settings.businessDetails" },
+    { selector: "#save-store-settings-btn", key: "settings.saveStore" },
+    { selector: "#appearance-tab .tab-title-container h1", key: "appearance.title" },
+    { selector: "#appearance-tab .tab-title-container p", key: "appearance.subtitle" },
+    { selector: "#appearance-tab .panel-card:nth-child(1) .panel-title", key: "appearance.appTheme" },
+    { selector: "#appearance-tab .panel-card:nth-child(1) p", key: "appearance.themeHelp" },
+    { selector: 'label[for="app-appearance"]', key: "appearance.appAppearance" },
+    { selector: '#app-appearance option[value="dark"]', key: "appearance.darkMode" },
+    { selector: '#app-appearance option[value="light"]', key: "appearance.lightMode" },
+    { selector: "#appearance-tab .panel-card:nth-child(2) .panel-title", key: "appearance.languageControls" },
+    { selector: "#appearance-tab .panel-card:nth-child(2) > p", key: "appearance.languageHelp" },
+    { selector: 'label[for="app-interface-language"]', key: "appearance.appLanguage" },
+    { selector: 'label[for="preferred-language"]', key: "appearance.receiptLanguage" },
+    { selector: "#appearance-tab .panel-card:nth-child(3) .panel-title", key: "appearance.receiptStyling" },
+    { selector: "#appearance-tab .panel-card:nth-child(3) > p", key: "appearance.stylingHelp" },
+    { selector: "#appearance-tab .panel-card:nth-child(3) .form-group > label", key: "appearance.accentColor" },
+    { selector: 'label[for="invoice-text-color"]', key: "appearance.textColor" },
+    { selector: 'label[for="print-layout"]', key: "appearance.printLayout" },
+    { selector: "#save-appearance-settings-btn", key: "appearance.save" },
+    { selector: "#account-tab .tab-title-container h1", key: "account.title" },
+    { selector: "#account-tab .tab-title-container p", key: "account.subtitle" },
+    { selector: "#account-tab .danger-zone-card .panel-title", key: "account.deleteTitle" },
+    { selector: "#account-tab .danger-warning-box", key: "account.deleteWarning" },
+    { selector: "#account-tab .danger-zone-card > p", key: "account.deleteHelp" },
+    { selector: "#open-account-delete-modal-btn", key: "account.deleteButton" },
+    { selector: "#account-tab .panel-card:nth-child(2) .panel-title", key: "account.paymentPolicy" },
+    { selector: "#account-tab .panel-card:nth-child(2) .feature-list div:nth-child(1) strong", key: "account.noCardStorage" },
+    { selector: "#account-tab .panel-card:nth-child(2) .feature-list div:nth-child(1) p", key: "account.noCardStorageBody" },
+    { selector: "#account-tab .panel-card:nth-child(2) .feature-list div:nth-child(2) strong", key: "account.manualRenewal" },
+    { selector: "#account-tab .panel-card:nth-child(2) .feature-list div:nth-child(2) p", key: "account.manualRenewalBody" },
+    { selector: "#feature-requests-tab .tab-title-container h1", key: "featureRequests.title" },
+    { selector: "#feature-requests-tab .tab-title-container p", key: "featureRequests.subtitle" },
+    { selector: "#feature-requests-tab .feature-request-settings-card .panel-title", key: "featureRequests.sendTitle" },
+    { selector: "#feature-requests-tab .feature-request-settings-card > p", key: "featureRequests.sendHelp" },
+    { selector: 'label[for="feature-request-text"]', key: "featureRequests.label" },
+    { selector: "#submit-feature-request-btn", key: "featureRequests.submit" },
+    { selector: "#feature-requests-tab .panel-card:nth-child(2) .panel-title", key: "featureRequests.includeTitle" },
+    { selector: "#bug-report-tab .tab-title-container h1", key: "bugReport.title" },
+    { selector: "#bug-report-tab .tab-title-container p", key: "bugReport.subtitle" },
+    { selector: "#bug-report-tab .support-tickets-card .panel-title", key: "bugReport.panelTitle" },
+    { selector: "#bug-report-tab .support-tickets-card > p", key: "bugReport.help" },
+    { selector: "#create-ticket-btn", key: "bugReport.create" },
+    { selector: "#send-ticket-message-btn", key: "bugReport.sendReply" },
+    { selector: "#offline-tab .tab-title-container h1", key: "offline.title" },
+    { selector: "#offline-tab .tab-title-container p", key: "offline.subtitle" },
+    { selector: "#offline-tab .panel-title", key: "offline.panelTitle" },
+    { selector: "#admin-tab .tab-title-container h1", key: "admin.title" },
+    { selector: "#admin-tab .tab-title-container p", key: "admin.subtitle" },
+    { selector: '[data-admin-screen="admin-gateway-screen"]', key: "admin.gatewayTab" },
+    { selector: '[data-admin-screen="admin-tickets-screen"]', key: "admin.ticketsTab" },
+    { selector: "#admin-payments-table-container .panel-title", key: "admin.paymentsTitle" },
+    { selector: "#billing-tab .tab-title-container h1", key: "billing.title" },
+    { selector: "#billing-tab .tab-title-container p", key: "billing.subtitle" },
+    { selector: '[data-billing-cycle="monthly"]', key: "billing.monthly" },
+    { selector: '[data-billing-cycle="yearly"]', key: "billing.yearly" },
+    { selector: "#save-invoice-btn", key: "creator.saveInvoice" },
+    { selector: "#print-invoice-btn", key: "creator.printInvoice" },
+    { selector: "#add-line-item-btn", key: "creator.addLineItem" }
+];
+
+const UI_PLACEHOLDER_BINDINGS = [
+    { selector: "#beta-feedback-text", key: "placeholders.betaFeedback" },
+    { selector: "#feature-request-text", key: "placeholders.featureRequest" },
+    { selector: "#ticket-subject", key: "placeholders.ticketSubject" },
+    { selector: "#ticket-message", key: "placeholders.ticketMessage" },
+    { selector: "#ticket-reply", key: "placeholders.ticketReply" },
+    { selector: "#custom-language-name", key: "placeholders.customLanguage" }
+];
+
+function readTranslationValue(source, keyPath) {
+    return keyPath.split(".").reduce((value, key) => (value && value[key] !== undefined ? value[key] : undefined), source);
+}
+
+function getUiLanguageCode() {
+    const code = currentProfile?.app_interface_language || "en";
+    return UI_TRANSLATIONS[code] ? code : "en";
+}
+
+function getUiText(keyPath) {
+    const language = getUiLanguageCode();
+    const translated = readTranslationValue(UI_TRANSLATIONS[language], keyPath);
+    if (translated !== undefined && translated !== "") return translated;
+    const fallback = readTranslationValue(UI_TRANSLATIONS.en, keyPath);
+    return fallback !== undefined ? fallback : keyPath;
+}
+
+function setElementTextPreservingIcon(element, text) {
+    const childNodes = Array.from(element.childNodes);
+    const textNodes = childNodes.filter((node) => node.nodeType === Node.TEXT_NODE);
+    if (textNodes.length) {
+        textNodes.forEach((node, index) => {
+            node.textContent = index === textNodes.length - 1 ? ` ${text}` : "";
+        });
+        return;
+    }
+    element.appendChild(document.createTextNode(` ${text}`));
+}
+
+function localizeFeatureRequestNavLabel() {
+    const featureRequestsNav = document.getElementById("feature-requests-nav-item");
+    if (!featureRequestsNav) return;
+    const label = featureRequestsNav.querySelector(".nav-link");
+    if (!label) return;
+    setElementTextPreservingIcon(label, getUiText(isAdminUser() ? "sidebar.featureInbox" : "sidebar.featureRequests"));
+}
+
+function applyInterfaceLanguage() {
+    document.documentElement.lang = getUiLanguageCode();
+
+    UI_TEXT_BINDINGS.forEach((binding) => {
+        document.querySelectorAll(binding.selector).forEach((element) => {
+            const text = getUiText(binding.key);
+            if (binding.preserveIcon) {
+                setElementTextPreservingIcon(element, text);
+            } else {
+                element.textContent = text;
+            }
+        });
+    });
+
+    UI_PLACEHOLDER_BINDINGS.forEach((binding) => {
+        document.querySelectorAll(binding.selector).forEach((element) => {
+            element.setAttribute("placeholder", getUiText(binding.key));
+        });
+    });
+
+    localizeFeatureRequestNavLabel();
+    renderMobileNavigation();
+}
+
 function normalizeCurrencyCode(code) {
     const normalized = String(code || "PHP").trim().toUpperCase();
     const mapped = CURRENCY_ALIASES[normalized] || normalized;
@@ -1133,15 +1589,7 @@ function updateAdminVisibility() {
     const featureRequestsNav = document.getElementById("feature-requests-nav-item");
     if (featureRequestsNav) {
         featureRequestsNav.dataset.tab = isAdminUser() ? "admin-feature-inbox-tab" : "feature-requests-tab";
-        const label = featureRequestsNav.querySelector(".nav-link");
-        if (label) {
-            let textNode = Array.from(label.childNodes).find((node) => node.nodeType === 3 && node.textContent.trim());
-            if (!textNode) {
-                textNode = document.createTextNode("");
-                label.appendChild(textNode);
-            }
-            textNode.textContent = isAdminUser() ? " Feature Inbox" : " Feature Requests";
-        }
+        localizeFeatureRequestNavLabel();
     }
     renderMobileNavigation();
 }
@@ -1584,6 +2032,7 @@ async function setupAuthenticatedUser(user) {
     applyInvoiceThemeColor();
     updateUserTierUI();
     updateAdminVisibility();
+    applyInterfaceLanguage();
     showAppScreen();
 }
 
@@ -1694,9 +2143,10 @@ async function saveAppearanceSettings() {
     }
 
     applyAppearance();
+    applyInterfaceLanguage();
     applyInvoiceThemeColor();
     updateInvoicePreview();
-    createToast("Appearance and document settings saved.");
+    createToast(getUiText("messages.appearanceSaved"));
 }
 
 function renderLogoAccessUI() {
@@ -3213,6 +3663,7 @@ function initAppEventListeners() {
         // Refresh logos/previews
         document.getElementById("user-avatar-char").innerText = currentProfile.company_name.charAt(0).toUpperCase();
         applyAppearance();
+        applyInterfaceLanguage();
         populateBusinessProfileSwitcher();
         renderLogoAccessUI();
         applyInvoiceThemeColor();
@@ -4571,7 +5022,8 @@ function initSignaturePad() {
     if (appLanguageSelect) {
         appLanguageSelect.addEventListener("change", (event) => {
             currentProfile.app_interface_language = event.target.value || "en";
-            createToast("App language preference saved locally. Full interface translation will roll out after beta.");
+            applyInterfaceLanguage();
+            createToast(getUiText("messages.languageChanged"));
         });
     }
 
@@ -4799,5 +5251,6 @@ Object.assign(window, {
     sendTicketMessage,
     updateTicketStatus,
     restartTutorial,
-    showTutorialIntro
+    showTutorialIntro,
+    applyInterfaceLanguage
 });
