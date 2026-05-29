@@ -290,7 +290,8 @@ function hasBusinessUnlimited() {
 
 function getCurrentPlanName() {
     if (isAdminUser()) return "Business Unlimited";
-    if (currentProfile.plan) return currentProfile.plan;
+    const canonicalPlan = getPlanCanonicalName(currentProfile.plan);
+    if (canonicalPlan !== "Standard Free Plan") return canonicalPlan;
     return currentProfile.is_pro ? "Pro Unlimited Plan" : "Standard Free Plan";
 }
 
@@ -313,6 +314,19 @@ function getPlanCanonicalName(planName) {
 function isFreeOrStarterPlan() {
     const planName = getPlanCanonicalName(getCurrentPlanName());
     return !isAdminUser() && (planName === "Standard Free Plan" || planName === "Starter Plan");
+}
+
+function hasPaidSubscriptionAccess() {
+    const planName = getPlanCanonicalName(getCurrentPlanName());
+    return isAdminUser() || currentProfile.is_pro === true || planName !== "Standard Free Plan";
+}
+
+function hasUnlimitedInvoiceAccess() {
+    return hasPaidSubscriptionAccess();
+}
+
+function isFreeInvoiceLimitReached() {
+    return !hasUnlimitedInvoiceAccess() && getActiveInvoices().length >= 5;
 }
 
 function getBusinessProfileLimit() {
@@ -846,7 +860,7 @@ function loadWhiteLabelSettings() {
     const saved = localStorage.getItem("valoraem_whitelabel") || localStorage.getItem("billflow_whitelabel");
     if (saved) {
         whitelabelConfig = JSON.parse(saved);
-        if (whitelabelConfig.appName && whitelabelConfig.appName.toLowerCase().startsWith("bill")) {
+        if (whitelabelConfig.appName !== "Valora EM") {
             whitelabelConfig.appName = "Valora EM";
         }
         localStorage.setItem("valoraem_whitelabel", JSON.stringify(whitelabelConfig));
@@ -916,11 +930,10 @@ function switchTab(tabId) {
         return;
     }
 
-    // Don't show premium features if user is on Free Tier and trying to write too many invoices
+    // Free users stop at five documents; paid plans are unlimited.
     const tutorialOpen = document.getElementById("tutorial-modal")?.style.display === "flex";
-    if (tabId === "creator-tab" && !tutorialOpen && !currentProfile.is_pro && getActiveInvoices().length >= 5) {
-        alert("Trial limit reached: Free accounts can create up to 5 invoices. Please subscribe to continue.");
-        switchTab("billing-tab");
+    if (tabId === "creator-tab" && !tutorialOpen && isFreeInvoiceLimitReached()) {
+        showInvoiceLimitUpgradeModal();
         return;
     }
 
@@ -1173,9 +1186,29 @@ function restartTutorial() {
     showTutorialIntro();
 }
 
+function showInvoiceLimitUpgradeModal() {
+    const modal = document.getElementById("invoice-limit-modal");
+    if (!modal) {
+        createToast("Free trial limit reached. Subscribe to continue creating invoices.", true);
+        return;
+    }
+    const countEl = document.getElementById("invoice-limit-count");
+    if (countEl) countEl.innerText = getActiveInvoices().length;
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden", "false");
+}
+
+function hideInvoiceLimitUpgradeModal() {
+    const modal = document.getElementById("invoice-limit-modal");
+    if (!modal) return;
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+}
+
 // Display auth form
 function showAuthScreen() {
     hideTutorialModal();
+    hideInvoiceLimitUpgradeModal();
     document.getElementById("auth-container").style.display = "flex";
     document.getElementById("app-root").style.display = "none";
 }
@@ -2331,14 +2364,7 @@ function updateUserTierUI() {
     const currentTierStatus = document.getElementById("current-tier-status");
     const banner = document.getElementById("trial-warning-banner");
     
-    if (isAdminUser()) {
-        tierDisplay.innerText = "BUSINESS UNLIMITED";
-        tierDisplay.style.color = "var(--accent)";
-        tierDisplay.style.backgroundColor = "var(--accent-glow)";
-        currentTierStatus.innerText = "BUSINESS UNLIMITED PLAN";
-        currentTierStatus.style.color = "var(--accent)";
-        if (banner) banner.style.display = "none";
-    } else if (currentProfile.is_pro) {
+    if (isAdminUser() || hasPaidSubscriptionAccess()) {
         const planName = getPlanCanonicalName(getCurrentPlanName());
         tierDisplay.innerText = planName.toUpperCase();
         tierDisplay.style.color = "var(--accent)";
@@ -2659,6 +2685,17 @@ function initAppEventListeners() {
     document.querySelectorAll("[data-learning-go]").forEach((button) => {
         button.addEventListener("click", () => switchTab(button.dataset.learningGo));
     });
+
+    const invoiceLimitCloseBtn = document.getElementById("invoice-limit-close-btn");
+    if (invoiceLimitCloseBtn) invoiceLimitCloseBtn.addEventListener("click", hideInvoiceLimitUpgradeModal);
+
+    const invoiceLimitUpgradeBtn = document.getElementById("invoice-limit-upgrade-btn");
+    if (invoiceLimitUpgradeBtn) {
+        invoiceLimitUpgradeBtn.addEventListener("click", () => {
+            hideInvoiceLimitUpgradeModal();
+            switchTab("billing-tab");
+        });
+    }
 
     // Navigation item click links
     document.querySelectorAll(".nav-item").forEach(item => {
@@ -3387,9 +3424,8 @@ function saveInvoiceLocally(invoiceData) {
 // Save invoice to database (with checks on account tier limits)
 async function saveInvoiceToDatabase() {
     // Check trial limits
-    if (!currentProfile.is_pro && getActiveInvoices().length >= 5 && !activeEditingInvoiceId) {
-        alert("Trial limit reached: Free accounts can create up to 5 invoices. Please subscribe to continue.");
-        switchTab("billing-tab");
+    if (isFreeInvoiceLimitReached() && !activeEditingInvoiceId) {
+        showInvoiceLimitUpgradeModal();
         return;
     }
     
@@ -3847,7 +3883,7 @@ function updateBillingTabUI() {
     const currentPlanKey = getPlanKey(currentPlan);
     const line = document.getElementById("billing-invoice-count-line");
     if (line) {
-        line.innerHTML = currentProfile.is_pro
+        line.innerHTML = hasUnlimitedInvoiceAccess()
             ? `Total documents created: <span id="billing-invoice-count">${activeInvoiceCount}</span>`
             : `Invoices Used: <span id="billing-invoice-count">${activeInvoiceCount}</span> / 5 free limits.`;
     }
@@ -3859,13 +3895,13 @@ function updateBillingTabUI() {
     document.querySelectorAll("[data-plan-action]").forEach((button) => {
         const planName = button.dataset.planAction;
         const isActivePlan = getPlanKey(planName) === currentPlanKey;
-        button.disabled = isActivePlan || (planName === "Standard Free Plan" && currentProfile.is_pro);
+        button.disabled = isActivePlan || (planName === "Standard Free Plan" && hasPaidSubscriptionAccess());
         button.classList.toggle("checkout-plan-btn", !isActivePlan && planName !== "Standard Free Plan");
 
         if (isActivePlan) {
             button.innerText = "Active Plan";
         } else if (planName === "Standard Free Plan") {
-            button.innerText = currentProfile.is_pro ? "Downgrade" : "Free Plan";
+            button.innerText = hasPaidSubscriptionAccess() ? "Downgrade" : "Free Plan";
         } else if (planName === "Starter Plan") {
             button.innerText = "Choose Starter";
         } else if (planName === "Pro Unlimited Plan") {
