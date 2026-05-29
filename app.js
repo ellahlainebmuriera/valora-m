@@ -63,6 +63,7 @@ const CURRENCY_ALIASES = {
 };
 
 const PROFILE_LOCK_MESSAGE = "Profile Lock active. Free and Starter tiers can only modify business profile settings once every 7 days. Upgrade to Pro or Business Plan to manage multiple stores instantly.";
+const FREE_WEEKLY_INVOICE_LIMIT = 5;
 
 const BUSINESS_PROFILE_FIELDS = [
     "company_name",
@@ -325,8 +326,45 @@ function hasUnlimitedInvoiceAccess() {
     return hasPaidSubscriptionAccess();
 }
 
+function getStartOfCurrentWeek(referenceDate = new Date()) {
+    const start = new Date(referenceDate);
+    start.setHours(0, 0, 0, 0);
+    const day = start.getDay();
+    const daysFromMonday = day === 0 ? 6 : day - 1;
+    start.setDate(start.getDate() - daysFromMonday);
+    return start;
+}
+
+function getInvoiceCreatedDate(invoice) {
+    const explicitDate = invoice.created_at || invoice.createdAt || invoice.saved_at;
+    if (explicitDate) {
+        const parsed = new Date(explicitDate);
+        if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+
+    const idTimestamp = String(invoice.id || "").match(/^inv-(\d{10,})/);
+    if (idTimestamp) {
+        const parsed = new Date(Number(idTimestamp[1]));
+        if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+
+    const fallbackDate = invoice.issue_date ? new Date(invoice.issue_date) : null;
+    return fallbackDate && !Number.isNaN(fallbackDate.getTime()) ? fallbackDate : null;
+}
+
+function getFreeInvoicesCreatedThisWeek() {
+    const start = getStartOfCurrentWeek();
+    const end = new Date(start);
+    end.setDate(start.getDate() + 7);
+
+    return getActiveInvoices().filter((invoice) => {
+        const createdDate = getInvoiceCreatedDate(invoice);
+        return createdDate && createdDate >= start && createdDate < end;
+    }).length;
+}
+
 function isFreeInvoiceLimitReached() {
-    return !hasUnlimitedInvoiceAccess() && getActiveInvoices().length >= 5;
+    return !hasUnlimitedInvoiceAccess() && getFreeInvoicesCreatedThisWeek() >= FREE_WEEKLY_INVOICE_LIMIT;
 }
 
 function getBusinessProfileLimit() {
@@ -472,6 +510,44 @@ async function insertCloudExpenseRecord(expenseData) {
     }
 
     return result;
+}
+
+async function insertCloudClientRecord(clientData) {
+    const cloudUser = await getAuthenticatedCloudUser();
+    if (!cloudUser?.id) {
+        return {
+            data: null,
+            error: {
+                message: "No active Supabase session. Please sign out, sign in again, then add the client."
+            }
+        };
+    }
+
+    const profileReady = await ensureCloudUserProfile(cloudUser);
+    if (!profileReady) {
+        return {
+            data: null,
+            error: {
+                message: "Your user profile is not ready yet. Please sign out and sign in again."
+            }
+        };
+    }
+
+    const payload = {
+        ...clientData,
+        user_id: cloudUser.id
+    };
+
+    const { data, error } = await supabaseClient
+        .from("clients")
+        .insert(payload)
+        .select();
+
+    if (error) {
+        logSupabaseError("clients insert", error, payload);
+    }
+
+    return { data, error };
 }
 
 async function getAuthenticatedCloudUser() {
@@ -1189,11 +1265,11 @@ function restartTutorial() {
 function showInvoiceLimitUpgradeModal() {
     const modal = document.getElementById("invoice-limit-modal");
     if (!modal) {
-        createToast("Free trial limit reached. Subscribe to continue creating invoices.", true);
+        createToast("Weekly limit reached. Free accounts can create up to 5 invoices per week.", true);
         return;
     }
     const countEl = document.getElementById("invoice-limit-count");
-    if (countEl) countEl.innerText = getActiveInvoices().length;
+    if (countEl) countEl.innerText = getFreeInvoicesCreatedThisWeek();
     modal.style.display = "flex";
     modal.setAttribute("aria-hidden", "false");
 }
@@ -2853,21 +2929,24 @@ function initAppEventListeners() {
             address
         };
         
-        if (isCloudActive) {
-            newClient.user_id = currentUser.id;
-            const { data, error } = await supabaseClient.from("clients").insert(newClient).select();
+        if (hasCloudConnection()) {
+            const { data, error } = await insertCloudClientRecord(newClient);
             if (error) {
-                alert("Error saving client: " + error.message);
-                return;
+                newClient.id = `client-${Date.now()}`;
+                newClient.user_id = currentUser?.id || null;
+                clients.push(newClient);
+                saveLocalData();
+                createToast("Client saved on this device. Supabase blocked cloud sync; run the clients RLS policy fix in SQL Editor.", true);
+            } else if (data && data[0]) {
+                clients.push(data[0]);
             }
-            if (data && data[0]) clients.push(data[0]);
         } else {
             newClient.id = `client-${Date.now()}`;
             clients.push(newClient);
             saveLocalData();
         }
         
-        alert("Client added successfully to directory!");
+        createToast("Client added successfully to directory.");
         document.getElementById("new-client-form").reset();
         renderClientsTable();
         populateClientDropdown();
@@ -3407,7 +3486,12 @@ function saveInvoiceLocally(invoiceData) {
     if (activeEditingInvoiceId) {
         const index = invoices.findIndex(i => i.id === activeEditingInvoiceId);
         if (index !== -1) {
-            invoices[index] = { ...invoiceData, id: activeEditingInvoiceId, items: currentInvoiceItems };
+            invoices[index] = {
+                ...invoiceData,
+                id: activeEditingInvoiceId,
+                created_at: invoices[index].created_at || invoiceData.created_at || new Date().toISOString(),
+                items: currentInvoiceItems
+            };
             saveLocalData();
             saveLocalStorageProfile();
             return activeEditingInvoiceId;
@@ -3415,7 +3499,12 @@ function saveInvoiceLocally(invoiceData) {
     }
 
     const newId = invoiceData.id || `inv-${Date.now()}`;
-    invoices.push({ ...invoiceData, id: newId, items: currentInvoiceItems });
+    invoices.push({
+        ...invoiceData,
+        id: newId,
+        created_at: invoiceData.created_at || new Date().toISOString(),
+        items: currentInvoiceItems
+    });
     saveLocalData();
     saveLocalStorageProfile();
     return newId;
@@ -3878,14 +3967,15 @@ function updatePricingDisplay() {
 
 function updateBillingTabUI() {
     const activeInvoiceCount = getActiveInvoices().length;
-    document.getElementById("billing-invoice-count").innerText = activeInvoiceCount;
+    const weeklyInvoiceCount = getFreeInvoicesCreatedThisWeek();
+    document.getElementById("billing-invoice-count").innerText = hasUnlimitedInvoiceAccess() ? activeInvoiceCount : weeklyInvoiceCount;
     const currentPlan = getPlanCanonicalName(getCurrentPlanName());
     const currentPlanKey = getPlanKey(currentPlan);
     const line = document.getElementById("billing-invoice-count-line");
     if (line) {
         line.innerHTML = hasUnlimitedInvoiceAccess()
             ? `Total documents created: <span id="billing-invoice-count">${activeInvoiceCount}</span>`
-            : `Invoices Used: <span id="billing-invoice-count">${activeInvoiceCount}</span> / 5 free limits.`;
+            : `Invoices Used This Week: <span id="billing-invoice-count">${weeklyInvoiceCount}</span> / ${FREE_WEEKLY_INVOICE_LIMIT} limits.`;
     }
 
     document.querySelectorAll("[data-plan-card]").forEach((card) => {

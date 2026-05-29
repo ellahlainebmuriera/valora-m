@@ -15,7 +15,7 @@
     <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=tutorial-v1">
+    <link rel="stylesheet" href="styles.css?v=weekly-limit-v1">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1515,7 +1515,7 @@
                 <div class="subscription-card" style="margin-bottom: 20px;">
                     <div>
                         <h3 style="font-family: var(--font-title); font-size: 18px; margin-bottom: 4px;">Current Package: <span id="current-tier-status" style="color: var(--accent);">Standard Free Tier</span></h3>
-                        <p style="color: var(--text-medium); font-size: 14px;" id="billing-invoice-count-line">Invoices Used: <span id="billing-invoice-count">0</span> / 5 free limits.</p>
+                        <p style="color: var(--text-medium); font-size: 14px;" id="billing-invoice-count-line">Invoices Used This Week: <span id="billing-invoice-count">0</span> / 5 limits.</p>
                     </div>
                 </div>
 
@@ -1531,7 +1531,7 @@
                         <div class="plan-price" data-plan-price="Standard Free Plan">PHP 0<span> / Month</span></div>
                         <p class="promo-note promo-spacer">50% off your first month.</p>
                         <ul class="plan-features">
-                            <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>5 free documents</small></span></li>
+                            <li><span class="feature-icon">✓</span><span>Create Invoices & Estimates <small>5 free documents per week</small></span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Customer Directory & Advanced History</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Print / Save as PDF</span></li>
                             <li class="locked"><span class="feature-icon">−</span><span>Store Logo Upload</span></li>
@@ -1732,8 +1732,8 @@
     <div class="modal-overlay upgrade-modal" id="invoice-limit-modal" aria-hidden="true">
         <div class="modal-card upgrade-modal-card" role="dialog" aria-modal="true" aria-labelledby="invoice-limit-title">
             <div class="upgrade-modal-icon">∞</div>
-            <h3 id="invoice-limit-title">Your free invoice limit is full</h3>
-            <p>You have created <strong><span id="invoice-limit-count">5</span> / 5</strong> free documents. Subscribe to Starter, Pro, or Business to keep creating unlimited invoices and estimates.</p>
+            <h3 id="invoice-limit-title">Weekly limit reached</h3>
+            <p>Weekly limit reached. Free accounts can create up to <strong>5 invoices per week</strong>. You have used <strong><span id="invoice-limit-count">5</span> / 5</strong> this week. Please wait for the weekly reset or subscribe to our premium plans for unlimited invoicing.</p>
             <div class="upgrade-modal-actions">
                 <button class="btn btn-primary" id="invoice-limit-upgrade-btn" type="button">View Subscription Plans</button>
                 <button class="btn btn-secondary" id="invoice-limit-close-btn" type="button">Maybe Later</button>
@@ -1820,7 +1820,7 @@
         }
     </style>
 
-    <script src="app.js?v=tutorial-v1"></script>
+    <script src="app.js?v=weekly-limit-v1"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>
