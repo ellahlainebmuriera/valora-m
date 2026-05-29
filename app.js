@@ -448,12 +448,840 @@ const UI_TRANSLATIONS = {
             languageChanged: "Na-update ang app language. I-click ang Save Appearance Settings para ma-sync sa account mo."
         }
     },
-    es: {},
-    fr: {},
-    de: {},
-    ja: {},
-    ko: {},
-    zh: {},
+    es: {
+        sidebar: {
+            dashboard: "Panel",
+            learning: "Aprendizaje",
+            createInvoice: "Crear factura",
+            invoiceHistory: "Historial de facturas",
+            expenses: "Gastos",
+            trashBin: "Papelera",
+            clientsList: "Clientes",
+            settings: "Configuracion",
+            appearance: "Apariencia",
+            account: "Cuenta",
+            featureRequests: "Solicitudes",
+            featureInbox: "Bandeja de solicitudes",
+            bugReport: "Reportar error",
+            offlineMode: "Modo sin conexion",
+            admin: "Admin",
+            subscription: "Suscripcion",
+            logoutAccount: "Cerrar sesion"
+        },
+        dashboard: {
+            title: "Panel SaaS",
+            subtitle: "Controle facturas, clientes e ingresos del negocio desde un panel simple.",
+            quickStart: "Inicio rapido",
+            newUserTitle: "Nuevo en Valora EM?",
+            newUserBody: "Tome el tutorial corto o abra el Centro de aprendizaje para configurar su tienda, crear facturas, imprimir PDF y ver ganancias.",
+            betaFeedback: "Comentarios beta",
+            feedbackTitle: "Ayude a mejorar Valora EM antes del lanzamiento",
+            feedbackBody: "Cuente que resulta confuso, roto o faltante. Su mensaje ira al panel del propietario para revision.",
+            totalRevenue: "Ingresos totales",
+            totalPaid: "Total pagado",
+            unpaidBalance: "Saldo pendiente",
+            totalInvoices: "Facturas totales"
+        },
+        learning: {
+            title: "Centro de aprendizaje",
+            subtitle: "Siga una guia simple para aprender Valora EM mas rapido."
+        },
+        settings: {
+            title: "Configuracion del negocio",
+            subtitle: "Configure el perfil de la tienda, moneda, identidad para clientes y catalogo de articulos.",
+            businessDetails: "Datos del negocio",
+            saveStore: "Guardar configuracion"
+        },
+        appearance: {
+            title: "Apariencia y diseno de documentos",
+            subtitle: "Controle modo oscuro, idioma de la app, idioma de recibos, colores y diseno de impresion.",
+            appTheme: "Tema de la app",
+            themeHelp: "Elija como se vera el panel para el usuario conectado.",
+            appAppearance: "Apariencia de la app",
+            darkMode: "Modo oscuro",
+            lightMode: "Modo claro",
+            languageControls: "Controles de idioma",
+            languageHelp: "El idioma de la app es para el panel. El idioma de factura/recibo es para documentos del cliente.",
+            appLanguage: "Idioma de la interfaz",
+            receiptLanguage: "Idioma de factura / recibo",
+            receiptStyling: "Estilo de recibo e impresion",
+            stylingHelp: "Estos ajustes afectan la vista previa y la impresion, no los colores del panel.",
+            accentColor: "Color de acento del recibo",
+            textColor: "Color del texto del recibo",
+            printLayout: "Diseno de impresion",
+            save: "Guardar apariencia"
+        },
+        account: {
+            title: "Cuenta y privacidad",
+            subtitle: "Administre privacidad, solicitudes de eliminacion y controles de datos de la cuenta.",
+            deleteTitle: "Eliminar cuenta / datos",
+            deleteWarning: "Despues de 7 dias, sus datos se borraran permanentemente. NO hay forma de restaurar su cuenta, ni siquiera por el equipo admin/dev.",
+            deleteHelp: "Use el boton de abajo para abrir el modal de eliminacion. Puede elegir el periodo de gracia de 7 dias o eliminacion permanente inmediata.",
+            deleteButton: "Eliminar cuenta",
+            paymentPolicy: "Politica de datos de pago",
+            noCardStorage: "Sin almacenamiento local de tarjetas",
+            noCardStorageBody: "Valora EM no guarda numeros de tarjeta, fechas de vencimiento, CVC ni credenciales de billetera.",
+            manualRenewal: "Renovacion manual por defecto",
+            manualRenewalBody: "Los planes pagados no cobran automaticamente salvo que el usuario active EasyPay en el checkout."
+        },
+        featureRequests: {
+            title: "Solicitudes de funciones",
+            subtitle: "Envie ideas, errores y mejoras directamente al propietario de Valora EM.",
+            sendTitle: "Enviar solicitud",
+            sendHelp: "Cuente que desea mejorar o agregar.",
+            label: "Solicitud de funcion",
+            submit: "Enviar solicitud",
+            includeTitle: "Que incluir"
+        },
+        bugReport: {
+            title: "Reportar error",
+            subtitle: "Envie un ticket de soporte y vea respuestas del equipo de Valora EM.",
+            panelTitle: "Sistema de reportes en la app",
+            help: "Cree un ticket con asunto y detalles, luego revise el hilo para ver respuestas.",
+            create: "Crear ticket",
+            sendReply: "Enviar respuesta",
+            noTickets: "No hay tickets todavia.",
+            selectTicket: "Seleccione un ticket para ver la conversacion."
+        },
+        offline: {
+            title: "Modo sin conexion",
+            subtitle: "Cree facturas e imprima PDF incluso con internet inestable.",
+            panelTitle: "Como funciona el acceso sin conexion"
+        },
+        admin: {
+            title: "Panel de propietario",
+            subtitle: "Controle ingresos de la app, mejoras de clientes, ajustes de pago y soporte.",
+            gatewayTab: "Panel y pasarelas de pago",
+            ticketsTab: "Errores / tickets de soporte",
+            paymentsTitle: "Pagos recientes",
+            featureInboxTitle: "Solicitudes de clientes"
+        },
+        billing: {
+            title: "Suscripcion",
+            subtitle: "Elija el plan que se adapta al flujo de su tienda.",
+            monthly: "Mensual",
+            yearly: "Anual"
+        },
+        creator: {
+            saveInvoice: "Guardar documento",
+            printInvoice: "Imprimir / guardar PDF",
+            addLineItem: "Agregar item"
+        },
+        common: {
+            beginTutorial: "Iniciar tutorial",
+            openLearningCenter: "Abrir aprendizaje",
+            newInvoiceEstimate: "Nueva factura/cotizacion",
+            sendFeedback: "Enviar comentario",
+            viewPlans: "Ver planes"
+        },
+        placeholders: {
+            betaFeedback: "Ejemplo: La vista termica es dificil de leer en mi telefono.",
+            featureRequest: "Ejemplo: Agreguen recordatorios por email, recibos leidos o reportes mensuales.",
+            ticketSubject: "Asunto",
+            ticketMessage: "Detalles: que paso, en que pagina estaba y que dispositivo uso.",
+            ticketReply: "Escriba una respuesta...",
+            customLanguage: "Escriba otro idioma de documento si no esta en la lista"
+        },
+        messages: {
+            appearanceSaved: "Apariencia y ajustes de documento guardados.",
+            languageChanged: "Idioma de la app actualizado. Haga clic en Guardar apariencia para sincronizarlo."
+        }
+    },
+    fr: {
+        sidebar: {
+            dashboard: "Tableau de bord",
+            learning: "Apprentissage",
+            createInvoice: "Creer une facture",
+            invoiceHistory: "Historique des factures",
+            expenses: "Depenses",
+            trashBin: "Corbeille",
+            clientsList: "Clients",
+            settings: "Parametres",
+            appearance: "Apparence",
+            account: "Compte",
+            featureRequests: "Demandes",
+            featureInbox: "Boite de demandes",
+            bugReport: "Signaler un bug",
+            offlineMode: "Mode hors ligne",
+            admin: "Admin",
+            subscription: "Abonnement",
+            logoutAccount: "Se deconnecter"
+        },
+        dashboard: {
+            title: "Tableau de bord SaaS",
+            subtitle: "Suivez les factures, les clients et les revenus depuis un tableau simple.",
+            quickStart: "Demarrage rapide",
+            newUserTitle: "Nouveau sur Valora EM ?",
+            newUserBody: "Lancez le court tutoriel ou ouvrez le centre d'apprentissage pour configurer votre boutique, creer des factures, imprimer des PDF et suivre le profit.",
+            betaFeedback: "Retour beta",
+            feedbackTitle: "Aidez a ameliorer Valora EM avant le lancement",
+            feedbackBody: "Dites-nous ce qui est confus, casse ou manquant. Votre message sera envoye au tableau proprietaire.",
+            totalRevenue: "Revenus totaux",
+            totalPaid: "Total paye",
+            unpaidBalance: "Solde impaye",
+            totalInvoices: "Total des factures"
+        },
+        learning: {
+            title: "Centre d'apprentissage",
+            subtitle: "Suivez un parcours simple pour apprendre Valora EM plus vite."
+        },
+        settings: {
+            title: "Parametres de l'entreprise",
+            subtitle: "Configurez le profil, la devise, l'identite client et le catalogue d'articles.",
+            businessDetails: "Details de l'entreprise",
+            saveStore: "Enregistrer les parametres"
+        },
+        appearance: {
+            title: "Apparence et design des documents",
+            subtitle: "Controlez le mode sombre, les langues, les couleurs et la mise en page d'impression.",
+            appTheme: "Theme de l'app",
+            themeHelp: "Choisissez l'apparence du tableau pour l'utilisateur connecte.",
+            appAppearance: "Apparence de l'app",
+            darkMode: "Mode sombre",
+            lightMode: "Mode clair",
+            languageControls: "Langues",
+            languageHelp: "La langue de l'app concerne le tableau. La langue facture/recu concerne les documents clients.",
+            appLanguage: "Langue de l'interface",
+            receiptLanguage: "Langue facture / recu",
+            receiptStyling: "Style recu et impression",
+            stylingHelp: "Ces reglages affectent l'apercu et l'impression, pas les couleurs du tableau.",
+            accentColor: "Couleur d'accent du recu",
+            textColor: "Couleur du texte du recu",
+            printLayout: "Mise en page d'impression",
+            save: "Enregistrer l'apparence"
+        },
+        account: {
+            title: "Compte et confidentialite",
+            subtitle: "Gerez la confidentialite, les demandes de suppression et les controles de donnees.",
+            deleteTitle: "Supprimer le compte / les donnees",
+            deleteWarning: "Apres 7 jours, vos donnees seront supprimees definitivement. Il n'y a AUCUN moyen de restaurer le compte, meme pour l'equipe admin/dev.",
+            deleteHelp: "Utilisez le bouton ci-dessous pour ouvrir la suppression. Choisissez 7 jours de delai ou suppression permanente immediate.",
+            deleteButton: "Supprimer le compte",
+            paymentPolicy: "Politique des donnees de paiement",
+            noCardStorage: "Aucun stockage local de carte",
+            noCardStorageBody: "Valora EM ne stocke pas les numeros de carte, dates d'expiration, CVC ou identifiants de portefeuille.",
+            manualRenewal: "Renouvellement manuel par defaut",
+            manualRenewalBody: "Les plans payants ne debitent pas automatiquement sauf si EasyPay est active au paiement."
+        },
+        featureRequests: {
+            title: "Demandes de fonctions",
+            subtitle: "Envoyez idees, bugs et ameliorations directement au proprietaire de Valora EM.",
+            sendTitle: "Envoyer une demande",
+            sendHelp: "Dites-nous ce que vous voulez ameliorer ou ajouter.",
+            label: "Demande de fonction",
+            submit: "Envoyer la demande",
+            includeTitle: "Que faut-il inclure"
+        },
+        bugReport: {
+            title: "Signaler un bug",
+            subtitle: "Envoyez un ticket support et suivez les reponses de Valora EM.",
+            panelTitle: "Systeme de signalement integre",
+            help: "Creez un ticket avec sujet et details, puis consultez le fil de conversation.",
+            create: "Creer un ticket",
+            sendReply: "Envoyer la reponse",
+            noTickets: "Aucun ticket pour le moment.",
+            selectTicket: "Selectionnez un ticket pour voir la conversation."
+        },
+        offline: {
+            title: "Mode hors ligne",
+            subtitle: "Creez des factures et imprimez des PDF meme avec internet instable.",
+            panelTitle: "Fonctionnement de l'acces hors ligne"
+        },
+        admin: {
+            title: "Tableau de bord proprietaire",
+            subtitle: "Suivez revenus, mises a niveau, parametres de paiement et support.",
+            gatewayTab: "Tableau et passerelles",
+            ticketsTab: "Bugs / tickets support",
+            paymentsTitle: "Paiements recents",
+            featureInboxTitle: "Demandes clients"
+        },
+        billing: {
+            title: "Abonnement",
+            subtitle: "Choisissez le plan adapte au flux de votre boutique.",
+            monthly: "Mensuel",
+            yearly: "Annuel"
+        },
+        creator: {
+            saveInvoice: "Enregistrer le document",
+            printInvoice: "Imprimer / enregistrer PDF",
+            addLineItem: "Ajouter une ligne"
+        },
+        common: {
+            beginTutorial: "Commencer le tutoriel",
+            openLearningCenter: "Ouvrir l'apprentissage",
+            newInvoiceEstimate: "Nouvelle facture/devis",
+            sendFeedback: "Envoyer un retour",
+            viewPlans: "Voir les plans"
+        },
+        placeholders: {
+            betaFeedback: "Exemple : l'apercu thermique est difficile a lire sur mon telephone.",
+            featureRequest: "Exemple : ajoutez des rappels email, recus lus ou rapports mensuels.",
+            ticketSubject: "Sujet",
+            ticketMessage: "Details : ce qui s'est passe, la page et l'appareil utilise.",
+            ticketReply: "Ecrire une reponse...",
+            customLanguage: "Tapez une autre langue de document si elle n'est pas listee"
+        },
+        messages: {
+            appearanceSaved: "Apparence et parametres de document enregistres.",
+            languageChanged: "Langue de l'app mise a jour. Cliquez sur Enregistrer l'apparence pour synchroniser."
+        }
+    },
+    de: {
+        sidebar: {
+            dashboard: "Dashboard",
+            learning: "Lernen",
+            createInvoice: "Rechnung erstellen",
+            invoiceHistory: "Rechnungsverlauf",
+            expenses: "Ausgaben",
+            trashBin: "Papierkorb",
+            clientsList: "Kundenliste",
+            settings: "Einstellungen",
+            appearance: "Darstellung",
+            account: "Konto",
+            featureRequests: "Funktionswunsche",
+            featureInbox: "Wunsch-Postfach",
+            bugReport: "Fehler melden",
+            offlineMode: "Offline-Modus",
+            admin: "Admin",
+            subscription: "Abonnement",
+            logoutAccount: "Abmelden"
+        },
+        dashboard: {
+            title: "SaaS Dashboard",
+            subtitle: "Verfolgen Sie Rechnungen, Kunden und Einnahmen in einem einfachen Dashboard.",
+            quickStart: "Schnellstart",
+            newUserTitle: "Neu bei Valora EM?",
+            newUserBody: "Starten Sie das kurze Tutorial oder offnen Sie das Lernzentrum, um Shop, Rechnungen, PDF-Druck und Gewinnverfolgung zu lernen.",
+            betaFeedback: "Beta Feedback",
+            feedbackTitle: "Helfen Sie, Valora EM vor dem Start zu verbessern",
+            feedbackBody: "Sagen Sie uns, was verwirrend, defekt oder fehlend ist. Ihre Nachricht geht an das Owner Dashboard.",
+            totalRevenue: "Gesamtumsatz",
+            totalPaid: "Bezahlt gesamt",
+            unpaidBalance: "Offener Saldo",
+            totalInvoices: "Rechnungen gesamt"
+        },
+        learning: {
+            title: "Lernzentrum",
+            subtitle: "Folgen Sie einem einfachen Pfad, um Valora EM schneller zu lernen."
+        },
+        settings: {
+            title: "Geschaftseinstellungen",
+            subtitle: "Richten Sie Shop-Profil, Wahrung, Kundenidentitat und Artikelkatalog ein.",
+            businessDetails: "Geschaftsdaten",
+            saveStore: "Einstellungen speichern"
+        },
+        appearance: {
+            title: "Darstellung und Dokumentdesign",
+            subtitle: "Steuern Sie Dark Mode, App-Sprache, Belegsprache, Farben und Drucklayout.",
+            appTheme: "App-Theme",
+            themeHelp: "Wahlen Sie, wie das Dashboard fur den angemeldeten Benutzer aussieht.",
+            appAppearance: "App-Darstellung",
+            darkMode: "Dunkler Modus",
+            lightMode: "Heller Modus",
+            languageControls: "Sprachsteuerung",
+            languageHelp: "Die App-Sprache gilt fur das Dashboard. Die Rechnungs-/Belegsprache gilt fur Kundendokumente.",
+            appLanguage: "Sprache der Benutzeroberflache",
+            receiptLanguage: "Rechnungs-/Belegsprache",
+            receiptStyling: "Beleg- und Druckstil",
+            stylingHelp: "Diese Einstellungen betreffen Vorschau und Druck, nicht die Dashboard-Farben.",
+            accentColor: "Akzentfarbe des Belegs",
+            textColor: "Textfarbe des Belegs",
+            printLayout: "Drucklayout",
+            save: "Darstellung speichern"
+        },
+        account: {
+            title: "Konto und Datenschutz",
+            subtitle: "Verwalten Sie Datenschutz, Loschanfragen und Kontodaten.",
+            deleteTitle: "Konto / Daten loschen",
+            deleteWarning: "Nach 7 Tagen werden Ihre Daten dauerhaft geloscht. Es gibt KEINE Moglichkeit zur Wiederherstellung, auch nicht durch Admin/Dev-Team.",
+            deleteHelp: "Offnen Sie unten den Loschdialog. Wahlen Sie 7 Tage Schonfrist oder sofortige dauerhafte Loschung.",
+            deleteButton: "Konto loschen",
+            paymentPolicy: "Zahlungsdaten-Richtlinie",
+            noCardStorage: "Keine lokale Kartenspeicherung",
+            noCardStorageBody: "Valora EM speichert keine Kartennummern, Ablaufdaten, CVCs oder Wallet-Zugangsdaten.",
+            manualRenewal: "Manuelle Verlangerung standardmassig",
+            manualRenewalBody: "Bezahlte Plane belasten nicht automatisch, ausser EasyPay wird beim Checkout aktiviert."
+        },
+        featureRequests: {
+            title: "Funktionswunsche",
+            subtitle: "Senden Sie Ideen, Fehler und Verbesserungen direkt an den Valora EM Owner.",
+            sendTitle: "Funktionswunsch senden",
+            sendHelp: "Sagen Sie uns, was verbessert oder hinzugefugt werden soll.",
+            label: "Funktionswunsch",
+            submit: "Wunsch senden",
+            includeTitle: "Was angeben"
+        },
+        bugReport: {
+            title: "Fehler melden",
+            subtitle: "Senden Sie ein Support-Ticket und verfolgen Sie Antworten von Valora EM.",
+            panelTitle: "In-App Fehlermeldesystem",
+            help: "Erstellen Sie ein Ticket mit Betreff und Details, dann verfolgen Sie den Verlauf.",
+            create: "Ticket erstellen",
+            sendReply: "Antwort senden",
+            noTickets: "Noch keine Tickets.",
+            selectTicket: "Wahlen Sie ein Ticket, um den Verlauf zu sehen."
+        },
+        offline: {
+            title: "Offline-Modus",
+            subtitle: "Erstellen Sie Rechnungen und drucken Sie PDFs auch bei instabilem Internet.",
+            panelTitle: "So funktioniert Offline-Zugriff"
+        },
+        admin: {
+            title: "Owner Admin Dashboard",
+            subtitle: "Verfolgen Sie App-Umsatz, Kunden-Upgrades, Zahlungseinstellungen und Support.",
+            gatewayTab: "Dashboard und Zahlungs-Gateways",
+            ticketsTab: "Fehler / Support-Tickets",
+            paymentsTitle: "Aktuelle App-Zahlungen",
+            featureInboxTitle: "Kundenwunsche"
+        },
+        billing: {
+            title: "Abonnement",
+            subtitle: "Wahlen Sie den Plan, der zu Ihrem Shop passt.",
+            monthly: "Monatlich",
+            yearly: "Jahrlich"
+        },
+        creator: {
+            saveInvoice: "Dokument speichern",
+            printInvoice: "Drucken / PDF speichern",
+            addLineItem: "Position hinzufugen"
+        },
+        common: {
+            beginTutorial: "Tutorial starten",
+            openLearningCenter: "Lernzentrum offnen",
+            newInvoiceEstimate: "Neue Rechnung/Angebot",
+            sendFeedback: "Feedback senden",
+            viewPlans: "Plane ansehen"
+        },
+        placeholders: {
+            betaFeedback: "Beispiel: Die Thermodruck-Vorschau ist auf meinem Telefon schwer lesbar.",
+            featureRequest: "Beispiel: Bitte Erinnerungs-E-Mails, Lesebestatigungen oder Monatsberichte hinzufugen.",
+            ticketSubject: "Betreff",
+            ticketMessage: "Details: Was ist passiert, welche Seite und welches Gerat wurde verwendet.",
+            ticketReply: "Antwort schreiben...",
+            customLanguage: "Geben Sie eine andere Dokumentsprache ein, falls sie nicht aufgefuhrt ist"
+        },
+        messages: {
+            appearanceSaved: "Darstellung und Dokumenteinstellungen gespeichert.",
+            languageChanged: "App-Sprache aktualisiert. Klicken Sie auf Darstellung speichern, um zu synchronisieren."
+        }
+    },
+    ja: {
+        sidebar: {
+            dashboard: "ダッシュボード",
+            learning: "学習",
+            createInvoice: "請求書を作成",
+            invoiceHistory: "請求書履歴",
+            expenses: "経費",
+            trashBin: "ゴミ箱",
+            clientsList: "顧客一覧",
+            settings: "設定",
+            appearance: "表示設定",
+            account: "アカウント",
+            featureRequests: "機能リクエスト",
+            featureInbox: "リクエスト受信箱",
+            bugReport: "不具合報告",
+            offlineMode: "オフラインモード",
+            admin: "管理者",
+            subscription: "サブスクリプション",
+            logoutAccount: "ログアウト"
+        },
+        dashboard: {
+            title: "SaaS ダッシュボード",
+            subtitle: "請求書、顧客、売上をひとつの画面で管理できます。",
+            quickStart: "クイックスタート",
+            newUserTitle: "Valora EM は初めてですか？",
+            newUserBody: "短いチュートリアルまたは学習センターで、店舗設定、請求書作成、PDF印刷、利益確認を学べます。",
+            betaFeedback: "ベータフィードバック",
+            feedbackTitle: "正式公開前の Valora EM 改善にご協力ください",
+            feedbackBody: "わかりにくい点、不具合、不足している機能をお知らせください。メッセージはオーナーダッシュボードに届きます。",
+            totalRevenue: "総収益",
+            totalPaid: "支払済み合計",
+            unpaidBalance: "未払い残高",
+            totalInvoices: "請求書合計"
+        },
+        learning: {
+            title: "学習センター",
+            subtitle: "シンプルなガイドで Valora EM をより早く学べます。"
+        },
+        settings: {
+            title: "事業設定",
+            subtitle: "店舗プロフィール、通貨、顧客向け情報、商品カタログを設定します。",
+            businessDetails: "事業情報",
+            saveStore: "店舗設定を保存"
+        },
+        appearance: {
+            title: "表示と書類デザイン",
+            subtitle: "ダークモード、アプリ言語、請求書言語、色、印刷レイアウトを設定します。",
+            appTheme: "アプリテーマ",
+            themeHelp: "ログイン中のユーザーに表示されるダッシュボードの見た目を選びます。",
+            appAppearance: "アプリ表示",
+            darkMode: "ダークモード",
+            lightMode: "ライトモード",
+            languageControls: "言語設定",
+            languageHelp: "アプリ言語はダッシュボード用です。請求書/領収書言語は顧客向け書類用です。",
+            appLanguage: "アプリ表示言語",
+            receiptLanguage: "請求書 / 領収書の言語",
+            receiptStyling: "領収書と印刷スタイル",
+            stylingHelp: "これらの設定はプレビューと印刷に反映され、ダッシュボード色には影響しません。",
+            accentColor: "領収書アクセントカラー",
+            textColor: "領収書テキストカラー",
+            printLayout: "印刷レイアウト",
+            save: "表示設定を保存"
+        },
+        account: {
+            title: "アカウントとプライバシー",
+            subtitle: "プライバシー、削除依頼、アカウントデータ設定を管理します。",
+            deleteTitle: "アカウント / データ削除",
+            deleteWarning: "7日後、データは完全に削除されます。管理者や開発チームでも復元できません。",
+            deleteHelp: "下のボタンで削除画面を開きます。7日間の猶予または即時完全削除を選べます。",
+            deleteButton: "アカウントを削除",
+            paymentPolicy: "支払いデータポリシー",
+            noCardStorage: "カード情報をローカル保存しません",
+            noCardStorageBody: "Valora EM はカード番号、有効期限、CVC、ウォレット認証情報を保存しません。",
+            manualRenewal: "標準は手動更新",
+            manualRenewalBody: "EasyPay 自動更新を明示的に選択しない限り、有料プランは自動課金されません。"
+        },
+        featureRequests: {
+            title: "機能リクエスト",
+            subtitle: "アイデア、不具合、改善要望を Valora EM オーナーへ直接送信します。",
+            sendTitle: "機能リクエストを送信",
+            sendHelp: "改善または追加してほしい内容を入力してください。",
+            label: "機能リクエスト",
+            submit: "リクエスト送信",
+            includeTitle: "含める内容"
+        },
+        bugReport: {
+            title: "不具合報告",
+            subtitle: "サポートチケットを送信し、Valora EM からの返信を確認できます。",
+            panelTitle: "アプリ内不具合報告システム",
+            help: "件名と詳細を入力してチケットを作成し、会話スレッドで返信を確認します。",
+            create: "チケット作成",
+            sendReply: "返信を送信",
+            noTickets: "チケットはまだありません。",
+            selectTicket: "会話を見るにはチケットを選択してください。"
+        },
+        offline: {
+            title: "オフラインモード",
+            subtitle: "インターネットが不安定でも請求書作成とPDF印刷ができます。",
+            panelTitle: "オフラインアクセスの仕組み"
+        },
+        admin: {
+            title: "オーナー管理ダッシュボード",
+            subtitle: "アプリ収益、顧客アップグレード、決済設定、サポートを管理します。",
+            gatewayTab: "ダッシュボードと決済設定",
+            ticketsTab: "不具合 / サポートチケット",
+            paymentsTitle: "最近のアプリ支払い",
+            featureInboxTitle: "顧客機能リクエスト"
+        },
+        billing: {
+            title: "サブスクリプション",
+            subtitle: "店舗の運用に合うプランを選択してください。",
+            monthly: "月額",
+            yearly: "年額"
+        },
+        creator: {
+            saveInvoice: "書類を保存",
+            printInvoice: "印刷 / PDF保存",
+            addLineItem: "明細を追加"
+        },
+        common: {
+            beginTutorial: "チュートリアル開始",
+            openLearningCenter: "学習センターを開く",
+            newInvoiceEstimate: "新規請求書/見積書",
+            sendFeedback: "フィードバック送信",
+            viewPlans: "プランを見る"
+        },
+        placeholders: {
+            betaFeedback: "例：スマホでサーマル印刷プレビューが読みにくいです。",
+            featureRequest: "例：請求リマインダー、既読確認、月次レポートを追加してください。",
+            ticketSubject: "件名",
+            ticketMessage: "詳細：何が起きたか、どのページか、使用した端末を入力してください。",
+            ticketReply: "返信を書く...",
+            customLanguage: "一覧にない書類言語を入力してください"
+        },
+        messages: {
+            appearanceSaved: "表示と書類設定を保存しました。",
+            languageChanged: "アプリ言語を更新しました。アカウントに同期するには表示設定を保存してください。"
+        }
+    },
+    ko: {
+        sidebar: {
+            dashboard: "대시보드",
+            learning: "학습",
+            createInvoice: "인보이스 작성",
+            invoiceHistory: "인보이스 기록",
+            expenses: "비용",
+            trashBin: "휴지통",
+            clientsList: "고객 목록",
+            settings: "설정",
+            appearance: "화면 설정",
+            account: "계정",
+            featureRequests: "기능 요청",
+            featureInbox: "요청함",
+            bugReport: "버그 신고",
+            offlineMode: "오프라인 모드",
+            admin: "관리자",
+            subscription: "구독",
+            logoutAccount: "로그아웃"
+        },
+        dashboard: {
+            title: "SaaS 대시보드",
+            subtitle: "인보이스, 고객, 사업 수입을 하나의 간단한 대시보드에서 확인하세요.",
+            quickStart: "빠른 시작",
+            newUserTitle: "Valora EM이 처음인가요?",
+            newUserBody: "짧은 튜토리얼이나 학습 센터에서 매장 설정, 인보이스 작성, PDF 인쇄, 수익 추적 방법을 배울 수 있습니다.",
+            betaFeedback: "베타 피드백",
+            feedbackTitle: "출시 전 Valora EM 개선을 도와주세요",
+            feedbackBody: "헷갈리거나 고장났거나 부족한 부분을 알려주세요. 메시지는 관리자 대시보드로 전달됩니다.",
+            totalRevenue: "총수익",
+            totalPaid: "결제 완료",
+            unpaidBalance: "미결제 잔액",
+            totalInvoices: "총 인보이스"
+        },
+        learning: {
+            title: "학습 센터",
+            subtitle: "간단한 안내를 따라 Valora EM을 더 빠르게 익히세요."
+        },
+        settings: {
+            title: "사업 설정",
+            subtitle: "매장 프로필, 통화, 고객용 정보, 저장된 상품 카탈로그를 설정하세요.",
+            businessDetails: "사업 정보",
+            saveStore: "매장 설정 저장"
+        },
+        appearance: {
+            title: "화면 및 문서 디자인",
+            subtitle: "다크 모드, 앱 언어, 영수증 언어, 색상, 인쇄 레이아웃을 설정하세요.",
+            appTheme: "앱 테마",
+            themeHelp: "로그인한 사용자에게 보이는 대시보드 모양을 선택하세요.",
+            appAppearance: "앱 표시",
+            darkMode: "다크 모드",
+            lightMode: "라이트 모드",
+            languageControls: "언어 설정",
+            languageHelp: "앱 언어는 대시보드용입니다. 인보이스/영수증 언어는 고객 문서용입니다.",
+            appLanguage: "앱 인터페이스 언어",
+            receiptLanguage: "인보이스 / 영수증 언어",
+            receiptStyling: "영수증 및 인쇄 스타일",
+            stylingHelp: "이 설정은 미리보기와 인쇄물에 적용되며 대시보드 색상에는 적용되지 않습니다.",
+            accentColor: "영수증 강조 색상",
+            textColor: "영수증 글자 색상",
+            printLayout: "인쇄 레이아웃",
+            save: "화면 설정 저장"
+        },
+        account: {
+            title: "계정 및 개인정보",
+            subtitle: "개인정보, 삭제 요청, 계정 데이터 설정을 관리하세요.",
+            deleteTitle: "계정 / 데이터 삭제",
+            deleteWarning: "7일 후 데이터가 영구 삭제됩니다. 관리자나 개발팀도 복구할 수 없습니다.",
+            deleteHelp: "아래 버튼으로 삭제 모달을 열고 7일 유예 기간 또는 즉시 영구 삭제를 선택하세요.",
+            deleteButton: "계정 삭제",
+            paymentPolicy: "결제 데이터 정책",
+            noCardStorage: "카드 정보 로컬 저장 없음",
+            noCardStorageBody: "Valora EM은 카드 번호, 만료일, CVC, 지갑 인증 정보를 저장하지 않습니다.",
+            manualRenewal: "기본은 수동 갱신",
+            manualRenewalBody: "사용자가 결제 시 EasyPay 자동 갱신을 선택하지 않으면 유료 플랜은 자동 청구되지 않습니다."
+        },
+        featureRequests: {
+            title: "기능 요청",
+            subtitle: "아이디어, 버그, 개선 요청을 Valora EM 소유자에게 직접 보내세요.",
+            sendTitle: "기능 요청 보내기",
+            sendHelp: "개선하거나 추가하고 싶은 내용을 알려주세요.",
+            label: "기능 요청",
+            submit: "요청 보내기",
+            includeTitle: "포함할 내용"
+        },
+        bugReport: {
+            title: "버그 신고",
+            subtitle: "지원 티켓을 제출하고 Valora EM 지원팀의 답변을 확인하세요.",
+            panelTitle: "앱 내 버그 신고 시스템",
+            help: "제목과 세부 내용을 입력해 티켓을 만들고 대화 스레드에서 답변을 확인하세요.",
+            create: "티켓 만들기",
+            sendReply: "답장 보내기",
+            noTickets: "아직 티켓이 없습니다.",
+            selectTicket: "대화를 보려면 티켓을 선택하세요."
+        },
+        offline: {
+            title: "오프라인 모드",
+            subtitle: "인터넷이 불안정해도 인보이스를 만들고 PDF를 인쇄할 수 있습니다.",
+            panelTitle: "오프라인 접근 방식"
+        },
+        admin: {
+            title: "소유자 관리자 대시보드",
+            subtitle: "앱 수익, 고객 업그레이드, 결제 설정, 지원 요청을 관리하세요.",
+            gatewayTab: "대시보드 및 결제 설정",
+            ticketsTab: "버그 / 지원 티켓",
+            paymentsTitle: "최근 앱 결제",
+            featureInboxTitle: "고객 기능 요청"
+        },
+        billing: {
+            title: "구독",
+            subtitle: "매장 운영에 맞는 플랜을 선택하세요.",
+            monthly: "월간",
+            yearly: "연간"
+        },
+        creator: {
+            saveInvoice: "문서 저장",
+            printInvoice: "인쇄 / PDF 저장",
+            addLineItem: "항목 추가"
+        },
+        common: {
+            beginTutorial: "튜토리얼 시작",
+            openLearningCenter: "학습 센터 열기",
+            newInvoiceEstimate: "새 인보이스/견적서",
+            sendFeedback: "피드백 보내기",
+            viewPlans: "플랜 보기"
+        },
+        placeholders: {
+            betaFeedback: "예: 휴대폰에서 열전사 인쇄 미리보기가 읽기 어렵습니다.",
+            featureRequest: "예: 인보이스 알림 이메일, 고객 읽음 확인, 월간 보고서를 추가해주세요.",
+            ticketSubject: "제목",
+            ticketMessage: "세부 정보: 무슨 일이 있었는지, 어떤 페이지였는지, 어떤 기기를 사용했는지 적어주세요.",
+            ticketReply: "답장을 입력하세요...",
+            customLanguage: "목록에 없는 문서 언어를 입력하세요"
+        },
+        messages: {
+            appearanceSaved: "화면 및 문서 설정이 저장되었습니다.",
+            languageChanged: "앱 언어가 업데이트되었습니다. 계정에 동기화하려면 화면 설정 저장을 클릭하세요."
+        }
+    },
+    zh: {
+        sidebar: {
+            dashboard: "仪表板",
+            learning: "学习",
+            createInvoice: "创建发票",
+            invoiceHistory: "发票记录",
+            expenses: "支出",
+            trashBin: "回收站",
+            clientsList: "客户列表",
+            settings: "设置",
+            appearance: "外观",
+            account: "账户",
+            featureRequests: "功能请求",
+            featureInbox: "请求收件箱",
+            bugReport: "错误报告",
+            offlineMode: "离线模式",
+            admin: "管理员",
+            subscription: "订阅",
+            logoutAccount: "退出登录"
+        },
+        dashboard: {
+            title: "SaaS 仪表板",
+            subtitle: "在一个简单的仪表板中跟踪发票、客户和业务收入。",
+            quickStart: "快速开始",
+            newUserTitle: "第一次使用 Valora EM？",
+            newUserBody: "开始简短教程或打开学习中心，了解如何设置店铺、创建发票、打印 PDF 和跟踪利润。",
+            betaFeedback: "测试反馈",
+            feedbackTitle: "帮助我们在发布前改进 Valora EM",
+            feedbackBody: "告诉我们哪些地方难懂、损坏或缺失。您的消息会发送到所有者仪表板。",
+            totalRevenue: "总收入",
+            totalPaid: "已付款总额",
+            unpaidBalance: "未付余额",
+            totalInvoices: "发票总数"
+        },
+        learning: {
+            title: "学习中心",
+            subtitle: "按照简单指南更快学会使用 Valora EM。"
+        },
+        settings: {
+            title: "业务设置",
+            subtitle: "设置店铺资料、货币、客户展示信息和商品目录。",
+            businessDetails: "业务详情",
+            saveStore: "保存店铺设置"
+        },
+        appearance: {
+            title: "外观与文档设计",
+            subtitle: "设置深色模式、应用语言、收据语言、颜色和打印布局。",
+            appTheme: "应用主题",
+            themeHelp: "选择登录用户看到的仪表板外观。",
+            appAppearance: "应用外观",
+            darkMode: "深色模式",
+            lightMode: "浅色模式",
+            languageControls: "语言设置",
+            languageHelp: "应用语言用于仪表板。发票/收据语言用于客户文档。",
+            appLanguage: "应用界面语言",
+            receiptLanguage: "发票 / 收据语言",
+            receiptStyling: "收据与打印样式",
+            stylingHelp: "这些设置影响发票/收据预览和打印输出，不影响仪表板颜色。",
+            accentColor: "收据强调色",
+            textColor: "收据文字颜色",
+            printLayout: "打印布局",
+            save: "保存外观设置"
+        },
+        account: {
+            title: "账户与隐私",
+            subtitle: "管理隐私、删除请求和账户级数据控制。",
+            deleteTitle: "删除账户 / 数据",
+            deleteWarning: "7天后，您的数据将被永久删除。即使管理员或开发团队也无法恢复。",
+            deleteHelp: "点击下方按钮打开删除窗口。您可以选择默认7天宽限期或立即永久删除。",
+            deleteButton: "删除账户",
+            paymentPolicy: "支付数据政策",
+            noCardStorage: "不在本地保存银行卡信息",
+            noCardStorageBody: "Valora EM 不保存卡号、有效期、CVC 或钱包凭证。",
+            manualRenewal: "默认手动续费",
+            manualRenewalBody: "除非用户在结账时明确启用 EasyPay 自动续费，否则付费计划不会自动扣款。"
+        },
+        featureRequests: {
+            title: "功能请求",
+            subtitle: "将想法、错误和改进建议直接发送给 Valora EM 所有者。",
+            sendTitle: "发送功能请求",
+            sendHelp: "告诉我们您想改进或添加什么。",
+            label: "功能请求",
+            submit: "发送请求",
+            includeTitle: "应包含什么"
+        },
+        bugReport: {
+            title: "错误报告",
+            subtitle: "提交支持工单并查看 Valora EM 支持回复。",
+            panelTitle: "应用内错误报告系统",
+            help: "使用主题和详细信息创建工单，然后查看对话线程中的回复。",
+            create: "创建工单",
+            sendReply: "发送回复",
+            noTickets: "还没有工单。",
+            selectTicket: "选择一个工单以查看对话。"
+        },
+        offline: {
+            title: "离线模式",
+            subtitle: "即使网络不稳定，也可以创建发票并打印 PDF。",
+            panelTitle: "离线访问如何工作"
+        },
+        admin: {
+            title: "所有者管理仪表板",
+            subtitle: "跟踪应用收入、客户升级、支付网关设置和支持请求。",
+            gatewayTab: "仪表板与支付设置",
+            ticketsTab: "错误 / 支持工单",
+            paymentsTitle: "最近应用付款",
+            featureInboxTitle: "客户功能请求"
+        },
+        billing: {
+            title: "订阅",
+            subtitle: "选择适合您店铺流程的计划。",
+            monthly: "每月",
+            yearly: "每年"
+        },
+        creator: {
+            saveInvoice: "保存文档",
+            printInvoice: "打印 / 保存 PDF",
+            addLineItem: "添加项目"
+        },
+        common: {
+            beginTutorial: "开始教程",
+            openLearningCenter: "打开学习中心",
+            newInvoiceEstimate: "新发票/估价单",
+            sendFeedback: "发送反馈",
+            viewPlans: "查看计划"
+        },
+        placeholders: {
+            betaFeedback: "示例：手机上的热敏打印预览很难阅读。",
+            featureRequest: "示例：请添加发票提醒邮件、客户已读回执或每月报告。",
+            ticketSubject: "主题",
+            ticketMessage: "详细信息：发生了什么、在哪个页面、使用了什么设备。",
+            ticketReply: "写回复...",
+            customLanguage: "如果列表中没有，请输入其他文档语言"
+        },
+        messages: {
+            appearanceSaved: "外观和文档设置已保存。",
+            languageChanged: "应用语言已更新。点击保存外观设置以同步到账户。"
+        }
+    },
     other: {}
 };
 
