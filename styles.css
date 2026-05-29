@@ -769,11 +769,17 @@ textarea:focus {
 
 .settings-layout,
 .admin-layout,
-.feature-request-page-layout {
+.feature-request-page-layout,
+.appearance-layout,
+.account-privacy-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(320px, 0.75fr);
     gap: 30px;
     align-items: start;
+}
+
+.appearance-layout {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .business-profile-toolbar {
@@ -1143,7 +1149,9 @@ textarea:focus {
     .grid-panels,
     .settings-layout,
     .admin-layout,
-    .feature-request-page-layout {
+    .feature-request-page-layout,
+    .appearance-layout,
+    .account-privacy-layout {
         grid-template-columns: 1fr;
     }
 

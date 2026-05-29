@@ -1650,6 +1650,55 @@ function syncLanguageControls() {
     if (customLanguageInput) customLanguageInput.value = currentProfile.custom_language_name || "";
 }
 
+async function saveAppearanceSettings() {
+    currentProfile.app_appearance = document.getElementById("app-appearance")?.value || "dark";
+    currentProfile.app_interface_language = document.getElementById("app-interface-language")?.value || "en";
+    currentProfile.document_language = document.getElementById("preferred-language")?.value || "en";
+    currentProfile.preferred_language = currentProfile.document_language;
+    currentProfile.custom_language_name = document.getElementById("custom-language-name")?.value.trim() || "";
+    currentProfile.invoice_text_color = document.getElementById("invoice-text-color")?.value || "#1e293b";
+    currentProfile.print_layout = document.getElementById("print-layout")?.value || "pdf";
+
+    const updatedBusinessProfile = syncActiveBusinessProfileFromCurrentForm();
+    if (updatedBusinessProfile) {
+        updatedBusinessProfile.app_appearance = currentProfile.app_appearance;
+        updatedBusinessProfile.app_interface_language = currentProfile.app_interface_language;
+        updatedBusinessProfile.document_language = currentProfile.document_language;
+        updatedBusinessProfile.preferred_language = currentProfile.document_language;
+        updatedBusinessProfile.custom_language_name = currentProfile.custom_language_name;
+        updatedBusinessProfile.invoice_theme_color = currentProfile.invoice_theme_color;
+        updatedBusinessProfile.invoice_text_color = currentProfile.invoice_text_color;
+        updatedBusinessProfile.print_layout = currentProfile.print_layout;
+    }
+
+    if (hasCloudConnection()) {
+        const { error } = await updateCloudProfileSettings({
+            app_appearance: currentProfile.app_appearance,
+            app_interface_language: currentProfile.app_interface_language,
+            document_language: currentProfile.document_language,
+            preferred_language: currentProfile.preferred_language,
+            custom_language_name: currentProfile.custom_language_name,
+            invoice_theme_color: currentProfile.invoice_theme_color,
+            invoice_text_color: currentProfile.invoice_text_color,
+            print_layout: currentProfile.print_layout
+        });
+        if (error) {
+            logSupabaseError("appearance settings update", error);
+            createToast(`Appearance settings could not sync: ${error.message}`, true);
+            return;
+        }
+        await persistActiveBusinessProfile();
+    } else {
+        await persistActiveBusinessProfile();
+        saveLocalStorageProfile();
+    }
+
+    applyAppearance();
+    applyInvoiceThemeColor();
+    updateInvoicePreview();
+    createToast("Appearance and document settings saved.");
+}
+
 function renderLogoAccessUI() {
     const allowed = hasLogoUploadAccess();
     const uploadGroup = document.getElementById("logo-upload-group");
@@ -3372,6 +3421,7 @@ function initAppEventListeners() {
     document.getElementById("save-admin-payment-settings-btn").addEventListener("click", savePaymentSettings);
     document.getElementById("submit-feature-request-btn").addEventListener("click", submitFeatureRequest);
     document.getElementById("submit-beta-feedback-btn").addEventListener("click", submitBetaFeedback);
+    document.getElementById("save-appearance-settings-btn").addEventListener("click", saveAppearanceSettings);
     document.getElementById("open-account-delete-modal-btn").addEventListener("click", showAccountDeleteModal);
     document.getElementById("close-account-delete-modal-btn").addEventListener("click", hideAccountDeleteModal);
     document.getElementById("confirm-account-delete-btn").addEventListener("click", submitAccountDeletionRequest);

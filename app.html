@@ -15,7 +15,7 @@
     <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=final-beta-v1">
+    <link rel="stylesheet" href="styles.css?v=ui-layout-v16">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -207,6 +207,22 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
                         Settings
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="appearance-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 0 0 4.947 2.28l1.88-1.88a3 3 0 0 0-4.243-4.243l-.353.353m-1.06 1.06-.353.353a3 3 0 1 1-4.243-4.243l1.88-1.88a3 3 0 0 1 4.947 2.28m-3.182 3.182 3.182-3.182" />
+                        </svg>
+                        Appearance
+                    </a>
+                </li>
+                <li class="nav-item" data-tab="account-tab">
+                    <a class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75 4.5 6.75v5.25c0 4.142 2.686 7.884 7.5 9 4.814-1.116 7.5-4.858 7.5-9V6.75L12 3.75Zm0 6v4.5m0 3h.008" />
+                        </svg>
+                        Account
                     </a>
                 </li>
                 <li class="nav-item" data-tab="feature-requests-tab" id="feature-requests-nav-item">
@@ -1114,103 +1130,11 @@
                             </div>
                         </div>
 
-                        <!-- Store Settings Invoice Color Accent Picker -->
-                        <div class="form-group">
-                            <label>Receipt Accent Color</label>
-                            <div class="preset-invoice-colors">
-                                <div class="invoice-color-preset active" data-color="#6366f1" style="background-color: #6366f1;" title="Indigo"></div>
-                                <div class="invoice-color-preset" data-color="#0d9488" style="background-color: #0d9488;" title="Teal"></div>
-                                <div class="invoice-color-preset" data-color="#f43f5e" style="background-color: #f43f5e;" title="Rose"></div>
-                                <div class="invoice-color-preset" data-color="#d97706" style="background-color: #d97706;" title="Amber"></div>
-                                <div class="invoice-color-preset" data-color="#1e293b" style="background-color: #1e293b;" title="Dark Slate"></div>
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <div class="form-group">
-                                <label for="invoice-text-color">Receipt Text Color</label>
-                                <input type="color" id="invoice-text-color" value="#1e293b">
-                            </div>
-                            <div class="form-group">
-                                <label for="print-layout">Print Layout</label>
-                                <select id="print-layout">
-                                    <option value="pdf">PDF / A4 Print</option>
-                                    <option value="thermal-80">Thermal Receipt 80mm</option>
-                                    <option value="thermal-58">Thermal Receipt 58mm</option>
-                                </select>
-                            </div>
-                        </div>
-
                         <button class="btn btn-primary" id="save-store-settings-btn" style="width: 100%;">Save Store Settings</button>
                     </div>
 
-                    <div class="panel-card settings-focus-card">
-                        <div class="panel-title">2. Appearance / Theme</div>
-                        <p style="font-size: 13px; color: var(--text-medium);">Theme controls are separated from business details so users can find dark mode faster.</p>
-                        <div class="form-group">
-                            <label for="app-appearance">App Appearance</label>
-                            <select id="app-appearance">
-                                <option value="dark">Dark Mode</option>
-                                <option value="light">Light Mode</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="panel-card settings-focus-card">
-                        <div class="panel-title">3. Language Settings</div>
-                        <p style="font-size: 13px; color: var(--text-medium);">Choose one language for the app UI and another for invoices or receipts sent to clients.</p>
-                        <div class="form-group">
-                            <label for="app-interface-language">App Interface Language</label>
-                            <select id="app-interface-language">
-                                <option value="en">English</option>
-                                <option value="fil">Filipino</option>
-                                <option value="es">Spanish</option>
-                                <option value="fr">French</option>
-                                <option value="de">German</option>
-                                <option value="ja">Japanese</option>
-                                <option value="ko">Korean</option>
-                                <option value="zh">Chinese</option>
-                                <option value="other">Other / Custom</option>
-                            </select>
-                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">English is the default during beta while full UI translation is being prepared.</p>
-                        </div>
-                        <div class="form-group">
-                            <label for="preferred-language">Invoice / Receipt Language</label>
-                            <select id="preferred-language">
-                                <option value="en">English</option>
-                                <option value="fil">Filipino</option>
-                                <option value="es">Spanish</option>
-                                <option value="fr">French</option>
-                                <option value="de">German</option>
-                                <option value="it">Italian</option>
-                                <option value="pt">Portuguese</option>
-                                <option value="id">Indonesian</option>
-                                <option value="ms">Malay</option>
-                                <option value="vi">Vietnamese</option>
-                                <option value="th">Thai</option>
-                                <option value="ja">Japanese</option>
-                                <option value="ko">Korean</option>
-                                <option value="zh">Chinese</option>
-                                <option value="hi">Hindi</option>
-                                <option value="ar">Arabic</option>
-                                <option value="nl">Dutch</option>
-                                <option value="sv">Swedish</option>
-                                <option value="tr">Turkish</option>
-                                <option value="ru">Russian</option>
-                                <option value="other">Other / Custom</option>
-                            </select>
-                            <input type="text" id="custom-language-name" placeholder="Type another document language if it is not listed" style="margin-top: 10px;">
-                        </div>
-                    </div>
-
-                    <div class="panel-card danger-zone-card">
-                        <div class="panel-title">4. Account Privacy & Deletion</div>
-                        <p style="font-size: 13px; color: var(--text-medium);">Request a 7-day deletion grace period or explicitly request immediate data purge. Valora EM never stores card numbers or CVVs.</p>
-                        <button class="btn btn-secondary btn-danger" id="open-account-delete-modal-btn" type="button">Delete Account / Data</button>
-                    </div>
-
                     <div class="panel-card">
-                        <div class="panel-title">5. Per-Store Item Catalog</div>
+                        <div class="panel-title">2. Per-Store Item Catalog</div>
                         <p id="catalog-access-note" style="font-size: 13px; color: var(--text-medium);">Saved items are attached to the active business profile.</p>
                         <div class="form-group">
                             <label for="catalog-item-name">Item Name</label>
@@ -1284,6 +1208,143 @@
                         </div>
 
                         <button class="btn btn-accent" id="save-wl-settings-btn" style="width: 100%;">Save Owner Branding Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== APPEARANCE TAB ==================== -->
+            <div id="appearance-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Appearance & Document Design</h1>
+                        <p>Control dark mode, app language, receipt language, colors, and print layout in one clean screen.</p>
+                    </div>
+                </div>
+
+                <div class="appearance-layout">
+                    <div class="panel-card settings-focus-card">
+                        <div class="panel-title">App Theme</div>
+                        <p style="font-size: 13px; color: var(--text-medium);">Choose how the dashboard looks for the logged-in user.</p>
+                        <div class="form-group">
+                            <label for="app-appearance">App Appearance</label>
+                            <select id="app-appearance">
+                                <option value="dark">Dark Mode</option>
+                                <option value="light">Light Mode</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="panel-card settings-focus-card">
+                        <div class="panel-title">Language Controls</div>
+                        <p style="font-size: 13px; color: var(--text-medium);">App language is for the dashboard. Invoice/receipt language is for generated customer documents.</p>
+                        <div class="form-group">
+                            <label for="app-interface-language">App Interface Language</label>
+                            <select id="app-interface-language">
+                                <option value="en">English</option>
+                                <option value="fil">Filipino</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                                <option value="zh">Chinese</option>
+                                <option value="other">Other / Custom</option>
+                            </select>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">English is the default during beta while full interface translation is being prepared.</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="preferred-language">Invoice / Receipt Language</label>
+                            <select id="preferred-language">
+                                <option value="en">English</option>
+                                <option value="fil">Filipino</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="it">Italian</option>
+                                <option value="pt">Portuguese</option>
+                                <option value="id">Indonesian</option>
+                                <option value="ms">Malay</option>
+                                <option value="vi">Vietnamese</option>
+                                <option value="th">Thai</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                                <option value="zh">Chinese</option>
+                                <option value="hi">Hindi</option>
+                                <option value="ar">Arabic</option>
+                                <option value="nl">Dutch</option>
+                                <option value="sv">Swedish</option>
+                                <option value="tr">Turkish</option>
+                                <option value="ru">Russian</option>
+                                <option value="other">Other / Custom</option>
+                            </select>
+                            <input type="text" id="custom-language-name" placeholder="Type another document language if it is not listed" style="margin-top: 10px;">
+                        </div>
+                    </div>
+
+                    <div class="panel-card settings-focus-card">
+                        <div class="panel-title">Receipt & Print Styling</div>
+                        <p style="font-size: 13px; color: var(--text-medium);">These settings affect the invoice/receipt preview and printed output, not the dashboard colors.</p>
+                        <div class="form-group">
+                            <label>Receipt Accent Color</label>
+                            <div class="preset-invoice-colors">
+                                <div class="invoice-color-preset active" data-color="#6366f1" style="background-color: #6366f1;" title="Indigo"></div>
+                                <div class="invoice-color-preset" data-color="#0d9488" style="background-color: #0d9488;" title="Teal"></div>
+                                <div class="invoice-color-preset" data-color="#f43f5e" style="background-color: #f43f5e;" title="Rose"></div>
+                                <div class="invoice-color-preset" data-color="#d97706" style="background-color: #d97706;" title="Amber"></div>
+                                <div class="invoice-color-preset" data-color="#1e293b" style="background-color: #1e293b;" title="Dark Slate"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="form-group">
+                                <label for="invoice-text-color">Receipt Text Color</label>
+                                <input type="color" id="invoice-text-color" value="#1e293b">
+                            </div>
+                            <div class="form-group">
+                                <label for="print-layout">Print Layout</label>
+                                <select id="print-layout">
+                                    <option value="pdf">PDF / A4 Print</option>
+                                    <option value="thermal-80">Thermal Receipt 80mm</option>
+                                    <option value="thermal-58">Thermal Receipt 58mm</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="save-appearance-settings-btn" type="button" style="width: 100%;">Save Appearance Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ACCOUNT TAB ==================== -->
+            <div id="account-tab" class="tab-content">
+                <div class="tab-header">
+                    <div class="tab-title-container">
+                        <h1>Account & Privacy</h1>
+                        <p>Manage privacy, deletion requests, and account-level data controls.</p>
+                    </div>
+                </div>
+
+                <div class="account-privacy-layout">
+                    <div class="panel-card danger-zone-card">
+                        <div class="panel-title">Delete Account / Data</div>
+                        <div class="danger-warning-box">
+                            After 7 days, your data will be permanently wiped. There is NO WAY to restore your account—even our admin/dev team cannot recover it.
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">Use the button below to open the deletion modal. You can choose the default 7-day grace period or explicitly request immediate permanent deletion.</p>
+                        <button class="btn btn-secondary btn-danger" id="open-account-delete-modal-btn" type="button">Delete Account</button>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-title">Payment Data Policy</div>
+                        <div class="feature-list" style="display: grid; gap: 14px;">
+                            <div>
+                                <strong>No local card storage</strong>
+                                <p style="color: var(--text-muted); font-size: 14px;">Valora EM does not store card numbers, expiry dates, CVCs, or wallet credentials.</p>
+                            </div>
+                            <div>
+                                <strong>Manual renewal by default</strong>
+                                <p style="color: var(--text-muted); font-size: 14px;">Paid plans do not auto-charge unless the user explicitly opts into EasyPay auto-renewal at checkout.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1911,7 +1972,7 @@
         }
     </style>
 
-    <script src="app.js?v=final-beta-v1"></script>
+    <script src="app.js?v=ui-layout-v16"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>
