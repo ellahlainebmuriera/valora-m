@@ -502,9 +502,10 @@
         .price-card ul {
             list-style: none;
             display: grid;
-            gap: 10px;
+            gap: 14px;
             color: var(--muted);
             font-size: 14px;
+            margin-top: 12px;
         }
 
         .price-card li::before {
@@ -519,16 +520,18 @@
         }
 
         .price-card ul {
-            gap: 12px;
+            gap: 16px;
             color: var(--ink);
         }
 
         .price-card li {
             display: flex;
             align-items: flex-start;
-            gap: 8px;
-            min-height: 44px;
-            height: 44px;
+            gap: 10px;
+            min-height: 52px;
+            height: 52px;
+            font-weight: 650;
+            line-height: 1.35;
         }
 
         .price-card li::before {
@@ -538,33 +541,35 @@
         .feature-icon {
             width: 18px;
             flex: 0 0 18px;
-            color: var(--brand);
+            color: #16a34a;
             font-weight: 900;
             text-align: center;
         }
 
         .price-card.featured .feature-icon {
-            color: #6d28d9;
+            color: #16a34a;
         }
 
         .price-card.business .feature-icon {
-            color: #047857;
+            color: #16a34a;
         }
 
         .price-card li.locked {
-            color: rgba(100, 116, 139, 0.72);
-            opacity: 0.5;
+            color: #475569;
+            opacity: 0.82;
         }
 
         .price-card li.locked .feature-icon {
-            color: #9ca3af;
+            color: #6b7280;
         }
 
         .price-card small {
             display: block;
-            margin-top: 2px;
-            color: var(--muted);
-            font-size: 11px;
+            margin-top: 4px;
+            color: #1f2937;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.25;
         }
 
         .regular-rate {
@@ -693,7 +698,7 @@
 
             .price-card li {
                 height: auto;
-                min-height: 44px;
+                min-height: 52px;
             }
         }
     </style>
