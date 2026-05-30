@@ -3452,15 +3452,16 @@ async function submitBetaFeedback() {
 }
 
 function handleDocumentPhotos(event) {
-    const files = Array.from(event.target.files || []).slice(0, 4);
+    const files = Array.from(event.target.files || []).filter((file) => file.type.startsWith("image/")).slice(0, 4);
     if (!files.length) return;
     currentDocumentPhotos = [];
 
     let loaded = 0;
     files.forEach((file) => {
-        if (!file.type.startsWith("image/")) return;
         if (file.size > 2 * 1024 * 1024) {
             alert(`${file.name} is too large. Maximum image size is 2MB.`);
+            loaded += 1;
+            if (loaded === files.length) renderDocumentPhotos();
             return;
         }
 
@@ -3476,6 +3477,17 @@ function handleDocumentPhotos(event) {
     });
 }
 
+function resetDocumentPhotoInput() {
+    const input = document.getElementById("document-photo-file");
+    if (input) input.value = "";
+}
+
+function removeDocumentPhoto(index) {
+    currentDocumentPhotos.splice(index, 1);
+    resetDocumentPhotoInput();
+    renderDocumentPhotos();
+}
+
 function renderDocumentPhotos() {
     const container = document.getElementById("preview-photo-container");
     if (!container) return;
@@ -3488,7 +3500,12 @@ function renderDocumentPhotos() {
 
     container.style.display = "grid";
     container.innerHTML = currentDocumentPhotos
-        .map((src) => `<img src="${src}" alt="Attached document photo">`)
+        .map((src, index) => `
+            <div class="invoice-photo-preview-item">
+                <img src="${src}" alt="Attached document photo">
+                <button class="invoice-photo-remove-btn" type="button" onclick="removeDocumentPhoto(${index})" aria-label="Remove attached photo">&times;</button>
+            </div>
+        `)
         .join("");
 }
 
@@ -5067,6 +5084,7 @@ function resetCreatorForm() {
     document.getElementById("printed-name").value = "";
     document.getElementById("request-client-signature-checkbox").checked = false;
     currentDocumentPhotos = [];
+    resetDocumentPhotoInput();
     renderDocumentPhotos();
     
     // Clear signature and state
@@ -6067,6 +6085,7 @@ Object.assign(window, {
     showPasswordResetForm,
     submitFeatureRequest,
     submitBetaFeedback,
+    removeDocumentPhoto,
     showAccountDeleteModal,
     submitAccountDeletionRequest,
     addBusinessProfile,

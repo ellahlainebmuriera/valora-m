@@ -2666,12 +2666,45 @@ textarea:focus {
     padding-top: 12px;
 }
 
+.invoice-photo-preview-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+}
+
 .invoice-photo-preview img {
     width: 100%;
     max-height: 120px;
     object-fit: cover;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
+    display: block;
+}
+
+.invoice-photo-remove-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.invoice-photo-remove-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
 }
 
 .invoice-paper[dir="rtl"] {
@@ -2773,6 +2806,9 @@ textarea:focus {
         width: 100% !important;
     }
     .preview-mode-label {
+        display: none !important;
+    }
+    .invoice-photo-remove-btn {
         display: none !important;
     }
     .invoice-paper {
