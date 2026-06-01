@@ -15,7 +15,7 @@
     <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=photo-remove-v19">
+    <link rel="stylesheet" href="styles.css?v=pdf-export-v20">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -523,11 +523,17 @@
                             </svg>
                             Save Invoice
                         </button>
-                        <button class="btn btn-accent" id="print-invoice-btn">
+                        <button class="btn btn-accent" id="save-pdf-btn" data-html2canvas-ignore="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v3.375A2.625 2.625 0 0 1 16.875 20.25h-9.75A2.625 2.625 0 0 1 4.5 17.625V14.25m15 0-3.75-3.75m3.75 3.75h-5.25a2.25 2.25 0 0 1-2.25-2.25V6.75m0 0L8.25 10.5m3.75-3.75v9" />
+                            </svg>
+                            Save as PDF
+                        </button>
+                        <button class="btn btn-secondary" id="print-invoice-btn" data-html2canvas-ignore="true">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.821 12.075 19.177l5.355-5.356m-10.71 0a9.045 9.045 0 0 1-2.074-2.074m12.784 2.074A9.045 9.045 0 0 0 19.5 12c0-2.392-.93-4.57-2.457-6.179m-10.71 0a9.045 9.045 0 0 1 2.074-2.074m12.784 2.074A9.045 9.045 0 0 0 19.5 12c0-2.392-.93-4.57-2.457-6.179M9 19.5a2.25 2.25 0 0 0 2.25 2.25h1.5A2.25 2.25 0 0 0 15 19.5m-6 0v-3h6v3m-6-10.5h6" />
                             </svg>
-                            Print / Save PDF
+                            Print
                         </button>
                     </div>
                 </div>
@@ -1971,7 +1977,7 @@
         }
     </style>
 
-    <script src="app.js?v=photo-remove-v19"></script>
+    <script src="app.js?v=pdf-export-v20"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>

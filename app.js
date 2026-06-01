@@ -69,6 +69,7 @@ const LIVE_LAUNCH_CONFIG = {
     launchDate: "",
     trialDays: 7
 };
+const PDF_EXPORT_LIBRARY_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
 
 const BUSINESS_PROFILE_FIELDS = [
     "company_name",
@@ -286,7 +287,8 @@ const UI_TRANSLATIONS = {
         },
         creator: {
             saveInvoice: "Save Document",
-            printInvoice: "Print / Save PDF",
+            savePdf: "Save as PDF",
+            printInvoice: "Print",
             addLineItem: "Add Line Item"
         },
         common: {
@@ -425,7 +427,8 @@ const UI_TRANSLATIONS = {
         },
         creator: {
             saveInvoice: "I-save ang Dokumento",
-            printInvoice: "Print / Save PDF",
+            savePdf: "Save as PDF",
+            printInvoice: "Print",
             addLineItem: "Magdagdag ng Line Item"
         },
         common: {
@@ -1379,7 +1382,8 @@ const UI_TEXT_BINDINGS = [
     { selector: '[data-billing-cycle="monthly"]', key: "billing.monthly" },
     { selector: '[data-billing-cycle="yearly"]', key: "billing.yearly" },
     { selector: "#save-invoice-btn", key: "creator.saveInvoice" },
-    { selector: "#print-invoice-btn", key: "creator.printInvoice" },
+    { selector: "#save-pdf-btn", key: "creator.savePdf", preserveIcon: true },
+    { selector: "#print-invoice-btn", key: "creator.printInvoice", preserveIcon: true },
     { selector: "#add-line-item-btn", key: "creator.addLineItem" }
 ];
 
@@ -3509,6 +3513,271 @@ function renderDocumentPhotos() {
         .join("");
 }
 
+function prepareDocumentOutput() {
+    const creatorLayout = document.getElementById("creator-print-layout");
+    if (creatorLayout) {
+        currentProfile.print_layout = creatorLayout.value || currentProfile.print_layout || "pdf";
+    }
+    const settingsLayout = document.getElementById("print-layout");
+    if (settingsLayout) settingsLayout.value = currentProfile.print_layout || "pdf";
+    applyReceiptLanguage();
+    updateInvoicePreview();
+    applyInvoiceThemeColor();
+}
+
+function sanitizeFileName(value) {
+    return String(value || "Valora-EM-document")
+        .replace(/[\\/:*?"<>|]+/g, "-")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .slice(0, 90);
+}
+
+function getInvoicePdfFileName() {
+    const number = document.getElementById("inv-number")?.value || "document";
+    const type = documentTypeLabels[document.getElementById("inv-type")?.value] || "Document";
+    return `${sanitizeFileName(`Valora-EM-${type}-${number}`)}.pdf`;
+}
+
+function clonePrintableInvoiceElement() {
+    const source = document.getElementById("invoice-printable-area");
+    if (!source) return null;
+    const clone = source.cloneNode(true);
+    clone.removeAttribute("id");
+    clone.querySelectorAll(".invoice-photo-remove-btn, [data-html2canvas-ignore]").forEach((node) => node.remove());
+    clone.style.boxShadow = "none";
+    clone.style.margin = "0 auto";
+    clone.style.backgroundColor = "#ffffff";
+    return clone;
+}
+
+function waitForInvoiceImages(root) {
+    const images = Array.from(root.querySelectorAll("img")).filter((img) => img.src && !img.complete);
+    return Promise.all(images.map((img) => new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+    })));
+}
+
+function loadPdfExportLibrary() {
+    if (window.html2pdf) return Promise.resolve(window.html2pdf);
+    return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${PDF_EXPORT_LIBRARY_URL}"]`);
+        if (existing) {
+            existing.addEventListener("load", () => resolve(window.html2pdf));
+            existing.addEventListener("error", reject);
+            return;
+        }
+        const script = document.createElement("script");
+        script.src = PDF_EXPORT_LIBRARY_URL;
+        script.async = true;
+        script.onload = () => window.html2pdf ? resolve(window.html2pdf) : reject(new Error("PDF library did not initialize."));
+        script.onerror = () => reject(new Error("PDF library could not be loaded."));
+        document.head.appendChild(script);
+    });
+}
+
+function getPdfExportOptions(fileName) {
+    const layout = currentProfile.print_layout || "pdf";
+    const thermal58 = layout === "thermal-58";
+    const thermal80 = layout === "thermal-80";
+    const scale = Math.min(2, Math.max(1.4, window.devicePixelRatio || 1.6));
+
+    return {
+        filename: fileName,
+        margin: thermal58 || thermal80 ? [3, 3, 3, 3] : [10, 10, 10, 10],
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+            scale,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            logging: false,
+            scrollX: 0,
+            scrollY: 0,
+            ignoreElements: (element) => element?.hasAttribute?.("data-html2canvas-ignore") || element?.classList?.contains("invoice-photo-remove-btn")
+        },
+        jsPDF: {
+            unit: "mm",
+            format: thermal58 ? [58, 297] : thermal80 ? [80, 297] : "a4",
+            orientation: "portrait",
+            compress: true
+        },
+        pagebreak: {
+            mode: ["css", "legacy"],
+            avoid: ["tr", ".preview-math-row", ".invoice-photo-preview-item", ".invoice-signature-preview-box", ".preview-address-block"]
+        }
+    };
+}
+
+function createPdfExportStage(clone) {
+    const stage = document.createElement("div");
+    stage.className = "pdf-export-stage";
+    stage.setAttribute("aria-hidden", "true");
+    stage.appendChild(clone);
+    document.body.appendChild(stage);
+    return stage;
+}
+
+function isMobilePdfOpenPreferred() {
+    const ua = navigator.userAgent || "";
+    const isiOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    return isiOS || /Android|Mobile|CriOS|FxiOS|EdgiOS/i.test(ua);
+}
+
+function openReservedPdfWindow(fileName) {
+    try {
+        const win = window.open("", "_blank");
+        if (!win) return null;
+        win.opener = null;
+        win.document.write(`<!doctype html><title>${fileName}</title><body style="font-family:sans-serif;padding:24px;">Preparing PDF...</body>`);
+        win.document.close();
+        return win;
+    } catch (err) {
+        return null;
+    }
+}
+
+function openPdfBlobInNewTab(blob, fileName, reservedWindow = null) {
+    const url = URL.createObjectURL(blob);
+    const releaseUrl = () => setTimeout(() => URL.revokeObjectURL(url), 60000);
+    try {
+        if (reservedWindow && !reservedWindow.closed) {
+            reservedWindow.location.href = url;
+            releaseUrl();
+            return true;
+        }
+        const opened = window.open(url, "_blank");
+        if (opened) {
+            opened.opener = null;
+            releaseUrl();
+            return true;
+        }
+    } catch (err) {
+        console.warn("PDF new-tab fallback failed:", err);
+    }
+    releaseUrl();
+    return false;
+}
+
+function triggerPdfDownload(blob, fileName) {
+    try {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.rel = "noopener";
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        return true;
+    } catch (err) {
+        console.warn("PDF direct download failed:", err);
+        return false;
+    }
+}
+
+function getStylesheetHref() {
+    const stylesheet = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find((link) => link.href.includes("styles.css"));
+    return stylesheet ? stylesheet.href : `${window.location.origin}/styles.css`;
+}
+
+function openPrintableInvoiceWindow(reservedWindow = null) {
+    const clone = clonePrintableInvoiceElement();
+    if (!clone) return false;
+    const fileName = getInvoicePdfFileName();
+    const stylesheetHref = getStylesheetHref();
+    const target = reservedWindow && !reservedWindow.closed ? reservedWindow : window.open("", "_blank");
+    if (!target) return false;
+    target.opener = null;
+    target.document.open();
+    target.document.write(`
+        <!doctype html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${fileName}</title>
+            <link rel="stylesheet" href="${stylesheetHref}">
+            <style>
+                body { margin: 0; padding: 16px; background: #ffffff; }
+                .invoice-paper { box-shadow: none !important; margin: 0 auto !important; }
+                .invoice-photo-remove-btn, [data-html2canvas-ignore] { display: none !important; }
+                @media print {
+                    body { padding: 0 !important; }
+                    .invoice-paper { border: 0 !important; box-shadow: none !important; }
+                }
+            </style>
+        </head>
+        <body>
+            ${clone.outerHTML}
+            <script>
+                window.addEventListener("load", function () {
+                    setTimeout(function () { window.print(); }, 300);
+                });
+            <\/script>
+        </body>
+        </html>
+    `);
+    target.document.close();
+    return true;
+}
+
+function printInvoiceDocument() {
+    prepareDocumentOutput();
+    setTimeout(() => window.print(), 80);
+}
+
+async function saveInvoiceAsPdf() {
+    prepareDocumentOutput();
+    const fileName = getInvoicePdfFileName();
+    const preferNewTab = isMobilePdfOpenPreferred();
+    const reservedWindow = preferNewTab ? openReservedPdfWindow(fileName) : null;
+    let stage = null;
+
+    try {
+        await loadPdfExportLibrary();
+        const clone = clonePrintableInvoiceElement();
+        if (!clone) throw new Error("Invoice preview is not available.");
+        stage = createPdfExportStage(clone);
+        await waitForInvoiceImages(stage);
+        const blob = await window.html2pdf()
+            .set(getPdfExportOptions(fileName))
+            .from(clone)
+            .outputPdf("blob");
+
+        if (preferNewTab) {
+            if (openPdfBlobInNewTab(blob, fileName, reservedWindow)) {
+                createToast("PDF opened in a new tab. Use Share, Save to Files, or Print if your browser asks.");
+                return;
+            }
+        }
+
+        if (triggerPdfDownload(blob, fileName)) {
+            if (reservedWindow && !reservedWindow.closed) reservedWindow.close();
+            createToast("PDF download started.");
+            return;
+        }
+
+        if (openPdfBlobInNewTab(blob, fileName, reservedWindow)) {
+            createToast("PDF opened in a new tab because the download was blocked.");
+            return;
+        }
+
+        throw new Error("Browser blocked the PDF download and new-tab fallback.");
+    } catch (err) {
+        console.warn("PDF export fallback:", err);
+        if (openPrintableInvoiceWindow(reservedWindow)) {
+            createToast("PDF download was blocked, so a printable invoice opened in a new tab. Choose Save as PDF from the browser print dialog.");
+        } else {
+            createToast("Unable to open the PDF fallback. Please use the Print button and choose Save as PDF.", true);
+        }
+    } finally {
+        if (stage) stage.remove();
+    }
+}
+
 async function handleLogoFile(file) {
     if (!hasLogoUploadAccess()) {
         alert("Logo upload is available on Pro Unlimited and Business Unlimited plans.");
@@ -4665,13 +4934,13 @@ function initAppEventListeners() {
     // Save invoice click
     document.getElementById("save-invoice-btn").addEventListener("click", saveInvoiceToDatabase);
 
-    // Print Invoice trigger
-    document.getElementById("print-invoice-btn").addEventListener("click", () => {
-        applyInvoiceThemeColor();
-        window.print();
-    });
+    // Save PDF trigger
+    document.getElementById("save-pdf-btn").addEventListener("click", saveInvoiceAsPdf);
 
-    window.addEventListener("beforeprint", applyInvoiceThemeColor);
+    // Print Invoice trigger
+    document.getElementById("print-invoice-btn").addEventListener("click", printInvoiceDocument);
+
+    window.addEventListener("beforeprint", prepareDocumentOutput);
     window.addEventListener("afterprint", applyInvoiceThemeColor);
 
     // Subscription upgrading popup
@@ -6086,6 +6355,8 @@ Object.assign(window, {
     submitFeatureRequest,
     submitBetaFeedback,
     removeDocumentPhoto,
+    saveInvoiceAsPdf,
+    printInvoiceDocument,
     showAccountDeleteModal,
     submitAccountDeletionRequest,
     addBusinessProfile,

@@ -2707,6 +2707,39 @@ textarea:focus {
     transform: scale(1.05);
 }
 
+.pdf-export-stage {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 900px;
+    min-height: 100vh;
+    background: #ffffff;
+    color: #000000;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 1;
+}
+
+.pdf-export-stage .invoice-paper {
+    box-shadow: none !important;
+    border: 0 !important;
+    overflow: visible !important;
+}
+
+.pdf-export-stage .invoice-photo-remove-btn,
+.pdf-export-stage [data-html2canvas-ignore] {
+    display: none !important;
+}
+
+.preview-table tr,
+.preview-math-row,
+.invoice-photo-preview-item,
+.invoice-signature-preview-box,
+.preview-address-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
 .invoice-paper[dir="rtl"] {
     direction: rtl;
 }
@@ -2753,11 +2786,18 @@ textarea:focus {
     display: none;
 }
 
+@page {
+    margin: 10mm;
+}
+
 /* PRINT MEDIA OVERRIDES - CRITICAL */
 @media print {
+    html,
     body {
         background-color: #ffffff !important;
         color: #000000 !important;
+        overflow: visible !important;
+        height: auto !important;
     }
     #app-root {
         display: block !important;
@@ -2818,6 +2858,17 @@ textarea:focus {
         width: 100% !important;
         min-height: auto !important;
         background-color: #ffffff !important;
+        overflow: visible !important;
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+    }
+    .preview-table tr,
+    .preview-math-row,
+    .invoice-photo-preview-item,
+    .invoice-signature-preview-box,
+    .preview-address-block {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
     }
     .invoice-paper.print-layout-thermal-80 {
         width: 80mm !important;
