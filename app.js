@@ -70,6 +70,7 @@ const LIVE_LAUNCH_CONFIG = {
     trialDays: 7
 };
 const PDF_EXPORT_LIBRARY_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+const ACCOUNT_DELETE_FUNCTION_NAME = "delete-account";
 
 const BUSINESS_PROFILE_FIELDS = [
     "company_name",
@@ -2675,6 +2676,47 @@ async function markProfileForDeletion(payload) {
     return { error };
 }
 
+async function invokeImmediateAccountPurge() {
+    if (!hasCloudConnection() || !currentUser?.id || !supabaseClient?.functions?.invoke) {
+        return { error: null, skipped: true };
+    }
+
+    const { data, error } = await supabaseClient.functions.invoke(ACCOUNT_DELETE_FUNCTION_NAME, {
+        body: {
+            confirm: "DELETE",
+            deletion_type: "immediate"
+        }
+    });
+    return { data, error };
+}
+
+function clearSupabaseBrowserSessionTokens() {
+    try {
+        Object.keys(localStorage)
+            .filter((key) => key.startsWith("sb-") || key.includes("supabase.auth.token"))
+            .forEach((key) => localStorage.removeItem(key));
+        Object.keys(sessionStorage)
+            .filter((key) => key.startsWith("sb-") || key.includes("supabase.auth.token"))
+            .forEach((key) => sessionStorage.removeItem(key));
+    } catch (err) {
+        console.warn("Unable to clear every browser auth token:", err);
+    }
+}
+
+async function destroySessionAndRedirectToLanding() {
+    try {
+        if (hasCloudConnection()) {
+            await supabaseClient.auth.signOut({ scope: "local" });
+        }
+    } catch (err) {
+        console.warn("Sign-out during account deletion skipped:", err);
+    }
+    localStorage.removeItem("valoraem_mock_user");
+    clearSupabaseBrowserSessionTokens();
+    currentUser = null;
+    window.location.replace("index.html");
+}
+
 async function submitAccountDeletionRequest() {
     const confirmText = document.getElementById("delete-confirm-text")?.value.trim();
     const immediate = !!document.getElementById("immediate-delete-checkbox")?.checked;
@@ -2714,6 +2756,13 @@ async function submitAccountDeletionRequest() {
             createToast(`Deletion flag could not be saved: ${profileResult.error.message}`, true);
             return;
         }
+
+        if (immediate) {
+            const purgeResult = await invokeImmediateAccountPurge();
+            if (purgeResult.error) {
+                logSupabaseError("immediate account purge edge function", purgeResult.error);
+            }
+        }
     }
 
     currentProfile = { ...currentProfile, ...deletionPayload };
@@ -2721,9 +2770,9 @@ async function submitAccountDeletionRequest() {
     if (immediate) clearLocalUserData(currentUser.email);
     hideAccountDeleteModal();
     createToast(immediate
-        ? "Immediate deletion request saved. Cloud Auth hard delete requires the Supabase service-role purge job."
-        : "Account scheduled for deletion. You have 7 days before permanent purge.");
-    await logoutCurrentUser();
+        ? "Your account deletion request has been processed. You will be logged out immediately."
+        : "Account deletion scheduled. You have 7 days before permanent deletion.");
+    await destroySessionAndRedirectToLanding();
 }
 
 // Display auth form
