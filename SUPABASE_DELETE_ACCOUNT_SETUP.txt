@@ -1,0 +1,34 @@
+Valora EM - Immediate Account Deletion Setup
+
+The browser app now calls this Supabase Edge Function when a user chooses immediate permanent deletion:
+
+delete-account
+
+Required file:
+supabase/functions/delete-account/index.ts
+
+Important:
+- Do not put SUPABASE_SERVICE_ROLE_KEY in app.js or any browser file.
+- The service role key must live only inside Supabase Edge Function secrets.
+
+Supabase steps:
+1. Open Supabase Dashboard.
+2. Go to Edge Functions.
+3. Create/deploy a function named:
+   delete-account
+4. Use the code from:
+   supabase/functions/delete-account/index.ts
+5. Add these Edge Function secrets:
+   SUPABASE_URL = your Supabase project URL
+   SUPABASE_SERVICE_ROLE_KEY = your service_role key from Project Settings > API Keys
+6. Deploy the function.
+
+Expected behavior:
+- User clicks immediate permanent delete.
+- App saves the deletion request.
+- App calls the delete-account Edge Function.
+- Edge Function verifies the logged-in user from the Authorization header.
+- Edge Function deletes the user from Supabase Auth using the service role key.
+- Because profiles.id references auth.users with ON DELETE CASCADE, related profile-owned data is purged by database cascade rules.
+- Browser session/local auth tokens are cleared.
+- User is redirected to index.html.
