@@ -2830,7 +2830,6 @@ textarea:focus {
 }
 
 #invoice-render-root .invoice-render-row,
-#invoice-render-root .invoice-render-footer,
 #invoice-render-root .invoice-render-totals,
 #invoice-render-root .invoice-render-notes,
 #invoice-render-root .invoice-render-attachments,
@@ -2839,6 +2838,12 @@ textarea:focus {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     -webkit-column-break-inside: avoid !important;
+}
+
+#invoice-render-root .invoice-render-footer {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    -webkit-column-break-inside: auto !important;
 }
 
 #invoice-render-root .invoice-render-attachment img {

@@ -3726,7 +3726,7 @@ function buildCleanInvoiceExportElement() {
             </table>
         </div>
 
-        <div class="invoice-render-footer" style="display: block; width: 100%; margin-top: 20px; position: static !important; clear: both; page-break-inside: avoid !important; break-inside: avoid !important;">
+        <div class="invoice-render-footer" style="display: block; width: 100%; margin-top: 20px; position: static !important; clear: both; page-break-inside: auto !important; break-inside: auto !important;">
             <div class="invoice-render-totals" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; border-top: 2px solid #e2e8f0; padding-top: 15px; position: static !important;">
                 <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("subtotal"))}</span><span>${formatCurrency(subtotal)}</span></div>
                 <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("tax"))} (${taxRate}%)</span><span>${formatCurrency(taxAmount)}</span></div>
@@ -3802,13 +3802,12 @@ function getPdfExportOptions(fileName) {
             compress: true
         },
         pagebreak: {
-            mode: ["css", "legacy"],
+            mode: ["css"],
             before: [".pdf-page-break-before"],
             avoid: [
                 ".invoice-render-header",
                 ".invoice-render-table thead",
                 ".invoice-render-row",
-                ".invoice-render-footer",
                 ".invoice-render-totals",
                 ".invoice-render-notes",
                 ".invoice-render-attachments",
@@ -3826,49 +3825,6 @@ function createPdfExportStage(clone) {
     stage.appendChild(clone);
     document.body.appendChild(stage);
     return stage;
-}
-
-function getPdfContentPageHeightPx(clone) {
-    const layout = currentProfile.print_layout || "pdf";
-    const widthPx = clone.getBoundingClientRect().width || 794;
-    if (layout === "thermal-58") return widthPx * (291 / 52);
-    if (layout === "thermal-80") return widthPx * (291 / 74);
-    return widthPx * (277 / 190);
-}
-
-function insertPdfPageBreaks(clone) {
-    const pageHeight = getPdfContentPageHeightPx(clone);
-    if (!Number.isFinite(pageHeight) || pageHeight <= 0) return;
-
-    const safeBlocks = Array.from(clone.querySelectorAll([
-        ".invoice-render-header",
-        ".invoice-render-table thead",
-        ".invoice-render-row",
-        ".invoice-render-footer",
-        ".invoice-render-totals",
-        ".invoice-render-notes",
-        ".invoice-render-attachments",
-        ".invoice-render-attachment",
-        ".invoice-render-signature"
-    ].join(",")));
-
-    const cloneTop = clone.getBoundingClientRect().top;
-    let breakOffset = 0;
-
-    safeBlocks.forEach((block) => {
-        const rect = block.getBoundingClientRect();
-        const blockHeight = rect.height;
-        if (!blockHeight || blockHeight >= pageHeight * 0.92) return;
-
-        const top = rect.top - cloneTop + breakOffset;
-        const bottom = rect.bottom - cloneTop + breakOffset;
-        const pageBottom = Math.floor(top / pageHeight) * pageHeight + pageHeight;
-
-        if (bottom > pageBottom - 12) {
-            block.classList.add("pdf-page-break-before");
-            breakOffset += Math.max(0, pageBottom - top);
-        }
-    });
 }
 
 function isMobilePdfOpenPreferred() {
@@ -3970,7 +3926,6 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                 .invoice-render-header,
                 .invoice-render-table thead,
                 .invoice-render-row,
-                .invoice-render-footer,
                 .invoice-render-totals,
                 .invoice-render-notes,
                 .invoice-render-attachments,
@@ -3984,7 +3939,8 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                 .invoice-render-table,
                 .invoice-render-table tbody,
                 .invoice-render-table th,
-                .invoice-render-table td {
+                .invoice-render-table td,
+                .invoice-render-footer {
                     break-inside: auto !important;
                     page-break-inside: auto !important;
                     -webkit-column-break-inside: auto !important;
@@ -4040,7 +3996,6 @@ async function saveInvoiceAsPdf() {
         if (!clone) throw new Error("Invoice preview is not available.");
         stage = createPdfExportStage(clone);
         await waitForInvoiceImages(stage);
-        insertPdfPageBreaks(clone);
         await new Promise((resolve) => requestAnimationFrame(resolve));
         const blob = await window.html2pdf()
             .set(getPdfExportOptions(fileName))
