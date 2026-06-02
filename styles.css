@@ -2778,6 +2778,66 @@ textarea:focus {
     overflow: visible !important;
 }
 
+#invoice-render-root,
+#invoice-render-root * {
+    position: static !important;
+    float: none !important;
+}
+
+#invoice-render-root {
+    display: block !important;
+    clear: both !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+}
+
+#invoice-render-root .invoice-render-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 24px !important;
+    width: 100% !important;
+    margin-bottom: 30px !important;
+}
+
+#invoice-render-root .invoice-render-logo img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+}
+
+#invoice-render-root .invoice-render-table-block,
+#invoice-render-root .invoice-render-table,
+#invoice-render-root .invoice-render-table tbody,
+#invoice-render-root .invoice-render-table th,
+#invoice-render-root .invoice-render-table td {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    -webkit-column-break-inside: auto !important;
+}
+
+#invoice-render-root .invoice-render-table thead {
+    display: table-header-group !important;
+}
+
+#invoice-render-root .invoice-render-row,
+#invoice-render-root .invoice-render-footer,
+#invoice-render-root .invoice-render-totals,
+#invoice-render-root .invoice-render-notes,
+#invoice-render-root .invoice-render-attachments,
+#invoice-render-root .invoice-render-attachment,
+#invoice-render-root .invoice-render-signature {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+}
+
+#invoice-render-root .invoice-render-attachment img {
+    max-height: none !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
 .pdf-export-stage .invoice-photo-remove-btn,
 .pdf-export-stage [data-html2canvas-ignore] {
     display: none !important;
@@ -2785,20 +2845,6 @@ textarea:focus {
 
 .pdf-export-stage .invoice-paper > * {
     margin-bottom: 20px;
-}
-
-.pdf-export-stage .preview-header,
-.pdf-export-stage .preview-meta,
-.pdf-export-stage .invoice-header-flex,
-.pdf-export-stage .invoice-header-business,
-.pdf-export-stage .invoice-header-meta,
-.pdf-export-stage .invoice-items-table-wrapper,
-.pdf-export-stage .invoice-bottom-wrapper,
-.pdf-export-stage .invoice-photo-preview,
-.pdf-export-stage .invoice-photo-preview-item,
-.pdf-export-stage .invoice-signature-preview-box {
-    position: static !important;
-    float: none !important;
 }
 
 .pdf-export-stage .invoice-attachment-container,

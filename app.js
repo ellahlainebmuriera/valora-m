@@ -3600,6 +3600,8 @@ function getCurrentSignatureExportUrl() {
 
 function buildCleanInvoiceExportElement() {
     const layout = currentProfile.print_layout || "pdf";
+    const thermal58 = layout === "thermal-58";
+    const thermal80 = layout === "thermal-80";
     const lang = currentProfile.document_language || currentProfile.preferred_language || "en";
     const meta = receiptLanguageMeta[lang] || { dir: "ltr", font: "var(--font-sans)" };
     const invoiceNumber = document.getElementById("inv-number")?.value.trim() || "INV-0001";
@@ -3620,19 +3622,19 @@ function buildCleanInvoiceExportElement() {
         const rowTotal = quantity * unitPrice;
         subtotal += rowTotal;
         return `
-            <tr>
-                <td><strong>${escapeHtml(item.description || "Description")}</strong></td>
-                <td style="text-align: center;">${escapeHtml(quantity)}</td>
-                <td style="text-align: right;">${formatCurrency(unitPrice)}</td>
-                <td style="text-align: right; font-weight: 600;">${formatCurrency(rowTotal)}</td>
+            <tr class="invoice-render-row" style="position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; position: static !important;"><strong>${escapeHtml(item.description || "Description")}</strong></td>
+                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: center; position: static !important;">${escapeHtml(quantity)}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: right; position: static !important;">${formatCurrency(unitPrice)}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: right; font-weight: 600; position: static !important;">${formatCurrency(rowTotal)}</td>
             </tr>
         `;
     }).join("") || `
-        <tr>
-            <td><strong>${escapeHtml(getReceiptText("description"))}</strong></td>
-            <td style="text-align: center;">0</td>
-            <td style="text-align: right;">${formatCurrency(0)}</td>
-            <td style="text-align: right; font-weight: 600;">${formatCurrency(0)}</td>
+        <tr class="invoice-render-row" style="position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; position: static !important;"><strong>${escapeHtml(getReceiptText("description"))}</strong></td>
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: center; position: static !important;">0</td>
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: right; position: static !important;">${formatCurrency(0)}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: right; font-weight: 600; position: static !important;">${formatCurrency(0)}</td>
         </tr>
     `;
 
@@ -3650,83 +3652,89 @@ function buildCleanInvoiceExportElement() {
     const printedName = document.getElementById("printed-name")?.value.trim() || "";
     const requestClientSignature = document.getElementById("request-client-signature-checkbox")?.checked;
     const photosHtml = currentDocumentPhotos.length
-        ? `<div class="invoice-photo-preview invoice-attachment-container" style="display: block;">
+        ? `<div class="invoice-render-attachments" style="display: block; width: 100%; margin-top: 16px; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
             ${currentDocumentPhotos.map((src) => `
-                <div class="invoice-photo-preview-item invoice-attachment-container">
-                    <img src="${escapeHtml(src)}" alt="Attached document photo">
+                <div class="invoice-render-attachment" style="display: block; width: 100%; margin-bottom: 10px; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+                    <img src="${escapeHtml(src)}" alt="Attached document photo" style="display: block; width: 100%; height: auto; max-height: none; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 6px; position: static !important;">
                 </div>
             `).join("")}
         </div>`
         : "";
     const signatureHtml = signatureUrl
-        ? `<div class="invoice-signature-preview-box">
-            <img src="${escapeHtml(signatureUrl)}" alt="Authorized Signature" style="display: block;">
+        ? `<div class="invoice-render-signature" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-top: 20px; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+            <img src="${escapeHtml(signatureUrl)}" alt="Authorized Signature" style="display: block; max-width: 180px; max-height: 70px; object-fit: contain; position: static !important;">
             ${printedName ? `<strong style="font-size: 12px;">${escapeHtml(printedName)}</strong>` : ""}
-            <span>${escapeHtml(getReceiptText("signature"))}</span>
+            <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700;">${escapeHtml(getReceiptText("signature"))}</span>
         </div>`
         : "";
     const clientSignatureHtml = requestClientSignature
-        ? `<div class="invoice-signature-preview-box client-signature-box">
-            <div class="signature-line"></div>
-            <span>${escapeHtml(getReceiptText("clientSignature"))}</span>
+        ? `<div class="invoice-render-signature" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-top: 20px; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+            <div style="width: 180px; border-bottom: 1px solid #94a3b8; height: 34px;"></div>
+            <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700;">${escapeHtml(getReceiptText("clientSignature"))}</span>
         </div>`
         : "";
 
     const exportElement = document.createElement("div");
-    exportElement.className = `invoice-paper invoice-export-document print-layout-${layout}`;
+    exportElement.id = "invoice-render-root";
+    exportElement.className = `invoice-render-root invoice-export-document print-layout-${layout}`;
     exportElement.setAttribute("dir", meta.dir);
     exportElement.style.fontFamily = meta.font;
-    exportElement.style.boxShadow = "none";
+    exportElement.style.width = thermal58 ? "58mm" : thermal80 ? "80mm" : "100%";
+    exportElement.style.maxWidth = thermal58 ? "58mm" : thermal80 ? "80mm" : "190mm";
+    exportElement.style.boxSizing = "border-box";
+    exportElement.style.display = "block";
+    exportElement.style.position = "static";
+    exportElement.style.float = "none";
+    exportElement.style.clear = "both";
+    exportElement.style.overflow = "visible";
     exportElement.style.margin = "0 auto";
     exportElement.style.backgroundColor = "#ffffff";
+    exportElement.style.color = currentProfile.invoice_text_color || "#1e293b";
     exportElement.innerHTML = `
-        <div class="preview-header invoice-header-flex">
-            <div class="invoice-header-business">
-                <div class="preview-logo-placeholder">${logoHtml}</div>
-                <h3 style="margin-top: 12px; font-weight: 700; font-size: 18px;">${escapeHtml(currentProfile.company_name || "My Business")}</h3>
-                <p style="font-size: 12px; color: #64748b; line-height: 1.4;">${storeDetails || "Add address & contact details in Settings"}</p>
+        <div class="invoice-render-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; width: 100%; margin-bottom: 30px; position: static !important; float: none !important; clear: both;">
+            <div class="invoice-render-vendor" style="position: static !important; float: none !important; min-width: 0; flex: 1;">
+                <div class="invoice-render-logo" style="width: 60px; height: 60px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #64748b; position: static !important;">${logoHtml}</div>
+                <h3 style="margin: 12px 0 4px; font-weight: 700; font-size: 18px;">${escapeHtml(currentProfile.company_name || "My Business")}</h3>
+                <p style="font-size: 12px; color: #64748b; line-height: 1.4; margin: 0 0 18px;">${storeDetails || "Add address & contact details in Settings"}</p>
+                <strong style="display: block; color: #64748b; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; margin-bottom: 4px;">${escapeHtml(getReceiptText("billedTo"))}</strong>
+                <p style="font-size: 13px; margin: 0;"><strong>${escapeHtml(client?.name || getReceiptText("walkIn"))}</strong></p>
+                <p style="font-size: 12px; color: #64748b; line-height: 1.4; margin: 3px 0 0;">
+                    ${escapeHtml(client?.email || "")}${client?.email ? "<br>" : ""}
+                    ${escapeHtml(client?.phone || "")}${client?.phone ? "<br>" : ""}
+                    ${escapeHtml(client?.address || "")}
+                </p>
             </div>
-            <div class="preview-meta invoice-header-meta">
-                <h2>${escapeHtml(documentType.toUpperCase())}</h2>
-                <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">${escapeHtml(invoiceNumber)}</p>
-                <p style="font-size: 12px; color: #64748b;">${escapeHtml(getReceiptText("date"))}: ${escapeHtml(issueDate)}</p>
-                <p style="font-size: 12px; color: #64748b;">${escapeHtml(getReceiptText("dueDate"))}: ${escapeHtml(dueDate)}</p>
-            </div>
-        </div>
-
-        <div class="preview-details">
-            <div class="preview-address-block">
-                <span class="title">${escapeHtml(getReceiptText("billedTo"))}</span>
-                <strong style="font-size: 14px;">${escapeHtml(client?.name || getReceiptText("walkIn"))}</strong>
-                <span>${escapeHtml(client?.email || "")}</span>
-                <span>${escapeHtml(client?.phone || "")}</span>
-                <span>${escapeHtml(client?.address || "")}</span>
+            <div class="invoice-render-meta" style="text-align: right; position: static !important; float: none !important; min-width: 160px;">
+                <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 800; color: ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")};">${escapeHtml(documentType.toUpperCase())}</h1>
+                <p style="font-size: 13px; font-weight: 700; margin: 0 0 8px;">${escapeHtml(invoiceNumber)}</p>
+                <p style="font-size: 12px; color: #64748b; margin: 3px 0;">${escapeHtml(getReceiptText("date"))}: ${escapeHtml(issueDate)}</p>
+                <p style="font-size: 12px; color: #64748b; margin: 3px 0;">${escapeHtml(getReceiptText("dueDate"))}: ${escapeHtml(dueDate)}</p>
             </div>
         </div>
 
-        <div class="invoice-items-table-wrapper">
-            <table class="preview-table">
+        <div class="invoice-render-table-block" style="display: block; width: 100%; clear: both; position: static !important; float: none !important; page-break-inside: auto !important; break-inside: auto !important;">
+            <table class="invoice-render-table" style="width: 100%; border-collapse: collapse; position: static !important; float: none !important; page-break-inside: auto !important; break-inside: auto !important;">
                 <thead>
                     <tr>
-                        <th style="width: 50%;">${escapeHtml(getReceiptText("description"))}</th>
-                        <th style="width: 15%; text-align: center;">${escapeHtml(getReceiptText("qty"))}</th>
-                        <th style="width: 20%; text-align: right;">${escapeHtml(getReceiptText("unitPrice"))}</th>
-                        <th style="width: 15%; text-align: right;">${escapeHtml(getReceiptText("total"))}</th>
+                        <th style="width: 50%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("description"))}</th>
+                        <th style="width: 15%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: center; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("qty"))}</th>
+                        <th style="width: 20%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: right; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("unitPrice"))}</th>
+                        <th style="width: 15%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: right; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("total"))}</th>
                     </tr>
                 </thead>
                 <tbody>${itemRows}</tbody>
             </table>
         </div>
 
-        <div class="invoice-bottom-wrapper">
-            <div class="preview-math invoice-totals-wrapper">
-                <div class="preview-math-row"><span>${escapeHtml(getReceiptText("subtotal"))}</span><span>${formatCurrency(subtotal)}</span></div>
-                <div class="preview-math-row"><span>${escapeHtml(getReceiptText("tax"))} (${taxRate}%)</span><span>${formatCurrency(taxAmount)}</span></div>
-                <div class="preview-math-row"><span>${escapeHtml(getReceiptText("discount"))}</span><span>${formatCurrency(discount)}</span></div>
-                <div class="preview-math-row"><span>${escapeHtml(getReceiptText("shipping"))}</span><span>${formatCurrency(shipping)}</span></div>
-                <div class="preview-math-row total"><span>${escapeHtml(getReceiptText("grandTotal"))}</span><span>${formatCurrency(grandTotal)}</span></div>
+        <div class="invoice-render-footer" style="display: block; width: 100%; margin-top: 20px; position: static !important; float: none !important; clear: both; page-break-inside: avoid !important; break-inside: avoid !important;">
+            <div class="invoice-render-totals" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; border-top: 2px solid #e2e8f0; padding-top: 15px; position: static !important;">
+                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("subtotal"))}</span><span>${formatCurrency(subtotal)}</span></div>
+                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("tax"))} (${taxRate}%)</span><span>${formatCurrency(taxAmount)}</span></div>
+                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("discount"))}</span><span>${formatCurrency(discount)}</span></div>
+                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("shipping"))}</span><span>${formatCurrency(shipping)}</span></div>
+                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 16px; font-weight: 700; border-top: 1px solid #e2e8f0; padding-top: 6px; color: #0f172a;"><span>${escapeHtml(getReceiptText("grandTotal"))}</span><span>${formatCurrency(grandTotal)}</span></div>
             </div>
-            <div class="preview-notes-block" style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 12px; font-size: 11px; color: #64748b; line-height: 1.4;">
+            <div class="invoice-render-notes" style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 12px; font-size: 11px; color: #64748b; line-height: 1.4; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
                 <strong>${escapeHtml(getReceiptText("notes"))}</strong>
                 <p>${escapeHtml(notes || "Enter notes here.")}</p>
             </div>
@@ -3797,20 +3805,15 @@ function getPdfExportOptions(fileName) {
             mode: ["css", "legacy"],
             before: [".pdf-page-break-before"],
             avoid: [
-                ".preview-header",
-                ".preview-details",
-                ".preview-table thead",
-                ".preview-table tbody tr",
-                ".invoice-bottom-wrapper",
-                ".invoice-totals-wrapper",
-                ".preview-math",
-                ".preview-math-row",
-                ".preview-notes-block",
-                ".invoice-attachment-container",
-                ".invoice-photo-preview",
-                ".invoice-photo-preview-item",
-                ".invoice-signature-preview-box",
-                ".preview-address-block"
+                ".invoice-render-header",
+                ".invoice-render-table thead",
+                ".invoice-render-row",
+                ".invoice-render-footer",
+                ".invoice-render-totals",
+                ".invoice-render-notes",
+                ".invoice-render-attachments",
+                ".invoice-render-attachment",
+                ".invoice-render-signature"
             ]
         }
     };
@@ -3838,20 +3841,15 @@ function insertPdfPageBreaks(clone) {
     if (!Number.isFinite(pageHeight) || pageHeight <= 0) return;
 
     const safeBlocks = Array.from(clone.querySelectorAll([
-        ".preview-header",
-        ".preview-details",
-        ".preview-table thead",
-        ".preview-table tbody tr",
-        ".invoice-bottom-wrapper",
-        ".invoice-totals-wrapper",
-        ".preview-math",
-        ".preview-math-row",
-        ".preview-notes-block",
-        ".invoice-attachment-container",
-        ".invoice-photo-preview",
-        ".invoice-photo-preview-item",
-        ".invoice-signature-preview-box",
-        ".client-signature-box"
+        ".invoice-render-header",
+        ".invoice-render-table thead",
+        ".invoice-render-row",
+        ".invoice-render-footer",
+        ".invoice-render-totals",
+        ".invoice-render-notes",
+        ".invoice-render-attachments",
+        ".invoice-render-attachment",
+        ".invoice-render-signature"
     ].join(",")));
 
     const cloneTop = clone.getBoundingClientRect().top;
@@ -3957,54 +3955,41 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
             <link rel="stylesheet" href="${stylesheetHref}">
             <style>
                 body { margin: 0; padding: 16px; background: #ffffff; }
-                .invoice-paper { box-shadow: none !important; margin: 0 auto !important; display: block !important; overflow: visible !important; }
-                .preview-header,
-                .preview-meta,
-                .invoice-header-flex,
-                .invoice-header-business,
-                .invoice-header-meta,
-                .invoice-items-table-wrapper,
-                .invoice-bottom-wrapper,
-                .invoice-photo-preview,
-                .invoice-photo-preview-item,
-                .invoice-signature-preview-box {
+                #invoice-render-root,
+                #invoice-render-root * {
                     position: static !important;
                     float: none !important;
                 }
-                .preview-header,
-                .preview-details,
-                .preview-table thead,
-                .preview-table tr,
-                .invoice-bottom-wrapper,
-                .invoice-totals-wrapper,
-                .preview-math,
-                .preview-math-row,
-                .preview-notes-block,
-                .invoice-attachment-container,
-                .invoice-photo-preview,
-                .invoice-photo-preview-item,
-                .invoice-signature-preview-box,
-                .preview-address-block {
+                #invoice-render-root {
+                    box-shadow: none !important;
+                    margin: 0 auto !important;
+                    display: block !important;
+                    overflow: visible !important;
+                    clear: both !important;
+                }
+                .invoice-render-header,
+                .invoice-render-table thead,
+                .invoice-render-row,
+                .invoice-render-footer,
+                .invoice-render-totals,
+                .invoice-render-notes,
+                .invoice-render-attachments,
+                .invoice-render-attachment,
+                .invoice-render-signature {
                     break-inside: avoid !important;
                     page-break-inside: avoid !important;
                     -webkit-column-break-inside: avoid !important;
                 }
-                .preview-table,
-                .invoice-items-table-wrapper,
-                .preview-table tbody,
-                .preview-table th,
-                .preview-table td {
+                .invoice-render-table-block,
+                .invoice-render-table,
+                .invoice-render-table tbody,
+                .invoice-render-table th,
+                .invoice-render-table td {
                     break-inside: auto !important;
                     page-break-inside: auto !important;
                     -webkit-column-break-inside: auto !important;
                 }
-                .invoice-attachment-container {
-                    display: block !important;
-                    break-inside: avoid !important;
-                    page-break-inside: avoid !important;
-                    -webkit-column-break-inside: avoid !important;
-                }
-                .invoice-photo-preview img {
+                .invoice-render-attachment img {
                     max-height: none !important;
                     height: auto !important;
                     object-fit: contain !important;
@@ -4012,8 +3997,8 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                 .invoice-photo-remove-btn, [data-html2canvas-ignore] { display: none !important; }
                 @media print {
                     body { padding: 0 !important; }
-                    .invoice-paper { border: 0 !important; box-shadow: none !important; display: block !important; overflow: visible !important; }
-                    .preview-table thead { display: table-header-group !important; }
+                    #invoice-render-root { border: 0 !important; box-shadow: none !important; display: block !important; overflow: visible !important; }
+                    .invoice-render-table thead { display: table-header-group !important; }
                 }
             </style>
         </head>
