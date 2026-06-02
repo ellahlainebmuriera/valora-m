@@ -3655,13 +3655,14 @@ function getPdfExportOptions(fileName) {
             compress: true
         },
         pagebreak: {
-            mode: ["avoid-all", "css", "legacy"],
+            mode: ["css", "legacy"],
             before: [".pdf-page-break-before"],
             avoid: [
                 ".preview-header",
                 ".preview-details",
                 ".preview-table thead",
                 ".preview-table tbody tr",
+                ".invoice-totals-wrapper",
                 ".preview-math",
                 ".preview-math-row",
                 ".preview-notes-block",
@@ -3701,6 +3702,7 @@ function insertPdfPageBreaks(clone) {
         ".preview-details",
         ".preview-table thead",
         ".preview-table tbody tr",
+        ".invoice-totals-wrapper",
         ".preview-math",
         ".preview-math-row",
         ".preview-notes-block",
@@ -3818,10 +3820,8 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                 .preview-header,
                 .preview-details,
                 .preview-table thead,
-                .preview-table tbody,
                 .preview-table tr,
-                .preview-table th,
-                .preview-table td,
+                .invoice-totals-wrapper,
                 .preview-math,
                 .preview-math-row,
                 .preview-notes-block,
@@ -3833,6 +3833,14 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                     break-inside: avoid !important;
                     page-break-inside: avoid !important;
                     -webkit-column-break-inside: avoid !important;
+                }
+                .preview-table,
+                .preview-table tbody,
+                .preview-table th,
+                .preview-table td {
+                    break-inside: auto !important;
+                    page-break-inside: auto !important;
+                    -webkit-column-break-inside: auto !important;
                 }
                 .invoice-attachment-container {
                     display: block !important;

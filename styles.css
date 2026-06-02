@@ -2770,10 +2770,8 @@ textarea:focus {
 .preview-header,
 .preview-details,
 .preview-table thead,
-.preview-table tbody,
 .preview-table tr,
-.preview-table th,
-.preview-table td,
+.invoice-totals-wrapper,
 .preview-math,
 .preview-math-row,
 .preview-notes-block,
@@ -2785,6 +2783,19 @@ textarea:focus {
     break-inside: avoid;
     page-break-inside: avoid;
     -webkit-column-break-inside: avoid;
+}
+
+.preview-table,
+.preview-table tbody,
+.preview-table th,
+.preview-table td {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    -webkit-column-break-inside: auto !important;
+}
+
+.preview-table thead {
+    display: table-header-group;
 }
 
 .invoice-paper[dir="rtl"] {
@@ -2917,12 +2928,9 @@ textarea:focus {
     }
     .preview-header,
     .preview-details,
-    .preview-table,
     .preview-table thead,
-    .preview-table tbody,
     .preview-table tr,
-    .preview-table th,
-    .preview-table td,
+    .invoice-totals-wrapper,
     .preview-math,
     .preview-math-row,
     .preview-notes-block,
@@ -2934,6 +2942,14 @@ textarea:focus {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
         -webkit-column-break-inside: avoid !important;
+    }
+    .preview-table,
+    .preview-table tbody,
+    .preview-table th,
+    .preview-table td {
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+        -webkit-column-break-inside: auto !important;
     }
     .invoice-attachment-container,
     .invoice-photo-preview,
