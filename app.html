@@ -15,7 +15,7 @@
     <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=table-flow-v24">
+    <link rel="stylesheet" href="styles.css?v=clean-export-v27">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -694,8 +694,8 @@
                     <div class="invoice-preview-container">
                         <div class="preview-mode-label" id="preview-mode-label">PDF / A4 Layout Preview</div>
                         <div class="invoice-paper" id="invoice-printable-area">
-                            <div class="preview-header">
-                                <div>
+                            <div class="preview-header invoice-header-flex">
+                                <div class="invoice-header-business">
                                     <div class="preview-logo-placeholder" id="preview-logo-box">
                                         <!-- Store Logo -->
                                         <span>LOGO</span>
@@ -705,7 +705,7 @@
                                         Add address & contact details in Settings
                                     </p>
                                 </div>
-                                <div class="preview-meta">
+                                <div class="preview-meta invoice-header-meta">
                                     <h2 id="preview-doc-type-text">INVOICE</h2>
                                     <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;" id="preview-inv-number">INV-0001</p>
                                     <p style="font-size: 12px; color: #64748b;"><span id="preview-date-label">Date</span>: <span id="preview-inv-date">YYYY-MM-DD</span></p>
@@ -723,7 +723,7 @@
                                 </div>
                             </div>
 
-                            <div style="flex-grow: 1;">
+                            <div class="invoice-items-table-wrapper">
                                 <table class="preview-table">
                                     <thead>
                                         <tr>
@@ -739,6 +739,7 @@
                                 </table>
                             </div>
 
+                            <div class="invoice-bottom-wrapper">
                             <div class="preview-math invoice-totals-wrapper">
                                 <div class="preview-math-row">
                                     <span id="preview-subtotal-label">Subtotal</span>
@@ -778,6 +779,7 @@
                             <div class="invoice-signature-preview-box client-signature-box" id="preview-client-signature-container" style="display: none;">
                                 <div class="signature-line"></div>
                                 <span id="preview-client-signature-label">Client Signature</span>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -1977,7 +1979,7 @@
         }
     </style>
 
-    <script src="app.js?v=table-flow-v24"></script>
+    <script src="app.js?v=clean-export-v27"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>

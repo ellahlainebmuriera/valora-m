@@ -1593,10 +1593,23 @@ textarea:focus {
     width: 100%;
 }
 
-.preview-header {
+.preview-header,
+.invoice-header-flex {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    gap: 24px;
+    position: static !important;
+    float: none !important;
+    clear: both;
+    width: 100%;
+}
+
+.invoice-header-business,
+.invoice-header-meta {
+    position: static !important;
+    float: none !important;
+    min-width: 0;
 }
 
 .preview-logo-placeholder {
@@ -1619,6 +1632,8 @@ textarea:focus {
 
 .preview-meta {
     text-align: right;
+    position: static !important;
+    float: none !important;
 }
 
 .preview-meta h2 {
@@ -1654,6 +1669,29 @@ textarea:focus {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
+    position: static !important;
+    float: none !important;
+}
+
+.invoice-items-table-wrapper {
+    display: block;
+    width: 100%;
+    position: static !important;
+    float: none !important;
+    clear: both;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+}
+
+.invoice-bottom-wrapper {
+    display: block;
+    width: 100%;
+    position: static !important;
+    float: none !important;
+    clear: both;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
 }
 
 .preview-table th {
@@ -2733,6 +2771,13 @@ textarea:focus {
     display: block !important;
 }
 
+.invoice-export-document {
+    display: block !important;
+    position: static !important;
+    float: none !important;
+    overflow: visible !important;
+}
+
 .pdf-export-stage .invoice-photo-remove-btn,
 .pdf-export-stage [data-html2canvas-ignore] {
     display: none !important;
@@ -2740,6 +2785,20 @@ textarea:focus {
 
 .pdf-export-stage .invoice-paper > * {
     margin-bottom: 20px;
+}
+
+.pdf-export-stage .preview-header,
+.pdf-export-stage .preview-meta,
+.pdf-export-stage .invoice-header-flex,
+.pdf-export-stage .invoice-header-business,
+.pdf-export-stage .invoice-header-meta,
+.pdf-export-stage .invoice-items-table-wrapper,
+.pdf-export-stage .invoice-bottom-wrapper,
+.pdf-export-stage .invoice-photo-preview,
+.pdf-export-stage .invoice-photo-preview-item,
+.pdf-export-stage .invoice-signature-preview-box {
+    position: static !important;
+    float: none !important;
 }
 
 .pdf-export-stage .invoice-attachment-container,
@@ -2771,6 +2830,7 @@ textarea:focus {
 .preview-details,
 .preview-table thead,
 .preview-table tr,
+.invoice-bottom-wrapper,
 .invoice-totals-wrapper,
 .preview-math,
 .preview-math-row,
@@ -2786,6 +2846,7 @@ textarea:focus {
 }
 
 .preview-table,
+.invoice-items-table-wrapper,
 .preview-table tbody,
 .preview-table th,
 .preview-table td {
@@ -2930,6 +2991,7 @@ textarea:focus {
     .preview-details,
     .preview-table thead,
     .preview-table tr,
+    .invoice-bottom-wrapper,
     .invoice-totals-wrapper,
     .preview-math,
     .preview-math-row,
@@ -2944,6 +3006,7 @@ textarea:focus {
         -webkit-column-break-inside: avoid !important;
     }
     .preview-table,
+    .invoice-items-table-wrapper,
     .preview-table tbody,
     .preview-table th,
     .preview-table td {

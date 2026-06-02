@@ -3588,19 +3588,158 @@ function getInvoicePdfFileName() {
     return `${sanitizeFileName(`Valora-EM-${type}-${number}`)}.pdf`;
 }
 
+function getCurrentSignatureExportUrl() {
+    const showSignature = document.getElementById("show-signature-checkbox")?.checked;
+    if (!showSignature) return "";
+    if (sigCanvas && !isCanvasBlank(sigCanvas)) {
+        return sigCanvas.toDataURL();
+    }
+    const previewImage = document.getElementById("preview-signature-img");
+    return previewImage?.src || "";
+}
+
+function buildCleanInvoiceExportElement() {
+    const layout = currentProfile.print_layout || "pdf";
+    const lang = currentProfile.document_language || currentProfile.preferred_language || "en";
+    const meta = receiptLanguageMeta[lang] || { dir: "ltr", font: "var(--font-sans)" };
+    const invoiceNumber = document.getElementById("inv-number")?.value.trim() || "INV-0001";
+    const documentType = documentTypeLabels[document.getElementById("inv-type")?.value] || "Invoice";
+    const issueDate = document.getElementById("inv-date")?.value || "";
+    const dueDate = document.getElementById("inv-duedate")?.value || "";
+    const clientId = document.getElementById("inv-client-select")?.value || "";
+    const client = clients.find((item) => String(item.id) === String(clientId));
+    const notes = document.getElementById("inv-notes")?.value || "";
+    const taxRate = parseFloat(document.getElementById("inv-tax-rate")?.value) || 0;
+    const discount = parseFloat(document.getElementById("inv-discount")?.value) || 0;
+    const shipping = parseFloat(document.getElementById("inv-shipping")?.value) || 0;
+
+    let subtotal = 0;
+    const itemRows = currentInvoiceItems.map((item) => {
+        const quantity = Number(item.quantity) || 0;
+        const unitPrice = Number(item.unit_price) || 0;
+        const rowTotal = quantity * unitPrice;
+        subtotal += rowTotal;
+        return `
+            <tr>
+                <td><strong>${escapeHtml(item.description || "Description")}</strong></td>
+                <td style="text-align: center;">${escapeHtml(quantity)}</td>
+                <td style="text-align: right;">${formatCurrency(unitPrice)}</td>
+                <td style="text-align: right; font-weight: 600;">${formatCurrency(rowTotal)}</td>
+            </tr>
+        `;
+    }).join("") || `
+        <tr>
+            <td><strong>${escapeHtml(getReceiptText("description"))}</strong></td>
+            <td style="text-align: center;">0</td>
+            <td style="text-align: right;">${formatCurrency(0)}</td>
+            <td style="text-align: right; font-weight: 600;">${formatCurrency(0)}</td>
+        </tr>
+    `;
+
+    const taxAmount = subtotal * (taxRate / 100);
+    const grandTotal = subtotal + taxAmount + shipping - discount;
+    const logoHtml = currentProfile.logo_url
+        ? `<img src="${escapeHtml(currentProfile.logo_url)}" alt="Store logo">`
+        : `<span>LOGO</span>`;
+    const storeDetails = [
+        currentProfile.address ? escapeHtml(currentProfile.address) : "",
+        currentProfile.phone ? `Phone: ${escapeHtml(currentProfile.phone)}` : "",
+        currentProfile.email ? `Email: ${escapeHtml(currentProfile.email)}` : ""
+    ].filter(Boolean).join("<br>");
+    const signatureUrl = getCurrentSignatureExportUrl();
+    const printedName = document.getElementById("printed-name")?.value.trim() || "";
+    const requestClientSignature = document.getElementById("request-client-signature-checkbox")?.checked;
+    const photosHtml = currentDocumentPhotos.length
+        ? `<div class="invoice-photo-preview invoice-attachment-container" style="display: block;">
+            ${currentDocumentPhotos.map((src) => `
+                <div class="invoice-photo-preview-item invoice-attachment-container">
+                    <img src="${escapeHtml(src)}" alt="Attached document photo">
+                </div>
+            `).join("")}
+        </div>`
+        : "";
+    const signatureHtml = signatureUrl
+        ? `<div class="invoice-signature-preview-box">
+            <img src="${escapeHtml(signatureUrl)}" alt="Authorized Signature" style="display: block;">
+            ${printedName ? `<strong style="font-size: 12px;">${escapeHtml(printedName)}</strong>` : ""}
+            <span>${escapeHtml(getReceiptText("signature"))}</span>
+        </div>`
+        : "";
+    const clientSignatureHtml = requestClientSignature
+        ? `<div class="invoice-signature-preview-box client-signature-box">
+            <div class="signature-line"></div>
+            <span>${escapeHtml(getReceiptText("clientSignature"))}</span>
+        </div>`
+        : "";
+
+    const exportElement = document.createElement("div");
+    exportElement.className = `invoice-paper invoice-export-document print-layout-${layout}`;
+    exportElement.setAttribute("dir", meta.dir);
+    exportElement.style.fontFamily = meta.font;
+    exportElement.style.boxShadow = "none";
+    exportElement.style.margin = "0 auto";
+    exportElement.style.backgroundColor = "#ffffff";
+    exportElement.innerHTML = `
+        <div class="preview-header invoice-header-flex">
+            <div class="invoice-header-business">
+                <div class="preview-logo-placeholder">${logoHtml}</div>
+                <h3 style="margin-top: 12px; font-weight: 700; font-size: 18px;">${escapeHtml(currentProfile.company_name || "My Business")}</h3>
+                <p style="font-size: 12px; color: #64748b; line-height: 1.4;">${storeDetails || "Add address & contact details in Settings"}</p>
+            </div>
+            <div class="preview-meta invoice-header-meta">
+                <h2>${escapeHtml(documentType.toUpperCase())}</h2>
+                <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">${escapeHtml(invoiceNumber)}</p>
+                <p style="font-size: 12px; color: #64748b;">${escapeHtml(getReceiptText("date"))}: ${escapeHtml(issueDate)}</p>
+                <p style="font-size: 12px; color: #64748b;">${escapeHtml(getReceiptText("dueDate"))}: ${escapeHtml(dueDate)}</p>
+            </div>
+        </div>
+
+        <div class="preview-details">
+            <div class="preview-address-block">
+                <span class="title">${escapeHtml(getReceiptText("billedTo"))}</span>
+                <strong style="font-size: 14px;">${escapeHtml(client?.name || getReceiptText("walkIn"))}</strong>
+                <span>${escapeHtml(client?.email || "")}</span>
+                <span>${escapeHtml(client?.phone || "")}</span>
+                <span>${escapeHtml(client?.address || "")}</span>
+            </div>
+        </div>
+
+        <div class="invoice-items-table-wrapper">
+            <table class="preview-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">${escapeHtml(getReceiptText("description"))}</th>
+                        <th style="width: 15%; text-align: center;">${escapeHtml(getReceiptText("qty"))}</th>
+                        <th style="width: 20%; text-align: right;">${escapeHtml(getReceiptText("unitPrice"))}</th>
+                        <th style="width: 15%; text-align: right;">${escapeHtml(getReceiptText("total"))}</th>
+                    </tr>
+                </thead>
+                <tbody>${itemRows}</tbody>
+            </table>
+        </div>
+
+        <div class="invoice-bottom-wrapper">
+            <div class="preview-math invoice-totals-wrapper">
+                <div class="preview-math-row"><span>${escapeHtml(getReceiptText("subtotal"))}</span><span>${formatCurrency(subtotal)}</span></div>
+                <div class="preview-math-row"><span>${escapeHtml(getReceiptText("tax"))} (${taxRate}%)</span><span>${formatCurrency(taxAmount)}</span></div>
+                <div class="preview-math-row"><span>${escapeHtml(getReceiptText("discount"))}</span><span>${formatCurrency(discount)}</span></div>
+                <div class="preview-math-row"><span>${escapeHtml(getReceiptText("shipping"))}</span><span>${formatCurrency(shipping)}</span></div>
+                <div class="preview-math-row total"><span>${escapeHtml(getReceiptText("grandTotal"))}</span><span>${formatCurrency(grandTotal)}</span></div>
+            </div>
+            <div class="preview-notes-block" style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 12px; font-size: 11px; color: #64748b; line-height: 1.4;">
+                <strong>${escapeHtml(getReceiptText("notes"))}</strong>
+                <p>${escapeHtml(notes || "Enter notes here.")}</p>
+            </div>
+            ${photosHtml}
+            ${signatureHtml}
+            ${clientSignatureHtml}
+        </div>
+    `;
+    return exportElement;
+}
+
 function clonePrintableInvoiceElement() {
-    const source = document.getElementById("invoice-printable-area");
-    if (!source) return null;
-    const clone = source.cloneNode(true);
-    clone.removeAttribute("id");
-    clone.querySelectorAll(".invoice-photo-remove-btn, [data-html2canvas-ignore]").forEach((node) => node.remove());
-    clone.querySelectorAll(".invoice-photo-preview, .invoice-photo-preview-item").forEach((node) => {
-        node.classList.add("invoice-attachment-container");
-    });
-    clone.style.boxShadow = "none";
-    clone.style.margin = "0 auto";
-    clone.style.backgroundColor = "#ffffff";
-    return clone;
+    return buildCleanInvoiceExportElement();
 }
 
 function waitForInvoiceImages(root) {
@@ -3662,6 +3801,7 @@ function getPdfExportOptions(fileName) {
                 ".preview-details",
                 ".preview-table thead",
                 ".preview-table tbody tr",
+                ".invoice-bottom-wrapper",
                 ".invoice-totals-wrapper",
                 ".preview-math",
                 ".preview-math-row",
@@ -3702,6 +3842,7 @@ function insertPdfPageBreaks(clone) {
         ".preview-details",
         ".preview-table thead",
         ".preview-table tbody tr",
+        ".invoice-bottom-wrapper",
         ".invoice-totals-wrapper",
         ".preview-math",
         ".preview-math-row",
@@ -3818,9 +3959,23 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                 body { margin: 0; padding: 16px; background: #ffffff; }
                 .invoice-paper { box-shadow: none !important; margin: 0 auto !important; display: block !important; overflow: visible !important; }
                 .preview-header,
+                .preview-meta,
+                .invoice-header-flex,
+                .invoice-header-business,
+                .invoice-header-meta,
+                .invoice-items-table-wrapper,
+                .invoice-bottom-wrapper,
+                .invoice-photo-preview,
+                .invoice-photo-preview-item,
+                .invoice-signature-preview-box {
+                    position: static !important;
+                    float: none !important;
+                }
+                .preview-header,
                 .preview-details,
                 .preview-table thead,
                 .preview-table tr,
+                .invoice-bottom-wrapper,
                 .invoice-totals-wrapper,
                 .preview-math,
                 .preview-math-row,
@@ -3835,6 +3990,7 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                     -webkit-column-break-inside: avoid !important;
                 }
                 .preview-table,
+                .invoice-items-table-wrapper,
                 .preview-table tbody,
                 .preview-table th,
                 .preview-table td {
@@ -3877,7 +4033,11 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
 
 function printInvoiceDocument() {
     prepareDocumentOutput();
-    setTimeout(() => window.print(), 80);
+    setTimeout(() => {
+        if (!openPrintableInvoiceWindow()) {
+            window.print();
+        }
+    }, 80);
 }
 
 async function saveInvoiceAsPdf() {
