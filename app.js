@@ -3554,7 +3554,7 @@ function renderDocumentPhotos() {
     container.style.display = "grid";
     container.innerHTML = currentDocumentPhotos
         .map((src, index) => `
-            <div class="invoice-photo-preview-item">
+            <div class="invoice-photo-preview-item invoice-attachment-container">
                 <img src="${src}" alt="Attached document photo">
                 <button class="invoice-photo-remove-btn" type="button" onclick="removeDocumentPhoto(${index})" aria-label="Remove attached photo">&times;</button>
             </div>
@@ -3594,6 +3594,9 @@ function clonePrintableInvoiceElement() {
     const clone = source.cloneNode(true);
     clone.removeAttribute("id");
     clone.querySelectorAll(".invoice-photo-remove-btn, [data-html2canvas-ignore]").forEach((node) => node.remove());
+    clone.querySelectorAll(".invoice-photo-preview, .invoice-photo-preview-item").forEach((node) => {
+        node.classList.add("invoice-attachment-container");
+    });
     clone.style.boxShadow = "none";
     clone.style.margin = "0 auto";
     clone.style.backgroundColor = "#ffffff";
@@ -3652,8 +3655,22 @@ function getPdfExportOptions(fileName) {
             compress: true
         },
         pagebreak: {
-            mode: ["css", "legacy"],
-            avoid: ["tr", ".preview-math-row", ".invoice-photo-preview-item", ".invoice-signature-preview-box", ".preview-address-block"]
+            mode: ["avoid-all", "css", "legacy"],
+            before: [".pdf-page-break-before"],
+            avoid: [
+                ".preview-header",
+                ".preview-details",
+                ".preview-table thead",
+                ".preview-table tbody tr",
+                ".preview-math",
+                ".preview-math-row",
+                ".preview-notes-block",
+                ".invoice-attachment-container",
+                ".invoice-photo-preview",
+                ".invoice-photo-preview-item",
+                ".invoice-signature-preview-box",
+                ".preview-address-block"
+            ]
         }
     };
 }
@@ -3665,6 +3682,52 @@ function createPdfExportStage(clone) {
     stage.appendChild(clone);
     document.body.appendChild(stage);
     return stage;
+}
+
+function getPdfContentPageHeightPx(clone) {
+    const layout = currentProfile.print_layout || "pdf";
+    const widthPx = clone.getBoundingClientRect().width || 794;
+    if (layout === "thermal-58") return widthPx * (291 / 52);
+    if (layout === "thermal-80") return widthPx * (291 / 74);
+    return widthPx * (277 / 190);
+}
+
+function insertPdfPageBreaks(clone) {
+    const pageHeight = getPdfContentPageHeightPx(clone);
+    if (!Number.isFinite(pageHeight) || pageHeight <= 0) return;
+
+    const safeBlocks = Array.from(clone.querySelectorAll([
+        ".preview-header",
+        ".preview-details",
+        ".preview-table thead",
+        ".preview-table tbody tr",
+        ".preview-math",
+        ".preview-math-row",
+        ".preview-notes-block",
+        ".invoice-attachment-container",
+        ".invoice-photo-preview",
+        ".invoice-photo-preview-item",
+        ".invoice-signature-preview-box",
+        ".client-signature-box"
+    ].join(",")));
+
+    const cloneTop = clone.getBoundingClientRect().top;
+    let breakOffset = 0;
+
+    safeBlocks.forEach((block) => {
+        const rect = block.getBoundingClientRect();
+        const blockHeight = rect.height;
+        if (!blockHeight || blockHeight >= pageHeight * 0.92) return;
+
+        const top = rect.top - cloneTop + breakOffset;
+        const bottom = rect.bottom - cloneTop + breakOffset;
+        const pageBottom = Math.floor(top / pageHeight) * pageHeight + pageHeight;
+
+        if (bottom > pageBottom - 12) {
+            block.classList.add("pdf-page-break-before");
+            breakOffset += Math.max(0, pageBottom - top);
+        }
+    });
 }
 
 function isMobilePdfOpenPreferred() {
@@ -3751,11 +3814,42 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
             <link rel="stylesheet" href="${stylesheetHref}">
             <style>
                 body { margin: 0; padding: 16px; background: #ffffff; }
-                .invoice-paper { box-shadow: none !important; margin: 0 auto !important; }
+                .invoice-paper { box-shadow: none !important; margin: 0 auto !important; display: block !important; overflow: visible !important; }
+                .preview-header,
+                .preview-details,
+                .preview-table thead,
+                .preview-table tbody,
+                .preview-table tr,
+                .preview-table th,
+                .preview-table td,
+                .preview-math,
+                .preview-math-row,
+                .preview-notes-block,
+                .invoice-attachment-container,
+                .invoice-photo-preview,
+                .invoice-photo-preview-item,
+                .invoice-signature-preview-box,
+                .preview-address-block {
+                    break-inside: avoid !important;
+                    page-break-inside: avoid !important;
+                    -webkit-column-break-inside: avoid !important;
+                }
+                .invoice-attachment-container {
+                    display: block !important;
+                    break-inside: avoid !important;
+                    page-break-inside: avoid !important;
+                    -webkit-column-break-inside: avoid !important;
+                }
+                .invoice-photo-preview img {
+                    max-height: none !important;
+                    height: auto !important;
+                    object-fit: contain !important;
+                }
                 .invoice-photo-remove-btn, [data-html2canvas-ignore] { display: none !important; }
                 @media print {
                     body { padding: 0 !important; }
-                    .invoice-paper { border: 0 !important; box-shadow: none !important; }
+                    .invoice-paper { border: 0 !important; box-shadow: none !important; display: block !important; overflow: visible !important; }
+                    .preview-table thead { display: table-header-group !important; }
                 }
             </style>
         </head>
@@ -3791,6 +3885,8 @@ async function saveInvoiceAsPdf() {
         if (!clone) throw new Error("Invoice preview is not available.");
         stage = createPdfExportStage(clone);
         await waitForInvoiceImages(stage);
+        insertPdfPageBreaks(clone);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
         const blob = await window.html2pdf()
             .set(getPdfExportOptions(fileName))
             .from(clone)

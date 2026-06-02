@@ -2672,6 +2672,12 @@ textarea:focus {
     border-radius: 6px;
 }
 
+.invoice-attachment-container {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+}
+
 .invoice-photo-preview img {
     width: 100%;
     max-height: 120px;
@@ -2724,6 +2730,7 @@ textarea:focus {
     box-shadow: none !important;
     border: 0 !important;
     overflow: visible !important;
+    display: block !important;
 }
 
 .pdf-export-stage .invoice-photo-remove-btn,
@@ -2731,13 +2738,53 @@ textarea:focus {
     display: none !important;
 }
 
+.pdf-export-stage .invoice-paper > * {
+    margin-bottom: 20px;
+}
+
+.pdf-export-stage .invoice-attachment-container,
+.pdf-export-stage .invoice-photo-preview,
+.pdf-export-stage .invoice-photo-preview-item {
+    display: block !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+}
+
+.pdf-export-stage .invoice-photo-preview-item {
+    margin-bottom: 10px;
+    overflow: visible !important;
+}
+
+.pdf-export-stage .invoice-photo-preview img {
+    max-height: none !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
+.pdf-page-break-before {
+    break-before: page !important;
+    page-break-before: always !important;
+}
+
+.preview-header,
+.preview-details,
+.preview-table thead,
+.preview-table tbody,
 .preview-table tr,
+.preview-table th,
+.preview-table td,
+.preview-math,
 .preview-math-row,
+.preview-notes-block,
+.invoice-attachment-container,
+.invoice-photo-preview,
 .invoice-photo-preview-item,
 .invoice-signature-preview-box,
 .preview-address-block {
     break-inside: avoid;
     page-break-inside: avoid;
+    -webkit-column-break-inside: avoid;
 }
 
 .invoice-paper[dir="rtl"] {
@@ -2859,16 +2906,62 @@ textarea:focus {
         min-height: auto !important;
         background-color: #ffffff !important;
         overflow: visible !important;
+        display: block !important;
         break-inside: auto !important;
         page-break-inside: auto !important;
+        orphans: 3;
+        widows: 3;
     }
+    .invoice-paper > * {
+        margin-bottom: 16px !important;
+    }
+    .preview-header,
+    .preview-details,
+    .preview-table,
+    .preview-table thead,
+    .preview-table tbody,
     .preview-table tr,
+    .preview-table th,
+    .preview-table td,
+    .preview-math,
     .preview-math-row,
+    .preview-notes-block,
+    .invoice-attachment-container,
+    .invoice-photo-preview,
     .invoice-photo-preview-item,
     .invoice-signature-preview-box,
     .preview-address-block {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
+        -webkit-column-break-inside: avoid !important;
+    }
+    .invoice-attachment-container,
+    .invoice-photo-preview,
+    .invoice-photo-preview-item {
+        display: block !important;
+        overflow: visible !important;
+    }
+    .invoice-photo-preview img {
+        max-height: none !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+    .pdf-page-break-before {
+        break-before: page !important;
+        page-break-before: always !important;
+    }
+    .preview-table {
+        border-collapse: collapse !important;
+        page-break-after: auto !important;
+    }
+    .preview-table thead {
+        display: table-header-group !important;
+    }
+    .preview-table tfoot {
+        display: table-footer-group !important;
+    }
+    .preview-table tr {
+        page-break-after: auto !important;
     }
     .invoice-paper.print-layout-thermal-80 {
         width: 80mm !important;
