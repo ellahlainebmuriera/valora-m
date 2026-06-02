@@ -1,4 +1,4 @@
-const CACHE_NAME = "valora-em-v30";
+const CACHE_NAME = "valora-em-v31";
 const APP_ASSETS = [
   "/",
   "/app",
@@ -28,6 +28,12 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -39,6 +45,28 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+  const mustStayFresh = (
+    url.origin === self.location.origin &&
+    (
+      url.pathname === "/" ||
+      url.pathname === "/app" ||
+      url.pathname.endsWith(".html") ||
+      url.pathname.endsWith(".js") ||
+      url.pathname.endsWith(".css") ||
+      url.pathname.endsWith("service-worker.js")
+    )
+  );
+
+  if (mustStayFresh) {
+    event.respondWith(
+      fetch(event.request, { cache: "no-store" })
+        .then((response) => response)
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html")))
+    );
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)

@@ -15,7 +15,7 @@
     <meta name="twitter:image" content="/icons/valora-em-logo-512.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=thumb-flow-v30">
+    <link rel="stylesheet" href="styles.css?v=thumb-flow-v31">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1979,13 +1979,40 @@
         }
     </style>
 
-    <script src="app.js?v=thumb-flow-v30"></script>
+    <script src="app.js?v=thumb-flow-v31"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>
         if ("serviceWorker" in navigator) {
+            let refreshingForServiceWorker = false;
+            navigator.serviceWorker.addEventListener("controllerchange", () => {
+                if (refreshingForServiceWorker || sessionStorage.getItem("valora-sw-refreshed-v31")) return;
+                refreshingForServiceWorker = true;
+                sessionStorage.setItem("valora-sw-refreshed-v31", "1");
+                window.location.reload();
+            });
+
             window.addEventListener("load", () => {
-                navigator.serviceWorker.register("service-worker.js", { scope: "/" }).catch(() => {});
+                navigator.serviceWorker.register("service-worker.js", {
+                    scope: "/",
+                    updateViaCache: "none"
+                }).then((registration) => {
+                    registration.update().catch(() => {});
+
+                    if (registration.waiting) {
+                        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+                    }
+
+                    registration.addEventListener("updatefound", () => {
+                        const worker = registration.installing;
+                        if (!worker) return;
+                        worker.addEventListener("statechange", () => {
+                            if (worker.state === "installed" && navigator.serviceWorker.controller) {
+                                worker.postMessage({ type: "SKIP_WAITING" });
+                            }
+                        });
+                    });
+                }).catch(() => {});
             });
         }
     </script>
