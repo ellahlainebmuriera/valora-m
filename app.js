@@ -3554,7 +3554,7 @@ function renderDocumentPhotos() {
     container.style.display = "grid";
     container.innerHTML = currentDocumentPhotos
         .map((src, index) => `
-            <div class="invoice-photo-preview-item invoice-attachment-container">
+            <div class="invoice-photo-preview-item invoice-attachment-wrapper">
                 <img src="${src}" alt="Attached document photo">
                 <button class="invoice-photo-remove-btn" type="button" onclick="removeDocumentPhoto(${index})" aria-label="Remove attached photo">&times;</button>
             </div>
@@ -3652,10 +3652,10 @@ function buildCleanInvoiceExportElement() {
     const printedName = document.getElementById("printed-name")?.value.trim() || "";
     const requestClientSignature = document.getElementById("request-client-signature-checkbox")?.checked;
     const photosHtml = currentDocumentPhotos.length
-        ? `<div class="invoice-render-attachments" style="display: block; width: 100%; margin-top: 16px; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+        ? `<div class="invoice-render-attachments invoice-attachment-wrapper" style="display: block; width: 100%; margin-top: 16px; text-align: left; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
             ${currentDocumentPhotos.map((src) => `
-                <div class="invoice-render-attachment" style="display: block; width: 100%; margin-bottom: 10px; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
-                    <img src="${escapeHtml(src)}" alt="Attached document photo" style="display: block; width: 100%; height: auto; max-height: none; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 6px; position: static !important;">
+                <div class="invoice-render-attachment invoice-attachment-wrapper" style="display: block; width: 180px; margin: 0 0 10px 0; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+                    <img src="${escapeHtml(src)}" alt="Attached document photo" style="display: block; width: 180px !important; height: 100px !important; max-width: 180px !important; max-height: 100px !important; object-fit: cover !important; border: 1px solid #e2e8f0; border-radius: 6px; position: static !important;">
                 </div>
             `).join("")}
         </div>`
@@ -3691,8 +3691,8 @@ function buildCleanInvoiceExportElement() {
     exportElement.style.backgroundColor = "#ffffff";
     exportElement.style.color = currentProfile.invoice_text_color || "#1e293b";
     exportElement.innerHTML = `
-        <div class="invoice-render-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; width: 100%; margin-bottom: 30px; position: static !important; float: none !important; clear: both;">
-            <div class="invoice-render-vendor" style="position: static !important; float: none !important; min-width: 0; flex: 1;">
+        <div class="invoice-render-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; width: 100%; margin-bottom: 30px; position: static !important;">
+            <div class="invoice-render-vendor" style="position: static !important; min-width: 0; flex: 1;">
                 <div class="invoice-render-logo" style="width: 60px; height: 60px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #64748b; position: static !important;">${logoHtml}</div>
                 <h3 style="margin: 12px 0 4px; font-weight: 700; font-size: 18px;">${escapeHtml(currentProfile.company_name || "My Business")}</h3>
                 <p style="font-size: 12px; color: #64748b; line-height: 1.4; margin: 0 0 18px;">${storeDetails || "Add address & contact details in Settings"}</p>
@@ -3704,7 +3704,7 @@ function buildCleanInvoiceExportElement() {
                     ${escapeHtml(client?.address || "")}
                 </p>
             </div>
-            <div class="invoice-render-meta" style="text-align: right; position: static !important; float: none !important; min-width: 160px;">
+            <div class="invoice-render-meta" style="text-align: right; position: static !important; min-width: 160px;">
                 <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 800; color: ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")};">${escapeHtml(documentType.toUpperCase())}</h1>
                 <p style="font-size: 13px; font-weight: 700; margin: 0 0 8px;">${escapeHtml(invoiceNumber)}</p>
                 <p style="font-size: 12px; color: #64748b; margin: 3px 0;">${escapeHtml(getReceiptText("date"))}: ${escapeHtml(issueDate)}</p>
@@ -3712,8 +3712,8 @@ function buildCleanInvoiceExportElement() {
             </div>
         </div>
 
-        <div class="invoice-render-table-block" style="display: block; width: 100%; clear: both; position: static !important; float: none !important; page-break-inside: auto !important; break-inside: auto !important;">
-            <table class="invoice-render-table" style="width: 100%; border-collapse: collapse; position: static !important; float: none !important; page-break-inside: auto !important; break-inside: auto !important;">
+        <div class="invoice-render-table-block" style="display: block; width: 100%; clear: both; position: static !important; page-break-inside: auto !important; break-inside: auto !important;">
+            <table class="invoice-render-table" style="width: 100%; border-collapse: collapse; position: static !important; page-break-inside: auto !important; break-inside: auto !important;">
                 <thead>
                     <tr>
                         <th style="width: 50%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("description"))}</th>
@@ -3726,7 +3726,7 @@ function buildCleanInvoiceExportElement() {
             </table>
         </div>
 
-        <div class="invoice-render-footer" style="display: block; width: 100%; margin-top: 20px; position: static !important; float: none !important; clear: both; page-break-inside: avoid !important; break-inside: avoid !important;">
+        <div class="invoice-render-footer" style="display: block; width: 100%; margin-top: 20px; position: static !important; clear: both; page-break-inside: avoid !important; break-inside: avoid !important;">
             <div class="invoice-render-totals" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; border-top: 2px solid #e2e8f0; padding-top: 15px; position: static !important;">
                 <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("subtotal"))}</span><span>${formatCurrency(subtotal)}</span></div>
                 <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("tax"))} (${taxRate}%)</span><span>${formatCurrency(taxAmount)}</span></div>
@@ -3990,9 +3990,11 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                     -webkit-column-break-inside: auto !important;
                 }
                 .invoice-render-attachment img {
-                    max-height: none !important;
-                    height: auto !important;
-                    object-fit: contain !important;
+                    width: 180px !important;
+                    height: 100px !important;
+                    max-width: 180px !important;
+                    max-height: 100px !important;
+                    object-fit: cover !important;
                 }
                 .invoice-photo-remove-btn, [data-html2canvas-ignore] { display: none !important; }
                 @media print {

@@ -2698,7 +2698,8 @@ textarea:focus {
 }
 
 .invoice-photo-preview {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, 180px);
+    justify-content: flex-start;
     gap: 8px;
     border-top: 1px solid #f1f5f9;
     padding-top: 12px;
@@ -2708,18 +2709,26 @@ textarea:focus {
     position: relative;
     overflow: hidden;
     border-radius: 6px;
+    width: 180px;
+    height: 100px;
 }
 
+.invoice-attachment-wrapper,
 .invoice-attachment-container {
+    display: block;
+    margin-top: 15px;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     -webkit-column-break-inside: avoid !important;
 }
 
+.invoice-attachment-wrapper img,
 .invoice-photo-preview img {
-    width: 100%;
-    max-height: 120px;
-    object-fit: cover;
+    width: 180px !important;
+    height: 100px !important;
+    max-width: 180px !important;
+    max-height: 100px !important;
+    object-fit: cover !important;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     display: block;
@@ -2833,9 +2842,11 @@ textarea:focus {
 }
 
 #invoice-render-root .invoice-render-attachment img {
-    max-height: none !important;
-    height: auto !important;
-    object-fit: contain !important;
+    width: 180px !important;
+    height: 100px !important;
+    max-width: 180px !important;
+    max-height: 100px !important;
+    object-fit: cover !important;
 }
 
 .pdf-export-stage .invoice-photo-remove-btn,
@@ -2862,9 +2873,11 @@ textarea:focus {
 }
 
 .pdf-export-stage .invoice-photo-preview img {
-    max-height: none !important;
-    height: auto !important;
-    object-fit: contain !important;
+    width: 180px !important;
+    height: 100px !important;
+    max-width: 180px !important;
+    max-height: 100px !important;
+    object-fit: cover !important;
 }
 
 .pdf-page-break-before {
@@ -3067,9 +3080,11 @@ textarea:focus {
         overflow: visible !important;
     }
     .invoice-photo-preview img {
-        max-height: none !important;
-        height: auto !important;
-        object-fit: contain !important;
+        width: 180px !important;
+        height: 100px !important;
+        max-width: 180px !important;
+        max-height: 100px !important;
+        object-fit: cover !important;
     }
     .pdf-page-break-before {
         break-before: page !important;
