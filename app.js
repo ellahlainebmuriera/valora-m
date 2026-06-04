@@ -3622,20 +3622,20 @@ function buildCleanInvoiceExportElement() {
         const rowTotal = quantity * unitPrice;
         subtotal += rowTotal;
         return `
-            <tr class="invoice-render-row" style="position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
-                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; position: static !important;"><strong>${escapeHtml(item.description || "Description")}</strong></td>
-                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: center; position: static !important;">${escapeHtml(quantity)}</td>
-                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: right; position: static !important;">${formatCurrency(unitPrice)}</td>
-                <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: right; font-weight: 600; position: static !important;">${formatCurrency(rowTotal)}</td>
-            </tr>
+            <div class="invoice-render-line-row" style="display: grid; grid-template-columns: minmax(0, 1fr) 52px 92px 92px; align-items: start; width: 100%; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important; border-bottom: 1px solid #f1f5f9;">
+                <div style="padding: 12px; font-size: 13px; position: static !important; overflow: visible !important; overflow-wrap: anywhere;"><strong>${escapeHtml(item.description || "Description")}</strong></div>
+                <div style="padding: 12px 8px; font-size: 13px; text-align: center; position: static !important; overflow: visible !important;">${escapeHtml(quantity)}</div>
+                <div style="padding: 12px 8px; font-size: 13px; text-align: right; position: static !important; overflow: visible !important; white-space: nowrap;">${formatCurrency(unitPrice)}</div>
+                <div style="padding: 12px 8px; font-size: 13px; text-align: right; font-weight: 600; position: static !important; overflow: visible !important; white-space: nowrap;">${formatCurrency(rowTotal)}</div>
+            </div>
         `;
     }).join("") || `
-        <tr class="invoice-render-row" style="position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
-            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; position: static !important;"><strong>${escapeHtml(getReceiptText("description"))}</strong></td>
-            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: center; position: static !important;">0</td>
-            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: right; position: static !important;">${formatCurrency(0)}</td>
-            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; text-align: right; font-weight: 600; position: static !important;">${formatCurrency(0)}</td>
-        </tr>
+        <div class="invoice-render-line-row" style="display: grid; grid-template-columns: minmax(0, 1fr) 52px 92px 92px; align-items: start; width: 100%; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important; border-bottom: 1px solid #f1f5f9;">
+            <div style="padding: 12px; font-size: 13px; position: static !important; overflow: visible !important;"><strong>${escapeHtml(getReceiptText("description"))}</strong></div>
+            <div style="padding: 12px 8px; font-size: 13px; text-align: center; position: static !important; overflow: visible !important;">0</div>
+            <div style="padding: 12px 8px; font-size: 13px; text-align: right; position: static !important; overflow: visible !important; white-space: nowrap;">${formatCurrency(0)}</div>
+            <div style="padding: 12px 8px; font-size: 13px; text-align: right; font-weight: 600; position: static !important; overflow: visible !important; white-space: nowrap;">${formatCurrency(0)}</div>
+        </div>
     `;
 
     const taxAmount = subtotal * (taxRate / 100);
@@ -3712,18 +3712,14 @@ function buildCleanInvoiceExportElement() {
             </div>
         </div>
 
-        <div class="invoice-render-table-block" style="display: block; width: 100%; clear: both; position: static !important; page-break-inside: auto !important; break-inside: auto !important;">
-            <table class="invoice-render-table" style="width: 100%; border-collapse: collapse; position: static !important; page-break-inside: auto !important; break-inside: auto !important;">
-                <thead>
-                    <tr>
-                        <th style="width: 50%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("description"))}</th>
-                        <th style="width: 15%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: center; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("qty"))}</th>
-                        <th style="width: 20%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: right; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("unitPrice"))}</th>
-                        <th style="width: 15%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; padding: 10px 12px; text-align: right; font-size: 12px; font-weight: 700; color: #475569;">${escapeHtml(getReceiptText("total"))}</th>
-                    </tr>
-                </thead>
-                <tbody>${itemRows}</tbody>
-            </table>
+        <div class="invoice-render-lines-block" style="display: block; width: 100%; clear: both; position: static !important; page-break-inside: auto !important; break-inside: auto !important; overflow: visible !important;">
+            <div class="invoice-render-lines-header" style="display: grid; grid-template-columns: minmax(0, 1fr) 52px 92px 92px; align-items: start; width: 100%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+                <div style="padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700; color: #475569; overflow: visible !important;">${escapeHtml(getReceiptText("description"))}</div>
+                <div style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #475569; overflow: visible !important;">${escapeHtml(getReceiptText("qty"))}</div>
+                <div style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #475569; overflow: visible !important; white-space: nowrap;">${escapeHtml(getReceiptText("unitPrice"))}</div>
+                <div style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #475569; overflow: visible !important; white-space: nowrap;">${escapeHtml(getReceiptText("total"))}</div>
+            </div>
+            <div class="invoice-render-lines-body" style="display: block; width: 100%; position: static !important; page-break-inside: auto !important; break-inside: auto !important; overflow: visible !important;">${itemRows}</div>
         </div>
 
         <div class="invoice-render-footer" style="display: block; width: 100%; margin-top: 20px; position: static !important; clear: both; page-break-inside: auto !important; break-inside: auto !important;">
@@ -3802,38 +3798,33 @@ function normalizeInvoiceExportElement(root) {
         meta.style.overflow = "visible";
     }
 
-    const tableBlock = root.querySelector(".invoice-render-table-block");
-    const table = root.querySelector(".invoice-render-table");
-    if (tableBlock) {
-        tableBlock.style.display = "block";
-        tableBlock.style.width = "100%";
-        tableBlock.style.clear = "both";
-        tableBlock.style.pageBreakInside = "auto";
-        tableBlock.style.breakInside = "auto";
-        tableBlock.style.overflow = "visible";
+    const linesBlock = root.querySelector(".invoice-render-lines-block");
+    if (linesBlock) {
+        linesBlock.style.display = "block";
+        linesBlock.style.width = "100%";
+        linesBlock.style.clear = "both";
+        linesBlock.style.pageBreakInside = "auto";
+        linesBlock.style.breakInside = "auto";
+        linesBlock.style.overflow = "visible";
     }
-    if (table) {
-        table.style.display = "table";
-        table.style.width = "100%";
-        table.style.borderCollapse = "collapse";
-        table.style.tableLayout = "fixed";
-        table.style.pageBreakInside = "auto";
-        table.style.breakInside = "auto";
-        table.querySelectorAll("thead").forEach((thead) => {
-            thead.style.display = "table-header-group";
-        });
-        table.querySelectorAll("tbody").forEach((tbody) => {
-            tbody.style.display = "table-row-group";
-        });
-        table.querySelectorAll("tr").forEach((row) => {
-            row.style.display = "table-row";
-            row.style.pageBreakInside = "avoid";
-            row.style.breakInside = "avoid";
-        });
-        table.querySelectorAll("th, td").forEach((cell) => {
-            cell.style.display = "table-cell";
-            cell.style.overflow = "visible";
-        });
+
+    root.querySelectorAll(".invoice-render-lines-header, .invoice-render-line-row").forEach((row) => {
+        row.style.display = "grid";
+        row.style.gridTemplateColumns = "minmax(0, 1fr) 52px 92px 92px";
+        row.style.alignItems = "start";
+        row.style.width = "100%";
+        row.style.pageBreakInside = "avoid";
+        row.style.breakInside = "avoid";
+        row.style.overflow = "visible";
+    });
+
+    const linesBody = root.querySelector(".invoice-render-lines-body");
+    if (linesBody) {
+        linesBody.style.display = "block";
+        linesBody.style.width = "100%";
+        linesBody.style.pageBreakInside = "auto";
+        linesBody.style.breakInside = "auto";
+        linesBody.style.overflow = "visible";
     }
 
     const footer = root.querySelector(".invoice-render-footer");
@@ -3846,8 +3837,8 @@ function normalizeInvoiceExportElement(root) {
         footer.style.pageBreakInside = "auto";
         footer.style.breakInside = "auto";
         footer.style.overflow = "visible";
-        if (tableBlock && footer.previousElementSibling !== tableBlock) {
-            tableBlock.insertAdjacentElement("afterend", footer);
+        if (linesBlock && footer.previousElementSibling !== linesBlock) {
+            linesBlock.insertAdjacentElement("afterend", footer);
         }
         if (attachments && attachments.parentElement !== footer) {
             footer.appendChild(attachments);
@@ -3933,8 +3924,8 @@ function getPdfExportOptions(fileName) {
             before: [".pdf-page-break-before"],
             avoid: [
                 ".invoice-render-header",
-                ".invoice-render-table thead",
-                ".invoice-render-row",
+                ".invoice-render-lines-header",
+                ".invoice-render-line-row",
                 ".invoice-render-totals",
                 ".invoice-render-notes",
                 ".invoice-render-attachments",
@@ -4051,8 +4042,8 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                     clear: both !important;
                 }
                 .invoice-render-header,
-                .invoice-render-table thead,
-                .invoice-render-row,
+                .invoice-render-lines-header,
+                .invoice-render-line-row,
                 .invoice-render-totals,
                 .invoice-render-notes,
                 .invoice-render-attachments,
@@ -4062,15 +4053,20 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                     page-break-inside: avoid !important;
                     -webkit-column-break-inside: avoid !important;
                 }
-                .invoice-render-table-block,
-                .invoice-render-table,
-                .invoice-render-table tbody,
-                .invoice-render-table th,
-                .invoice-render-table td,
+                .invoice-render-lines-block,
+                .invoice-render-lines-body,
                 .invoice-render-footer {
                     break-inside: auto !important;
                     page-break-inside: auto !important;
                     -webkit-column-break-inside: auto !important;
+                }
+                .invoice-render-lines-header,
+                .invoice-render-line-row {
+                    display: grid !important;
+                    grid-template-columns: minmax(0, 1fr) 52px 92px 92px !important;
+                    align-items: start !important;
+                    width: 100% !important;
+                    overflow: visible !important;
                 }
                 .invoice-render-attachment img {
                     width: 180px !important;
@@ -4083,7 +4079,6 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                 @media print {
                     body { padding: 0 !important; }
                     #invoice-render-root { border: 0 !important; box-shadow: none !important; display: block !important; overflow: visible !important; }
-                    .invoice-render-table thead { display: table-header-group !important; }
                 }
             </style>
         </head>
