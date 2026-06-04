@@ -3677,6 +3677,7 @@ function buildCleanInvoiceExportElement() {
     const exportElement = document.createElement("div");
     exportElement.id = "invoice-render-root";
     exportElement.className = `invoice-render-root invoice-export-document print-layout-${layout}`;
+    exportElement.dataset.exportFlow = "pdf-grid-v35";
     exportElement.setAttribute("dir", meta.dir);
     exportElement.style.fontFamily = meta.font;
     exportElement.style.width = thermal58 ? "58mm" : thermal80 ? "80mm" : "100%";
@@ -3689,6 +3690,7 @@ function buildCleanInvoiceExportElement() {
     exportElement.style.overflow = "visible";
     exportElement.style.margin = "0 auto";
     exportElement.style.backgroundColor = "#ffffff";
+    exportElement.style.backgroundImage = "none";
     exportElement.style.color = currentProfile.invoice_text_color || "#1e293b";
     exportElement.innerHTML = `
         <div class="invoice-render-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; width: 100%; margin-bottom: 30px; position: static !important;">
@@ -3751,6 +3753,7 @@ function normalizeInvoiceExportElement(root) {
     root.style.overflow = "visible";
     root.style.transform = "none";
     root.style.boxSizing = "border-box";
+    root.style.backgroundImage = "none";
 
     root.querySelectorAll("*").forEach((element) => {
         element.style.position = "static";
@@ -3766,6 +3769,7 @@ function normalizeInvoiceExportElement(root) {
         element.style.overflow = "visible";
         element.style.boxSizing = "border-box";
         element.style.maxWidth = "100%";
+        element.style.backgroundImage = "none";
     });
 
     const header = root.querySelector(".invoice-render-header");

@@ -2791,6 +2791,7 @@ textarea:focus {
 #invoice-render-root * {
     position: static !important;
     float: none !important;
+    background-image: none !important;
 }
 
 #invoice-render-root {
@@ -2798,6 +2799,7 @@ textarea:focus {
     clear: both !important;
     overflow: visible !important;
     box-shadow: none !important;
+    background-image: none !important;
 }
 
 #invoice-render-root .invoice-render-header {
