@@ -3622,7 +3622,7 @@ function buildCleanInvoiceExportElement() {
         const rowTotal = quantity * unitPrice;
         subtotal += rowTotal;
         return `
-            <div class="invoice-render-line-row" style="display: grid; grid-template-columns: minmax(0, 1fr) 52px 92px 92px; align-items: start; width: 100%; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important; border-bottom: 1px solid #f1f5f9;">
+            <div class="invoice-render-line-row" style="display: grid; grid-template-columns: minmax(0, 1fr) 46px 82px 86px; align-items: start; width: 100%; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important; border-bottom: 1px solid #f1f5f9;">
                 <div style="padding: 12px; font-size: 13px; position: static !important; overflow: visible !important; overflow-wrap: anywhere;"><strong>${escapeHtml(item.description || "Description")}</strong></div>
                 <div style="padding: 12px 8px; font-size: 13px; text-align: center; position: static !important; overflow: visible !important;">${escapeHtml(quantity)}</div>
                 <div style="padding: 12px 8px; font-size: 13px; text-align: right; position: static !important; overflow: visible !important; white-space: nowrap;">${formatCurrency(unitPrice)}</div>
@@ -3630,7 +3630,7 @@ function buildCleanInvoiceExportElement() {
             </div>
         `;
     }).join("") || `
-        <div class="invoice-render-line-row" style="display: grid; grid-template-columns: minmax(0, 1fr) 52px 92px 92px; align-items: start; width: 100%; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important; border-bottom: 1px solid #f1f5f9;">
+        <div class="invoice-render-line-row" style="display: grid; grid-template-columns: minmax(0, 1fr) 46px 82px 86px; align-items: start; width: 100%; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important; border-bottom: 1px solid #f1f5f9;">
             <div style="padding: 12px; font-size: 13px; position: static !important; overflow: visible !important;"><strong>${escapeHtml(getReceiptText("description"))}</strong></div>
             <div style="padding: 12px 8px; font-size: 13px; text-align: center; position: static !important; overflow: visible !important;">0</div>
             <div style="padding: 12px 8px; font-size: 13px; text-align: right; position: static !important; overflow: visible !important; white-space: nowrap;">${formatCurrency(0)}</div>
@@ -3677,11 +3677,11 @@ function buildCleanInvoiceExportElement() {
     const exportElement = document.createElement("div");
     exportElement.id = "invoice-render-root";
     exportElement.className = `invoice-render-root invoice-export-document print-layout-${layout}`;
-    exportElement.dataset.exportFlow = "pdf-grid-v35";
+    exportElement.dataset.exportFlow = "pdf-grid-v36";
     exportElement.setAttribute("dir", meta.dir);
     exportElement.style.fontFamily = meta.font;
-    exportElement.style.width = thermal58 ? "58mm" : thermal80 ? "80mm" : "100%";
-    exportElement.style.maxWidth = thermal58 ? "58mm" : thermal80 ? "80mm" : "190mm";
+    exportElement.style.width = thermal58 ? "58mm" : thermal80 ? "80mm" : "180mm";
+    exportElement.style.maxWidth = thermal58 ? "58mm" : thermal80 ? "80mm" : "180mm";
     exportElement.style.boxSizing = "border-box";
     exportElement.style.display = "block";
     exportElement.style.position = "static";
@@ -3693,7 +3693,7 @@ function buildCleanInvoiceExportElement() {
     exportElement.style.backgroundImage = "none";
     exportElement.style.color = currentProfile.invoice_text_color || "#1e293b";
     exportElement.innerHTML = `
-        <div class="invoice-render-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; width: 100%; margin-bottom: 30px; position: static !important;">
+        <div class="invoice-render-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; width: 100%; margin-bottom: 30px; position: static !important;">
             <div class="invoice-render-vendor" style="position: static !important; min-width: 0; flex: 1;">
                 <div class="invoice-render-logo" style="width: 60px; height: 60px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #64748b; position: static !important;">${logoHtml}</div>
                 <h3 style="margin: 12px 0 4px; font-weight: 700; font-size: 18px;">${escapeHtml(currentProfile.company_name || "My Business")}</h3>
@@ -3706,8 +3706,8 @@ function buildCleanInvoiceExportElement() {
                     ${escapeHtml(client?.address || "")}
                 </p>
             </div>
-            <div class="invoice-render-meta" style="text-align: right; position: static !important; width: 220px; min-width: 220px; flex: 0 0 220px; overflow: visible !important; white-space: nowrap;">
-                <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 800; color: ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")};">${escapeHtml(documentType.toUpperCase())}</h1>
+            <div class="invoice-render-meta" style="text-align: right; position: static !important; width: 175px; min-width: 175px; flex: 0 0 175px; overflow: visible !important; white-space: nowrap;">
+                <h1 style="margin: 0 0 8px; font-size: 22px; font-weight: 800; color: ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")};">${escapeHtml(documentType.toUpperCase())}</h1>
                 <p style="font-size: 13px; font-weight: 700; margin: 0 0 8px;">${escapeHtml(invoiceNumber)}</p>
                 <p style="font-size: 12px; color: #64748b; margin: 3px 0;">${escapeHtml(getReceiptText("date"))}: ${escapeHtml(issueDate)}</p>
                 <p style="font-size: 12px; color: #64748b; margin: 3px 0;">${escapeHtml(getReceiptText("dueDate"))}: ${escapeHtml(dueDate)}</p>
@@ -3715,7 +3715,7 @@ function buildCleanInvoiceExportElement() {
         </div>
 
         <div class="invoice-render-lines-block" style="display: block; width: 100%; clear: both; position: static !important; page-break-inside: auto !important; break-inside: auto !important; overflow: visible !important;">
-            <div class="invoice-render-lines-header" style="display: grid; grid-template-columns: minmax(0, 1fr) 52px 92px 92px; align-items: start; width: 100%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
+            <div class="invoice-render-lines-header" style="display: grid; grid-template-columns: minmax(0, 1fr) 46px 82px 86px; align-items: start; width: 100%; background: #f8fafc; border-bottom: 2px solid ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")}; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
                 <div style="padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700; color: #475569; overflow: visible !important;">${escapeHtml(getReceiptText("description"))}</div>
                 <div style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 700; color: #475569; overflow: visible !important;">${escapeHtml(getReceiptText("qty"))}</div>
                 <div style="padding: 10px 8px; text-align: right; font-size: 12px; font-weight: 700; color: #475569; overflow: visible !important; white-space: nowrap;">${escapeHtml(getReceiptText("unitPrice"))}</div>
@@ -3726,11 +3726,11 @@ function buildCleanInvoiceExportElement() {
 
         <div class="invoice-render-footer" style="display: block; width: 100%; margin-top: 20px; position: static !important; clear: both; page-break-inside: auto !important; break-inside: auto !important;">
             <div class="invoice-render-totals" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; border-top: 2px solid #e2e8f0; padding-top: 15px; position: static !important;">
-                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("subtotal"))}</span><span>${formatCurrency(subtotal)}</span></div>
-                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("tax"))} (${taxRate}%)</span><span>${formatCurrency(taxAmount)}</span></div>
-                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("discount"))}</span><span>${formatCurrency(discount)}</span></div>
-                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("shipping"))}</span><span>${formatCurrency(shipping)}</span></div>
-                <div style="display: flex; width: 220px; justify-content: space-between; font-size: 16px; font-weight: 700; border-top: 1px solid #e2e8f0; padding-top: 6px; color: #0f172a;"><span>${escapeHtml(getReceiptText("grandTotal"))}</span><span>${formatCurrency(grandTotal)}</span></div>
+                <div style="display: flex; width: 200px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("subtotal"))}</span><span>${formatCurrency(subtotal)}</span></div>
+                <div style="display: flex; width: 200px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("tax"))} (${taxRate}%)</span><span>${formatCurrency(taxAmount)}</span></div>
+                <div style="display: flex; width: 200px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("discount"))}</span><span>${formatCurrency(discount)}</span></div>
+                <div style="display: flex; width: 200px; justify-content: space-between; font-size: 13px;"><span>${escapeHtml(getReceiptText("shipping"))}</span><span>${formatCurrency(shipping)}</span></div>
+                <div style="display: flex; width: 200px; justify-content: space-between; font-size: 16px; font-weight: 700; border-top: 1px solid #e2e8f0; padding-top: 6px; color: #0f172a;"><span>${escapeHtml(getReceiptText("grandTotal"))}</span><span>${formatCurrency(grandTotal)}</span></div>
             </div>
             <div class="invoice-render-notes" style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 12px; font-size: 11px; color: #64748b; line-height: 1.4; position: static !important; page-break-inside: avoid !important; break-inside: avoid !important;">
                 <strong>${escapeHtml(getReceiptText("notes"))}</strong>
@@ -3777,7 +3777,7 @@ function normalizeInvoiceExportElement(root) {
         header.style.display = "flex";
         header.style.justifyContent = "space-between";
         header.style.alignItems = "flex-start";
-        header.style.gap = "24px";
+        header.style.gap = "18px";
         header.style.width = "100%";
         header.style.marginBottom = "30px";
         header.style.pageBreakInside = "avoid";
@@ -3794,10 +3794,10 @@ function normalizeInvoiceExportElement(root) {
     const meta = root.querySelector(".invoice-render-meta");
     if (meta) {
         meta.style.textAlign = "right";
-        meta.style.width = "220px";
-        meta.style.minWidth = "220px";
-        meta.style.maxWidth = "220px";
-        meta.style.flex = "0 0 220px";
+        meta.style.width = "175px";
+        meta.style.minWidth = "175px";
+        meta.style.maxWidth = "175px";
+        meta.style.flex = "0 0 175px";
         meta.style.whiteSpace = "nowrap";
         meta.style.overflow = "visible";
     }
@@ -3814,7 +3814,7 @@ function normalizeInvoiceExportElement(root) {
 
     root.querySelectorAll(".invoice-render-lines-header, .invoice-render-line-row").forEach((row) => {
         row.style.display = "grid";
-        row.style.gridTemplateColumns = "minmax(0, 1fr) 52px 92px 92px";
+        row.style.gridTemplateColumns = "minmax(0, 1fr) 46px 82px 86px";
         row.style.alignItems = "start";
         row.style.width = "100%";
         row.style.pageBreakInside = "avoid";
@@ -3906,7 +3906,7 @@ function getPdfExportOptions(fileName) {
 
     return {
         filename: fileName,
-        margin: thermal58 || thermal80 ? [3, 3, 3, 3] : [10, 10, 10, 10],
+        margin: thermal58 || thermal80 ? [3, 3, 3, 3] : [10, 10, 10, 12],
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
             scale,
@@ -4067,7 +4067,7 @@ function openPrintableInvoiceWindow(reservedWindow = null) {
                 .invoice-render-lines-header,
                 .invoice-render-line-row {
                     display: grid !important;
-                    grid-template-columns: minmax(0, 1fr) 52px 92px 92px !important;
+                    grid-template-columns: minmax(0, 1fr) 46px 82px 86px !important;
                     align-items: start !important;
                     width: 100% !important;
                     overflow: visible !important;

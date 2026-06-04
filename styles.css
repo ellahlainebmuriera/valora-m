@@ -2806,16 +2806,16 @@ textarea:focus {
     display: flex !important;
     justify-content: space-between !important;
     align-items: flex-start !important;
-    gap: 24px !important;
+    gap: 18px !important;
     width: 100% !important;
     margin-bottom: 30px !important;
 }
 
 #invoice-render-root .invoice-render-meta {
-    width: 220px !important;
-    min-width: 220px !important;
-    max-width: 220px !important;
-    flex: 0 0 220px !important;
+    width: 175px !important;
+    min-width: 175px !important;
+    max-width: 175px !important;
+    flex: 0 0 175px !important;
     text-align: right !important;
     white-space: nowrap !important;
     overflow: visible !important;
@@ -2850,7 +2850,7 @@ textarea:focus {
 #invoice-render-root .invoice-render-lines-header,
 #invoice-render-root .invoice-render-line-row {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 52px 92px 92px !important;
+    grid-template-columns: minmax(0, 1fr) 46px 82px 86px !important;
     align-items: start !important;
     width: 100% !important;
     overflow: visible !important;
