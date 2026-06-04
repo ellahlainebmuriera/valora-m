@@ -3704,7 +3704,7 @@ function buildCleanInvoiceExportElement() {
                     ${escapeHtml(client?.address || "")}
                 </p>
             </div>
-            <div class="invoice-render-meta" style="text-align: right; position: static !important; min-width: 160px;">
+            <div class="invoice-render-meta" style="text-align: right; position: static !important; width: 220px; min-width: 220px; flex: 0 0 220px; overflow: visible !important; white-space: nowrap;">
                 <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 800; color: ${escapeHtml(currentProfile.invoice_theme_color || "#6366f1")};">${escapeHtml(documentType.toUpperCase())}</h1>
                 <p style="font-size: 13px; font-weight: 700; margin: 0 0 8px;">${escapeHtml(invoiceNumber)}</p>
                 <p style="font-size: 12px; color: #64748b; margin: 3px 0;">${escapeHtml(getReceiptText("date"))}: ${escapeHtml(issueDate)}</p>
@@ -3746,8 +3746,135 @@ function buildCleanInvoiceExportElement() {
     return exportElement;
 }
 
+function normalizeInvoiceExportElement(root) {
+    if (!root) return root;
+
+    root.style.position = "static";
+    root.style.float = "none";
+    root.style.clear = "both";
+    root.style.overflow = "visible";
+    root.style.transform = "none";
+    root.style.boxSizing = "border-box";
+
+    root.querySelectorAll("*").forEach((element) => {
+        element.style.position = "static";
+        element.style.float = "none";
+        element.style.clear = "none";
+        element.style.transform = "none";
+        element.style.inset = "auto";
+        element.style.top = "auto";
+        element.style.right = "auto";
+        element.style.bottom = "auto";
+        element.style.left = "auto";
+        element.style.zIndex = "auto";
+        element.style.overflow = "visible";
+        element.style.boxSizing = "border-box";
+        element.style.maxWidth = "100%";
+    });
+
+    const header = root.querySelector(".invoice-render-header");
+    if (header) {
+        header.style.display = "flex";
+        header.style.justifyContent = "space-between";
+        header.style.alignItems = "flex-start";
+        header.style.gap = "24px";
+        header.style.width = "100%";
+        header.style.marginBottom = "30px";
+        header.style.pageBreakInside = "avoid";
+        header.style.breakInside = "avoid";
+    }
+
+    const vendor = root.querySelector(".invoice-render-vendor");
+    if (vendor) {
+        vendor.style.flex = "1 1 auto";
+        vendor.style.minWidth = "0";
+        vendor.style.overflow = "visible";
+    }
+
+    const meta = root.querySelector(".invoice-render-meta");
+    if (meta) {
+        meta.style.textAlign = "right";
+        meta.style.width = "220px";
+        meta.style.minWidth = "220px";
+        meta.style.maxWidth = "220px";
+        meta.style.flex = "0 0 220px";
+        meta.style.whiteSpace = "nowrap";
+        meta.style.overflow = "visible";
+    }
+
+    const tableBlock = root.querySelector(".invoice-render-table-block");
+    const table = root.querySelector(".invoice-render-table");
+    if (tableBlock) {
+        tableBlock.style.display = "block";
+        tableBlock.style.width = "100%";
+        tableBlock.style.clear = "both";
+        tableBlock.style.pageBreakInside = "auto";
+        tableBlock.style.breakInside = "auto";
+        tableBlock.style.overflow = "visible";
+    }
+    if (table) {
+        table.style.display = "table";
+        table.style.width = "100%";
+        table.style.borderCollapse = "collapse";
+        table.style.tableLayout = "fixed";
+        table.style.pageBreakInside = "auto";
+        table.style.breakInside = "auto";
+        table.querySelectorAll("thead").forEach((thead) => {
+            thead.style.display = "table-header-group";
+        });
+        table.querySelectorAll("tbody").forEach((tbody) => {
+            tbody.style.display = "table-row-group";
+        });
+        table.querySelectorAll("tr").forEach((row) => {
+            row.style.display = "table-row";
+            row.style.pageBreakInside = "avoid";
+            row.style.breakInside = "avoid";
+        });
+        table.querySelectorAll("th, td").forEach((cell) => {
+            cell.style.display = "table-cell";
+            cell.style.overflow = "visible";
+        });
+    }
+
+    const footer = root.querySelector(".invoice-render-footer");
+    const attachments = root.querySelector(".invoice-render-attachments");
+    if (footer) {
+        footer.style.display = "block";
+        footer.style.width = "100%";
+        footer.style.clear = "both";
+        footer.style.marginTop = "20px";
+        footer.style.pageBreakInside = "auto";
+        footer.style.breakInside = "auto";
+        footer.style.overflow = "visible";
+        if (tableBlock && footer.previousElementSibling !== tableBlock) {
+            tableBlock.insertAdjacentElement("afterend", footer);
+        }
+        if (attachments && attachments.parentElement !== footer) {
+            footer.appendChild(attachments);
+        }
+    }
+
+    root.querySelectorAll(".invoice-render-totals, .invoice-render-notes, .invoice-render-attachments, .invoice-render-attachment, .invoice-render-signature").forEach((block) => {
+        block.style.pageBreakInside = "avoid";
+        block.style.breakInside = "avoid";
+        block.style.overflow = "visible";
+    });
+
+    root.querySelectorAll(".invoice-render-attachment img").forEach((img) => {
+        img.style.display = "block";
+        img.style.width = "180px";
+        img.style.height = "100px";
+        img.style.maxWidth = "180px";
+        img.style.maxHeight = "100px";
+        img.style.objectFit = "cover";
+        img.style.overflow = "visible";
+    });
+
+    return root;
+}
+
 function clonePrintableInvoiceElement() {
-    return buildCleanInvoiceExportElement();
+    return normalizeInvoiceExportElement(buildCleanInvoiceExportElement());
 }
 
 function waitForInvoiceImages(root) {
