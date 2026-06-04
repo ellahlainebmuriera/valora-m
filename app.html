@@ -25,7 +25,7 @@
     <meta name="twitter:image" content="https://valora-m.vercel.app/assets/og-preview-banner.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=thumb-flow-v37">
+    <link rel="stylesheet" href="styles.css?v=thumb-flow-v39">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1552,6 +1552,34 @@
                         <button class="btn btn-primary" id="save-admin-payment-settings-btn" style="width: 100%;">Save Admin Payment Settings</button>
                     </div>
 
+                    <div class="panel-card">
+                        <div class="panel-title">Manual Plan Activation</div>
+                        <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Use this only after confirming the customer's paid PayMongo transaction in your PayMongo dashboard.</p>
+                        <div class="form-group">
+                            <label for="admin-activate-email">Customer Email</label>
+                            <input type="email" id="admin-activate-email" placeholder="customer@email.com">
+                        </div>
+                        <div class="form-group row">
+                            <div class="form-group">
+                                <label for="admin-activate-plan">Plan</label>
+                                <select id="admin-activate-plan">
+                                    <option value="Starter Plan">Starter Plan - PHP 149</option>
+                                    <option value="Pro Unlimited Plan">Pro Unlimited - PHP 249</option>
+                                    <option value="Business Unlimited">Business Unlimited - PHP 449</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-activate-months">Access Months</label>
+                                <input type="number" id="admin-activate-months" value="1" min="1" max="24">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-payment-reference">PayMongo Reference / Payment ID</label>
+                            <input type="text" id="admin-payment-reference" placeholder="Example: H3ygrUp or payment ID">
+                        </div>
+                        <button class="btn btn-accent" id="admin-activate-plan-btn" style="width: 100%;">Activate Verified Payment</button>
+                    </div>
+
                     <div class="panel-card admin-payments-card">
                         <div class="panel-title">Recent App Payments</div>
                         <div class="table-wrapper" style="max-height: 420px; overflow-y: auto;">
@@ -1878,7 +1906,7 @@
             </div>
             
             <p style="font-size: 13px; color: var(--text-medium);">
-                You will be redirected to PayMongo's secure checkout page. Your plan will be activated after payment verification.
+                You will be redirected to PayMongo's secure checkout page. Your plan will activate automatically after successful payment.
             </p>
 
             <div class="checkout-trust-strip" aria-label="Supported payment methods">
@@ -1914,7 +1942,7 @@
                         <strong>Amount:</strong> <span id="payment-plan-amount">PHP 249.00</span>
                     </p>
                 </div>
-                <p style="font-size: 12px; color: var(--text-medium); line-height: 1.5;">Click the button below to open PayMongo. After payment, send the payment reference or email used so your plan can be verified and activated.</p>
+                <p style="font-size: 12px; color: var(--text-medium); line-height: 1.5;">Click the button below to open PayMongo. After successful payment, Valora EM will activate your plan automatically.</p>
             </div>
 
             <!-- Card Section (Hidden by default) -->
@@ -1974,16 +2002,16 @@
         }
     </style>
 
-    <script src="app.js?v=thumb-flow-v37"></script>
+    <script src="app.js?v=thumb-flow-v39"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>
         if ("serviceWorker" in navigator) {
             let refreshingForServiceWorker = false;
             navigator.serviceWorker.addEventListener("controllerchange", () => {
-                if (refreshingForServiceWorker || sessionStorage.getItem("valora-sw-refreshed-v37")) return;
+                if (refreshingForServiceWorker || sessionStorage.getItem("valora-sw-refreshed-v39")) return;
                 refreshingForServiceWorker = true;
-                sessionStorage.setItem("valora-sw-refreshed-v37", "1");
+                sessionStorage.setItem("valora-sw-refreshed-v39", "1");
                 window.location.reload();
             });
 
