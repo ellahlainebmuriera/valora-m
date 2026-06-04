@@ -71,6 +71,11 @@ const LIVE_LAUNCH_CONFIG = {
 };
 const PDF_EXPORT_LIBRARY_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
 const ACCOUNT_DELETE_FUNCTION_NAME = "delete-account";
+const PAYMONGO_PAYMENT_LINKS = {
+    "Starter Plan": "https://pm.link/org-vYcsboZrS1xBPbpGua2GMNHr/h7onXjm",
+    "Pro Unlimited Plan": "https://pm.link/org-vYcsboZrS1xBPbpGua2GMNHr/d7ad5e4",
+    "Business Unlimited": "https://pm.link/org-vYcsboZrS1xBPbpGua2GMNHr/H3ygrUp"
+};
 
 const BUSINESS_PROFILE_FIELDS = [
     "company_name",
@@ -3310,15 +3315,15 @@ function loadPaymentSettings() {
 function savePaymentSettings() {
     paymentSettings = {
         paymongoPublicKey: document.getElementById("admin-paymongo-public").value.trim(),
-        paymongoSecretKey: document.getElementById("admin-paymongo-secret").value.trim(),
+        paymongoSecretKey: "",
         stripePublishableKey: document.getElementById("admin-stripe-public").value.trim(),
-        stripeSecretKey: document.getElementById("admin-stripe-secret").value.trim(),
+        stripeSecretKey: "",
         cardCheckoutUrl: document.getElementById("admin-card-checkout-url").value.trim(),
         gcashNumber: document.getElementById("admin-gcash-number").value.trim(),
         payoutAccount: document.getElementById("admin-payout-account").value.trim()
     };
     localStorage.setItem("valoraem_payment_settings", JSON.stringify(paymentSettings));
-    alert("Admin payment settings saved. Connect these keys to the live checkout when the payment integration is ready.");
+    alert("Admin payment settings saved. Secret keys must stay in PayMongo/Supabase backend settings, not in this browser app.");
 }
 
 function getLocalPaymentRecords() {
@@ -5331,15 +5336,25 @@ function initAppEventListeners() {
             const regularPrice = button.dataset.regularPrice || price;
             const cycle = button.dataset.billingCycle || billingCycle;
             const plan = button.dataset.plan || "Pro Unlimited";
+            const checkoutUrl = PAYMONGO_PAYMENT_LINKS[getPlanCanonicalName(plan)];
+            if (cycle !== "monthly") {
+                createToast("Live PayMongo payment links are currently monthly only. Please switch to Monthly billing.", true);
+                return;
+            }
+            if (!checkoutUrl) {
+                createToast("Payment link is not configured for this plan yet.", true);
+                return;
+            }
             document.getElementById("payment-modal").dataset.plan = plan;
             document.getElementById("payment-modal").dataset.price = price;
             document.getElementById("payment-modal").dataset.regularPrice = regularPrice;
             document.getElementById("payment-modal").dataset.billingCycle = cycle;
+            document.getElementById("payment-modal").dataset.checkoutUrl = checkoutUrl;
             document.getElementById("payment-plan-name").innerText = plan;
             document.getElementById("payment-plan-amount").innerText = `PHP ${Number(price).toLocaleString("en-PH")}.00 ${cycle === "yearly" ? "/ Year" : "/ Month"}`;
             const easyPayCheckbox = document.getElementById("enable-easypay-checkbox");
             if (easyPayCheckbox) easyPayCheckbox.checked = false;
-            document.getElementById("submit-mock-payment-btn").innerText = `Activate ${plan}`;
+            document.getElementById("submit-mock-payment-btn").innerText = `Pay PHP ${Number(price).toLocaleString("en-PH")}.00 with PayMongo`;
             document.getElementById("payment-modal").style.display = "flex";
         });
     });
@@ -5361,7 +5376,7 @@ function initAppEventListeners() {
         document.getElementById("gcash-payment-details").style.display = "none";
     });
 
-    // Submit Payment Simulation
+    // Open live PayMongo payment link.
     document.getElementById("submit-mock-payment-btn").addEventListener("click", processMockPaymentUpgrade);
 
     document.getElementById("save-admin-payment-settings-btn").addEventListener("click", savePaymentSettings);
@@ -6315,9 +6330,9 @@ async function renderAdminDashboard() {
     document.getElementById("admin-customer-count").innerText = new Set(records.map((record) => record.customer_email)).size;
 
     document.getElementById("admin-paymongo-public").value = paymentSettings.paymongoPublicKey || "";
-    document.getElementById("admin-paymongo-secret").value = paymentSettings.paymongoSecretKey || "";
+    document.getElementById("admin-paymongo-secret").value = "";
     document.getElementById("admin-stripe-public").value = paymentSettings.stripePublishableKey || "";
-    document.getElementById("admin-stripe-secret").value = paymentSettings.stripeSecretKey || "";
+    document.getElementById("admin-stripe-secret").value = "";
     document.getElementById("admin-card-checkout-url").value = paymentSettings.cardCheckoutUrl || "";
     document.getElementById("admin-gcash-number").value = paymentSettings.gcashNumber || "";
     document.getElementById("admin-payout-account").value = paymentSettings.payoutAccount || "";
@@ -6367,69 +6382,37 @@ async function renderAdminFeatureInbox() {
     await renderFeatureRequestsTable("#feature-inbox-table tbody");
 }
 
-// ==================== MOCK PAYMENT GATEWAY PROCESSOR ====================
+// ==================== LIVE PAYMENT LINK PROCESSOR ====================
 async function processMockPaymentUpgrade() {
-    const gcashActive = document.getElementById("pay-gcash-opt").classList.contains("active");
-    const accountNum = gcashActive 
-        ? document.getElementById("payment-phone").value.trim()
-        : document.getElementById("card-num").value.trim();
-    const easyPayEnabled = !!document.getElementById("enable-easypay-checkbox")?.checked;
-        
-    if (!accountNum) {
-        createToast("Please enter dummy beta payment details first.", true);
+    const paymentModal = document.getElementById("payment-modal");
+    const plan = paymentModal?.dataset.plan || "Pro Unlimited Plan";
+    const checkoutUrl = paymentModal?.dataset.checkoutUrl || PAYMONGO_PAYMENT_LINKS[getPlanCanonicalName(plan)];
+
+    if (!checkoutUrl) {
+        createToast("PayMongo payment link is not configured for this plan yet.", true);
         return;
     }
-    
-    // Show spinner inside payment modal to simulate gateway handshake
+
     const overlay = document.getElementById("payment-processing-overlay");
-    overlay.style.display = "flex";
-    
-    // Wait for 2.5 seconds mock processing time
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    
-    // Update DB status to PRO
-    currentProfile.is_pro = true;
-    const paymentModal = document.getElementById("payment-modal");
-    currentProfile.plan = paymentModal.dataset.plan || "Pro Unlimited Plan";
-    currentProfile.billing_cycle = paymentModal.dataset.billingCycle || billingCycle;
-    currentProfile.auto_renewal_enabled = easyPayEnabled;
-    currentProfile.billing_status = easyPayEnabled ? "easypay_auto_renewal" : "manual_renewal";
-    currentProfile.subscription_expires_at = getSubscriptionExpiryDate(currentProfile.billing_cycle);
-    await recordPayment(
-        paymentModal.dataset.plan || "Pro Unlimited Plan",
-        paymentModal.dataset.price || 249,
-        `${gcashActive ? "Wallet/Banking" : "Card"} (${currentProfile.billing_cycle})`,
-        { autoRenewalEnabled: easyPayEnabled }
-    );
-    
-    if (hasCloudConnection()) {
-        const { error } = await updateCloudProfileSettings({
-            is_pro: true,
-            plan: currentProfile.plan,
-            billing_cycle: currentProfile.billing_cycle,
-            auto_renewal_enabled: currentProfile.auto_renewal_enabled,
-            billing_status: currentProfile.billing_status,
-            subscription_expires_at: currentProfile.subscription_expires_at
-        });
-        if (error) {
-            logSupabaseError("profiles beta plan activation", error, {
-                plan: currentProfile.plan,
-                billing_cycle: currentProfile.billing_cycle
-            });
-        }
-    } else {
-        saveLocalStorageProfile();
+    if (overlay) overlay.style.display = "flex";
+
+    try {
+        localStorage.setItem("valoraem_pending_payment", JSON.stringify({
+            plan,
+            price: paymentModal?.dataset.price || "",
+            checkoutUrl,
+            customer_email: currentUser?.email || "",
+            created_at: new Date().toISOString(),
+            status: "pending_manual_verification"
+        }));
+    } catch (err) {
+        console.warn("Unable to store pending payment marker:", err);
     }
-    
-    // Visual success alerts
-    overlay.style.display = "none";
-    document.getElementById("payment-modal").style.display = "none";
-    createToast(`Beta plan activated: ${currentProfile.plan}. ${easyPayEnabled ? "EasyPay auto-renewal is enabled." : "Manual renewal only. No auto-charge."}`);
-    
-    // Refresh GUI details
-    updateUserTierUI();
-    updateBillingTabUI();
-    switchTab("dashboard-tab");
+
+    createToast("Opening PayMongo checkout. Your plan will be activated after payment verification.");
+    setTimeout(() => {
+        window.location.href = checkoutUrl;
+    }, 450);
 }
 
 // ==================== SIGNATURE & THEME ACCESSORIES ====================
