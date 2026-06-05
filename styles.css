@@ -2355,6 +2355,40 @@ textarea:focus {
     box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15);
 }
 
+.checkout-summary-card {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.24);
+    border-radius: 14px;
+    padding: 16px;
+    margin: 18px 0;
+}
+
+.checkout-summary-card p {
+    color: var(--primary);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.paymongo-secure-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.09);
+    border: 1px solid rgba(16, 185, 129, 0.26);
+    border-radius: 14px;
+    color: var(--text-medium);
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 18px;
+    padding: 14px;
+}
+
+.paymongo-secure-flow strong {
+    color: var(--text-main);
+    font-size: 13px;
+}
+
 .payment-logo-gcash {
     width: 60px;
     height: 15px;
