@@ -33,6 +33,16 @@ function getPaymentStatus(payment: Record<string, unknown>) {
   return String(attributes?.status || "").toLowerCase();
 }
 
+function getPayMongoEvent(payload: Record<string, unknown>) {
+  const data = payload?.data as Record<string, unknown> | undefined;
+  const attributes = data?.attributes as Record<string, unknown> | undefined;
+
+  return {
+    eventType: String(attributes?.type || data?.type || payload?.type || ""),
+    checkoutSession: (attributes?.data || (data as Record<string, unknown>)?.data || data) as Record<string, unknown> | undefined
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -43,16 +53,18 @@ serve(async (req) => {
   }
 
   const configuredWebhookSecret = Deno.env.get("PAYMONGO_WEBHOOK_SECRET");
-  if (configuredWebhookSecret) {
-    const url = new URL(req.url);
-    const providedSecret =
-      url.searchParams.get("token") ||
-      req.headers.get("x-valora-webhook-secret") ||
-      "";
+  if (!configuredWebhookSecret) {
+    return jsonResponse({ error: "Webhook function is not configured." }, 500);
+  }
 
-    if (providedSecret !== configuredWebhookSecret) {
-      return jsonResponse({ error: "Invalid webhook secret." }, 401);
-    }
+  const url = new URL(req.url);
+  const providedSecret =
+    url.searchParams.get("token") ||
+    req.headers.get("x-valora-webhook-secret") ||
+    "";
+
+  if (providedSecret !== configuredWebhookSecret) {
+    return jsonResponse({ error: "Invalid webhook secret." }, 401);
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -66,16 +78,17 @@ serve(async (req) => {
     return jsonResponse({ error: "Invalid JSON payload." }, 400);
   }
 
-  const eventType = payload?.data?.type || payload?.type;
+  const { eventType, checkoutSession } = getPayMongoEvent(payload);
   if (eventType !== "checkout_session.payment.paid") {
     return jsonResponse({ ok: true, ignored: true, event_type: eventType || "unknown" });
   }
 
-  const checkoutSession = payload?.data?.data;
   const checkoutSessionId = checkoutSession?.id;
-  const attributes = checkoutSession?.attributes || {};
-  const reference = attributes?.reference_number;
-  const payments = Array.isArray(attributes?.payments) ? attributes.payments : [];
+  const attributes = (checkoutSession?.attributes as Record<string, unknown> | undefined) || {};
+  const reference = attributes.reference_number;
+  const payments = Array.isArray(attributes.payments)
+    ? attributes.payments as Record<string, unknown>[]
+    : [];
   const paidPayment = payments.find((payment: Record<string, unknown>) => getPaymentStatus(payment) === "paid") || payments[0];
 
   if (!reference || !checkoutSessionId || !paidPayment) {
@@ -120,7 +133,7 @@ serve(async (req) => {
     return jsonResponse({ error: "Checkout session mismatch." }, 400);
   }
 
-  const paidAmountCentavos = getPaymentAmount(paidPayment as Record<string, unknown>);
+  const paidAmountCentavos = getPaymentAmount(paidPayment);
   const expectedAmountCentavos = Math.round(Number(order.amount || 0) * 100);
   if (paidAmountCentavos < expectedAmountCentavos) {
     await admin
@@ -135,9 +148,10 @@ serve(async (req) => {
     return jsonResponse({ error: "Paid amount does not match the order amount." }, 400);
   }
 
-  const paymentAttributes = (paidPayment as Record<string, unknown>)?.attributes as Record<string, unknown> | undefined;
-  const paymentId = String((paidPayment as Record<string, unknown>)?.id || "");
-  const paymentIntentId = String(attributes?.payment_intent?.id || attributes?.payment_intent_id || "");
+  const paymentAttributes = paidPayment.attributes as Record<string, unknown> | undefined;
+  const paymentId = String(paidPayment.id || "");
+  const paymentIntent = attributes.payment_intent as Record<string, unknown> | undefined;
+  const paymentIntentId = String(paymentIntent?.id || attributes.payment_intent_id || "");
   const source = paymentAttributes?.source as Record<string, unknown> | undefined;
   const sourceType = String(source?.type || "");
   const expiresAt = getSubscriptionExpiry(1);
