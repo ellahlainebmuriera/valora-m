@@ -1,0 +1,6 @@
+# Keep the separate NuVora/finance tracker prototype out of the Valora EM deployment.
+finance-tracker.html
+finance-tracker.css
+finance-tracker.js
+assets/finance-planner-accent.png
+

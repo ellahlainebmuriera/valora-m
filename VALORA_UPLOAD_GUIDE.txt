@@ -1,0 +1,43 @@
+VALORA EM UPLOAD GUIDE
+======================
+
+Main Valora EM website/app files:
+- index.html
+- app.html
+- app.js
+- styles.css
+- service-worker.js
+- manifest.json
+- manifest.webmanifest
+- vercel.json
+- refund-policy.html
+- pwa-install.js
+- auth-fallback.js
+- icons/
+- assets/og-preview-banner.png
+- assets/valora-em-maintenance.png
+
+Supabase / database setup files:
+- schema.sql
+- SUPABASE_FINAL_BETA_UPDATE.sql
+- SUPABASE_ADMIN_ACTIVATION.sql
+- SUPABASE_PAYMONGO_AUTOMATION.sql
+- SUPABASE_DELETE_ACCOUNT_SETUP.txt
+- supabase/functions/create-paymongo-checkout/index.ts
+- supabase/functions/paymongo-webhook/index.ts
+- supabase/functions/delete-account/index.ts
+
+Separate project files, not needed for Valora EM upload:
+- finance-tracker.html
+- finance-tracker.css
+- finance-tracker.js
+- assets/finance-planner-accent.png
+
+Recommended commit comments:
+- Valora app UI fixes: Fix checkout selector and sidebar scrolling
+- PayMongo automation: Harden PayMongo webhook activation flow
+- Supabase setup: Update payment automation database setup
+
+Beginner reminder:
+For Valora EM updates, upload only the Main Valora EM files and the Supabase files that changed.
+Do not upload the finance-tracker files unless you intentionally want that separate prototype in the same repository.

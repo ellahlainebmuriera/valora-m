@@ -29,6 +29,16 @@ ALTER TABLE public.payment_orders ADD COLUMN IF NOT EXISTS raw_checkout_response
 ALTER TABLE public.payment_orders ADD COLUMN IF NOT EXISTS raw_webhook_event JSONB;
 ALTER TABLE public.payment_orders ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP WITH TIME ZONE;
 
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'Standard Free Plan';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_pro BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS billing_cycle TEXT DEFAULT 'monthly';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS auto_renewal_enabled BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS billing_status TEXT DEFAULT 'manual';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS billing_mode TEXT DEFAULT 'Manual Renewal';
+ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS auto_renewal_enabled BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS paymongo_reference_number TEXT;
 ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS paymongo_checkout_session_id TEXT;
 ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS paymongo_payment_id TEXT;
@@ -48,6 +58,14 @@ CREATE POLICY "Users can view their own payment orders."
 DROP POLICY IF EXISTS "Owner admin can view all payment orders." ON public.payment_orders;
 CREATE POLICY "Owner admin can view all payment orders."
     ON public.payment_orders FOR SELECT
+    TO authenticated
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+ALTER TABLE public.app_payments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Owner admin can view all payment records." ON public.app_payments;
+CREATE POLICY "Owner admin can view all payment records."
+    ON public.app_payments FOR SELECT
     TO authenticated
     USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
 
