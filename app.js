@@ -5413,43 +5413,14 @@ function initAppEventListeners() {
             document.getElementById("payment-modal").dataset.billingCycle = cycle;
             document.getElementById("payment-plan-name").innerText = plan;
             document.getElementById("payment-plan-amount").innerText = `PHP ${Number(price).toLocaleString("en-PH")}.00 ${cycle === "yearly" ? "/ Year" : "/ Month"}`;
-            const cardPlanName = document.getElementById("payment-card-plan-name");
-            const cardPlanAmount = document.getElementById("payment-card-plan-amount");
-            if (cardPlanName) cardPlanName.innerText = plan;
-            if (cardPlanAmount) cardPlanAmount.innerText = `PHP ${Number(price).toLocaleString("en-PH")}.00 ${cycle === "yearly" ? "/ Year" : "/ Month"}`;
             const easyPayCheckbox = document.getElementById("enable-easypay-checkbox");
             if (easyPayCheckbox) easyPayCheckbox.checked = false;
-            document.getElementById("pay-gcash-opt").classList.add("active");
-            document.getElementById("pay-card-opt").classList.remove("active");
-            document.getElementById("gcash-payment-details").style.display = "block";
-            document.getElementById("card-payment-details").style.display = "none";
-            document.getElementById("submit-mock-payment-btn").innerText = `Continue to PayMongo - PHP ${Number(price).toLocaleString("en-PH")}.00`;
+            document.getElementById("submit-mock-payment-btn").innerText = `Continue to QR Secure Checkout - PHP ${Number(price).toLocaleString("en-PH")}.00`;
             document.getElementById("payment-modal").style.display = "flex";
         });
     });
     document.getElementById("close-payment-btn").addEventListener("click", () => {
         document.getElementById("payment-modal").style.display = "none";
-    });
-
-    // Payment Option Switching
-    document.getElementById("pay-gcash-opt").addEventListener("click", () => {
-        document.getElementById("pay-gcash-opt").classList.add("active");
-        document.getElementById("pay-card-opt").classList.remove("active");
-        document.getElementById("gcash-payment-details").style.display = "block";
-        document.getElementById("card-payment-details").style.display = "none";
-    });
-    document.getElementById("pay-card-opt").addEventListener("click", () => {
-        document.getElementById("pay-card-opt").classList.add("active");
-        document.getElementById("pay-gcash-opt").classList.remove("active");
-        document.getElementById("card-payment-details").style.display = "block";
-        document.getElementById("gcash-payment-details").style.display = "none";
-    });
-    document.querySelectorAll(".payment-btn[role='button']").forEach((button) => {
-        button.addEventListener("keydown", (event) => {
-            if (event.key !== "Enter" && event.key !== " ") return;
-            event.preventDefault();
-            button.click();
-        });
     });
 
     // Create tracked PayMongo Hosted Checkout.
