@@ -156,8 +156,28 @@ body {
     padding: 24px;
     position: fixed;
     height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
     z-index: 100;
     transition: var(--transition-speed);
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
 }
 
 .logo-container {
@@ -198,7 +218,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    flex-grow: 1;
+    flex: 0 0 auto;
 }
 
 .nav-item {
@@ -2324,9 +2344,15 @@ textarea:focus {
     background-color: var(--primary-glow);
 }
 
+.payment-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
 .payment-btn.active {
     border-color: var(--primary);
     background-color: var(--primary-glow);
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15);
 }
 
 .payment-logo-gcash {
