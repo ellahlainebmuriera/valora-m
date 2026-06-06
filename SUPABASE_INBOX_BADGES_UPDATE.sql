@@ -38,6 +38,10 @@ ADD COLUMN IF NOT EXISTS is_read_by_admin BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.ticket_messages
 ADD COLUMN IF NOT EXISTS is_read_by_user BOOLEAN DEFAULT FALSE;
 
+GRANT SELECT, UPDATE, DELETE ON TABLE public.feature_requests TO authenticated;
+GRANT SELECT, UPDATE, DELETE ON TABLE public.tickets TO authenticated;
+GRANT SELECT, UPDATE ON TABLE public.ticket_messages TO authenticated;
+
 -- Existing records are treated as already read. Only messages and requests
 -- submitted after this migration will create new unread notifications.
 DO $$
@@ -65,15 +69,22 @@ CREATE POLICY "Owner admin can update feature requests."
 ON public.feature_requests
 FOR UPDATE
 TO authenticated
-USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
-WITH CHECK ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+USING (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com')
+WITH CHECK (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com');
+
+DROP POLICY IF EXISTS "Owner admin can view all feature requests." ON public.feature_requests;
+CREATE POLICY "Owner admin can view all feature requests."
+ON public.feature_requests
+FOR SELECT
+TO authenticated
+USING (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com');
 
 DROP POLICY IF EXISTS "Owner admin can delete feature requests." ON public.feature_requests;
 CREATE POLICY "Owner admin can delete feature requests."
 ON public.feature_requests
 FOR DELETE
 TO authenticated
-USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+USING (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com');
 
 DROP POLICY IF EXISTS "Users can update their own tickets." ON public.tickets;
 CREATE POLICY "Users can update their own tickets."
@@ -88,8 +99,8 @@ CREATE POLICY "Owner admin can update all tickets."
 ON public.tickets
 FOR UPDATE
 TO authenticated
-USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
-WITH CHECK ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+USING (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com')
+WITH CHECK (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com');
 
 DROP POLICY IF EXISTS "Users can delete their own tickets." ON public.tickets;
 CREATE POLICY "Users can delete their own tickets."
@@ -103,7 +114,14 @@ CREATE POLICY "Owner admin can delete all tickets."
 ON public.tickets
 FOR DELETE
 TO authenticated
-USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+USING (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com');
+
+DROP POLICY IF EXISTS "Owner admin can read all tickets." ON public.tickets;
+CREATE POLICY "Owner admin can read all tickets."
+ON public.tickets
+FOR SELECT
+TO authenticated
+USING (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com');
 
 DROP POLICY IF EXISTS "Users can mark their ticket messages read." ON public.ticket_messages;
 CREATE POLICY "Users can mark their ticket messages read."
@@ -134,7 +152,7 @@ CREATE POLICY "Owner admin can mark ticket messages read."
 ON public.ticket_messages
 FOR UPDATE
 TO authenticated
-USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
-WITH CHECK ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+USING (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com')
+WITH CHECK (lower(COALESCE(auth.jwt() ->> 'email', '')) = 'ellahlaine.b.muriera@gmail.com');
 
 NOTIFY pgrst, 'reload schema';

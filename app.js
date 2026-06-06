@@ -4578,7 +4578,7 @@ async function deleteSupportTicket(ticketId, adminMode = false) {
             return;
         }
         if (!data?.length) {
-            createToast("Delete was blocked by Supabase permissions. Run the latest inbox SQL update first.", true);
+            createToast("Delete permission is not active yet. Run SUPABASE_REPORT_DELETE_FIX.sql in Supabase.", true);
             return;
         }
     }
@@ -4609,7 +4609,7 @@ async function deleteFeatureRequest(requestId) {
             return;
         }
         if (!data?.length) {
-            createToast("Delete was blocked by Supabase permissions. Run the latest inbox SQL update first.", true);
+            createToast("Delete permission is not active yet. Run SUPABASE_REPORT_DELETE_FIX.sql in Supabase.", true);
             return;
         }
     }
