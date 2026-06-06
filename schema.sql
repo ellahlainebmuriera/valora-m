@@ -217,6 +217,9 @@ CREATE TABLE public.feature_requests (
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     customer_email TEXT,
     request_text TEXT NOT NULL,
+    is_read_by_admin BOOLEAN DEFAULT FALSE,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -228,6 +231,15 @@ CREATE POLICY "Users can submit feature requests."
 
 CREATE POLICY "Owner admin can view all feature requests."
     ON public.feature_requests FOR SELECT
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+CREATE POLICY "Owner admin can update feature requests."
+    ON public.feature_requests FOR UPDATE
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+    WITH CHECK ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
+CREATE POLICY "Owner admin can delete feature requests."
+    ON public.feature_requests FOR DELETE
     USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
 
 -- 7. Multi-store business profiles, per-store catalog, and support tickets
@@ -291,6 +303,11 @@ CREATE TABLE IF NOT EXISTS public.tickets (
     customer_email TEXT,
     subject TEXT NOT NULL,
     status TEXT DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'RESOLVED')),
+    is_read_by_admin BOOLEAN DEFAULT FALSE,
+    is_read_by_user BOOLEAN DEFAULT TRUE,
+    deleted_by_admin BOOLEAN DEFAULT FALSE,
+    deleted_by_user BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -319,12 +336,27 @@ CREATE POLICY "Owner admin can update tickets."
     USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
     WITH CHECK ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
 
+CREATE POLICY "Users can update their own tickets."
+    ON public.tickets FOR UPDATE
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own tickets."
+    ON public.tickets FOR DELETE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Owner admin can delete all tickets."
+    ON public.tickets FOR DELETE
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
+
 CREATE TABLE IF NOT EXISTS public.ticket_messages (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     ticket_id UUID REFERENCES public.tickets(id) ON DELETE CASCADE NOT NULL,
     sender_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     message TEXT NOT NULL,
     is_admin_reply BOOLEAN DEFAULT FALSE,
+    is_read_by_admin BOOLEAN DEFAULT FALSE,
+    is_read_by_user BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -353,6 +385,30 @@ CREATE POLICY "Users and owner can send ticket messages."
             AND (public.tickets.user_id = auth.uid() OR (auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
         )
     );
+
+CREATE POLICY "Users can mark their ticket messages read."
+    ON public.ticket_messages FOR UPDATE
+    USING (
+        is_admin_reply = TRUE
+        AND EXISTS (
+            SELECT 1 FROM public.tickets
+            WHERE public.tickets.id = public.ticket_messages.ticket_id
+            AND public.tickets.user_id = auth.uid()
+        )
+    )
+    WITH CHECK (
+        is_admin_reply = TRUE
+        AND EXISTS (
+            SELECT 1 FROM public.tickets
+            WHERE public.tickets.id = public.ticket_messages.ticket_id
+            AND public.tickets.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Owner admin can mark ticket messages read."
+    ON public.ticket_messages FOR UPDATE
+    USING ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com')
+    WITH CHECK ((auth.jwt() ->> 'email') = 'ellahlaine.b.muriera@gmail.com');
 
 -- Account deletion request queue.
 -- Browser code can request deletion, but final Auth user purging must run with a trusted service role.

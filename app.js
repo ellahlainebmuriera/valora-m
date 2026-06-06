@@ -2362,10 +2362,13 @@ async function checkAuthSession() {
 
 // Switch between tab screens
 function switchTab(tabId) {
-    if ((tabId === "admin-tab" || tabId === "admin-feature-inbox-tab") && !isAdminUser()) {
+    if ((tabId === "admin-tab" || tabId === "admin-feature-inbox-tab" || tabId === "admin-tickets-tab") && !isAdminUser()) {
         alert("Admin access is only available for the owner account.");
         return;
     }
+
+    const requestedTabId = tabId;
+    const displayTabId = tabId === "admin-tickets-tab" ? "admin-tab" : tabId;
 
     // Free users stop at five documents; paid plans are unlimited.
     const tutorialOpen = document.getElementById("tutorial-modal")?.style.display === "flex";
@@ -2378,10 +2381,10 @@ function switchTab(tabId) {
     document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
     document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
     
-    const activeTab = document.getElementById(tabId);
+    const activeTab = document.getElementById(displayTabId);
     if (activeTab) activeTab.classList.add("active");
     
-    const activeLink = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+    const activeLink = document.querySelector(`.nav-item[data-tab="${requestedTabId}"]`);
     if (activeLink) activeLink.classList.add("active");
     
     // Refresh tables on navigation
@@ -2405,7 +2408,10 @@ function switchTab(tabId) {
     } else if (tabId === "billing-tab") {
         updateBillingTabUI();
     } else if (tabId === "admin-tab") {
+        showAdminScreen("admin-gateway-screen");
         renderAdminDashboard();
+    } else if (tabId === "admin-tickets-tab") {
+        showAdminScreen("admin-tickets-screen");
     } else if (tabId === "admin-feature-inbox-tab") {
         renderAdminFeatureInbox();
     } else if (tabId === "feature-requests-tab") {
@@ -2431,6 +2437,11 @@ function updateAdminVisibility() {
     if (featureRequestsNav) {
         featureRequestsNav.dataset.tab = isAdminUser() ? "admin-feature-inbox-tab" : "feature-requests-tab";
         localizeFeatureRequestNavLabel();
+    }
+
+    const bugReportNav = document.getElementById("bug-report-nav-item");
+    if (bugReportNav) {
+        bugReportNav.dataset.tab = isAdminUser() ? "admin-tickets-tab" : "bug-report-tab";
     }
     renderMobileNavigation();
 }
@@ -4468,12 +4479,30 @@ function getVisibleTickets() {
     return visible;
 }
 
-function isTicketUnread(ticket, adminMode = false) {
-    return adminMode ? ticket.is_read_by_admin === false : ticket.is_read_by_user === false;
+function isTicketMessageUnread(message, adminMode = false) {
+    if (adminMode) {
+        return !message.is_admin_reply && message.is_read_by_admin === false;
+    }
+    return !!message.is_admin_reply && message.is_read_by_user === false;
 }
 
-function setUnreadBadge(id, count) {
-    document.querySelectorAll(`#${id}`).forEach((badge) => {
+function getUnreadTicketMessageCount(adminMode = false) {
+    const visibleTicketIds = new Set(getVisibleTickets().map((ticket) => ticket.id));
+    return ticketMessages.filter((message) => (
+        visibleTicketIds.has(message.ticket_id) &&
+        isTicketMessageUnread(message, adminMode)
+    )).length;
+}
+
+function ticketHasUnreadMessages(ticketId, adminMode = false) {
+    return ticketMessages.some((message) => (
+        message.ticket_id === ticketId &&
+        isTicketMessageUnread(message, adminMode)
+    ));
+}
+
+function setUnreadBadge(key, count) {
+    document.querySelectorAll(`[data-unread-badge="${key}"], #${key}-badge`).forEach((badge) => {
         badge.innerText = count > 99 ? "99+" : String(count);
         badge.style.display = count > 0 ? "inline-flex" : "none";
     });
@@ -4483,9 +4512,9 @@ function updateUnreadBadges() {
     const featureCount = isAdminUser()
         ? featureRequestsCache.filter((request) => !request.is_deleted && request.is_read_by_admin === false).length
         : 0;
-    const bugCount = getVisibleTickets().filter((ticket) => isTicketUnread(ticket, isAdminUser())).length;
-    setUnreadBadge("feature-requests-badge", featureCount);
-    setUnreadBadge("bug-report-badge", bugCount);
+    const bugCount = getUnreadTicketMessageCount(isAdminUser());
+    setUnreadBadge("feature-requests", featureCount);
+    setUnreadBadge("bug-report", bugCount);
 }
 
 async function markFeatureRequestsRead(requestIds) {
@@ -4507,15 +4536,27 @@ async function markFeatureRequestsRead(requestIds) {
 }
 
 async function markTicketRead(ticketId, adminMode = false) {
-    const ticket = supportTickets.find((item) => item.id === ticketId);
-    if (!ticket) return;
-    const updatePayload = adminMode ? { is_read_by_admin: true } : { is_read_by_user: true };
-    Object.assign(ticket, updatePayload);
+    const unreadMessages = ticketMessages.filter((message) => (
+        message.ticket_id === ticketId &&
+        isTicketMessageUnread(message, adminMode)
+    ));
+    if (!unreadMessages.length) return;
+
+    const messageIds = unreadMessages.map((message) => message.id);
+    const readField = adminMode ? "is_read_by_admin" : "is_read_by_user";
+    unreadMessages.forEach((message) => {
+        message[readField] = true;
+    });
     updateUnreadBadges();
 
     if (hasCloudConnection()) {
-        const { error } = await supabaseClient.from("tickets").update(updatePayload).eq("id", ticketId);
-        if (error) logSupabaseError("tickets mark read", error, { ticketId, updatePayload });
+        const { error } = await supabaseClient
+            .from("ticket_messages")
+            .update({ [readField]: true })
+            .in("id", messageIds);
+        if (error) {
+            logSupabaseError("ticket_messages mark read", error, { ticketId, messageIds, readField });
+        }
     } else {
         saveLocalData();
     }
@@ -4523,51 +4564,61 @@ async function markTicketRead(ticketId, adminMode = false) {
 
 async function deleteSupportTicket(ticketId, adminMode = false) {
     if (!ticketId) return;
-    if (!confirm("Delete this bug report from your inbox?")) return;
-    const updatePayload = adminMode
-        ? { deleted_by_admin: true, deleted_at: new Date().toISOString() }
-        : { deleted_by_user: true, deleted_at: new Date().toISOString() };
+    if (!confirm("Permanently delete this bug report and its conversation?")) return;
 
     if (hasCloudConnection()) {
-        const { error } = await supabaseClient.from("tickets").update(updatePayload).eq("id", ticketId);
+        const { data, error } = await supabaseClient
+            .from("tickets")
+            .delete()
+            .eq("id", ticketId)
+            .select("id");
         if (error) {
-            logSupabaseError("tickets soft delete", error, { ticketId, updatePayload });
-            alert(`Failed: ${error.message}`);
+            logSupabaseError("tickets delete", error, { ticketId, adminMode });
+            createToast(`Could not delete report: ${error.message}`, true);
+            return;
+        }
+        if (!data?.length) {
+            createToast("Delete was blocked by Supabase permissions. Run the latest inbox SQL update first.", true);
             return;
         }
     }
 
-    supportTickets = supportTickets.map((ticket) => ticket.id === ticketId ? { ...ticket, ...updatePayload } : ticket);
+    supportTickets = supportTickets.filter((ticket) => ticket.id !== ticketId);
+    ticketMessages = ticketMessages.filter((message) => message.ticket_id !== ticketId);
     if (activeTicketId === ticketId) activeTicketId = null;
     if (activeAdminTicketId === ticketId) activeAdminTicketId = null;
     saveLocalData();
     adminMode ? renderAdminTickets() : renderSupportTickets();
     updateUnreadBadges();
+    createToast("Bug report deleted.");
 }
 
 async function deleteFeatureRequest(requestId) {
     if (!isAdminUser() || !requestId) return;
-    if (!confirm("Delete this feedback or feature request from the inbox?")) return;
-    const deletedAt = new Date().toISOString();
+    if (!confirm("Permanently delete this feedback or feature request?")) return;
 
     if (hasCloudConnection()) {
-        const { error } = await supabaseClient
+        const { data, error } = await supabaseClient
             .from("feature_requests")
-            .update({ is_deleted: true, deleted_at: deletedAt, is_read_by_admin: true })
-            .eq("id", requestId);
+            .delete()
+            .eq("id", requestId)
+            .select("id");
         if (error) {
-            logSupabaseError("feature_requests soft delete", error, { requestId });
-            alert(`Failed: ${error.message}`);
+            logSupabaseError("feature_requests delete", error, { requestId });
+            createToast(`Could not delete feedback: ${error.message}`, true);
+            return;
+        }
+        if (!data?.length) {
+            createToast("Delete was blocked by Supabase permissions. Run the latest inbox SQL update first.", true);
             return;
         }
     }
 
-    featureRequestsCache = featureRequestsCache.map((request) => (
-        request.id === requestId ? { ...request, is_deleted: true, deleted_at: deletedAt, is_read_by_admin: true } : request
-    ));
+    featureRequestsCache = featureRequestsCache.filter((request) => request.id !== requestId);
     saveFeatureRequests(featureRequestsCache);
     renderAdminFeatureInbox();
     updateUnreadBadges();
+    createToast("Feedback deleted.");
 }
 
 function renderTicketList(containerId, adminMode = false) {
@@ -4581,7 +4632,7 @@ function renderTicketList(containerId, adminMode = false) {
     }
 
     container.innerHTML = tickets.map((ticket) => `
-        <div class="ticket-list-item ${ticket.id === selectedId ? "active" : ""} ${isTicketUnread(ticket, adminMode) ? "unread" : ""}">
+        <div class="ticket-list-item ${ticket.id === selectedId ? "active" : ""} ${ticketHasUnreadMessages(ticket.id, adminMode) ? "unread" : ""}">
             <button class="ticket-list-main" type="button" onclick="${adminMode ? "selectAdminTicket" : "selectTicket"}('${ticket.id}')">
                 <strong>${escapeHtml(ticket.subject)}</strong>
                 ${adminMode
@@ -4656,6 +4707,8 @@ async function createSupportTicket() {
         sender_id: cloudUser.id,
         message,
         is_admin_reply: false,
+        is_read_by_admin: false,
+        is_read_by_user: true,
         created_at: new Date().toISOString()
     };
 
@@ -4705,13 +4758,29 @@ async function createSupportTicket() {
             ticket_id: ticket.id,
             sender_id: cloudUser.id,
             message,
-            is_admin_reply: false
+            is_admin_reply: false,
+            is_read_by_admin: false,
+            is_read_by_user: true
         };
-        const { data: savedMessage, error: messageError } = await supabaseClient
+        let { data: savedMessage, error: messageError } = await supabaseClient
             .from("ticket_messages")
             .insert([messagePayload])
-            .select("id,ticket_id,sender_id,message,is_admin_reply,created_at")
+            .select("id,ticket_id,sender_id,message,is_admin_reply,is_read_by_admin,is_read_by_user,created_at")
             .single();
+        if (messageError && (
+            isMissingSchemaColumnError(messageError, "is_read_by_admin") ||
+            isMissingSchemaColumnError(messageError, "is_read_by_user")
+        )) {
+            logSupabaseError("ticket_messages insert missing unread columns", messageError, messagePayload);
+            const fallbackPayload = withoutKeys(messagePayload, ["is_read_by_admin", "is_read_by_user"]);
+            const fallback = await supabaseClient
+                .from("ticket_messages")
+                .insert([fallbackPayload])
+                .select("id,ticket_id,sender_id,message,is_admin_reply,created_at")
+                .single();
+            savedMessage = fallback.data;
+            messageError = fallback.error;
+        }
         if (messageError) {
             logSupabaseError("ticket_messages insert", messageError, messagePayload);
             alert(`Ticket created, but message failed: ${messageError.message}`);
@@ -4764,6 +4833,8 @@ async function sendTicketMessage(adminMode = false) {
         sender_id: cloudUser.id,
         message,
         is_admin_reply: adminMode,
+        is_read_by_admin: adminMode,
+        is_read_by_user: !adminMode,
         created_at: new Date().toISOString()
     };
 
@@ -4772,9 +4843,20 @@ async function sendTicketMessage(adminMode = false) {
             ticket_id: ticketId,
             sender_id: cloudUser.id,
             message,
-            is_admin_reply: adminMode
+            is_admin_reply: adminMode,
+            is_read_by_admin: adminMode,
+            is_read_by_user: !adminMode
         };
-        const { error } = await supabaseClient.from("ticket_messages").insert([replyPayload]);
+        let { error } = await supabaseClient.from("ticket_messages").insert([replyPayload]);
+        if (error && (
+            isMissingSchemaColumnError(error, "is_read_by_admin") ||
+            isMissingSchemaColumnError(error, "is_read_by_user")
+        )) {
+            logSupabaseError("ticket_messages reply missing unread columns", error, replyPayload);
+            const fallbackPayload = withoutKeys(replyPayload, ["is_read_by_admin", "is_read_by_user"]);
+            const fallback = await supabaseClient.from("ticket_messages").insert([fallbackPayload]);
+            error = fallback.error;
+        }
         if (error) {
             logSupabaseError("ticket_messages reply insert", error, replyPayload);
             alert(`Failed: ${error.message}`);
@@ -4783,15 +4865,6 @@ async function sendTicketMessage(adminMode = false) {
     }
 
     ticketMessages.push(messageRecord);
-    const ticket = supportTickets.find((item) => item.id === ticketId);
-    const readPayload = adminMode
-        ? { is_read_by_admin: true, is_read_by_user: false }
-        : { is_read_by_user: true, is_read_by_admin: false };
-    if (ticket) Object.assign(ticket, readPayload);
-    if (hasCloudConnection()) {
-        const { error: readError } = await supabaseClient.from("tickets").update(readPayload).eq("id", ticketId);
-        if (readError) logSupabaseError("tickets reply read-state update", readError, { ticketId, readPayload });
-    }
     input.value = "";
     saveLocalData();
     updateUnreadBadges();
