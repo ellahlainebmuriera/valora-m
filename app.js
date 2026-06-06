@@ -1527,6 +1527,7 @@ let activeBusinessProfileId = null;
 let savedItems = [];
 let supportTickets = [];
 let ticketMessages = [];
+let featureRequestsCache = [];
 let activeTicketId = null;
 let activeAdminTicketId = null;
 let currentInvoiceItems = []; // List of { id, description, quantity, unit_price }
@@ -2405,10 +2406,11 @@ function switchTab(tabId) {
         updateBillingTabUI();
     } else if (tabId === "admin-tab") {
         renderAdminDashboard();
-        renderAdminTickets();
     } else if (tabId === "admin-feature-inbox-tab") {
         renderAdminFeatureInbox();
-    } else if (tabId === "feature-requests-tab" || tabId === "bug-report-tab") {
+    } else if (tabId === "feature-requests-tab") {
+        updateUnreadBadges();
+    } else if (tabId === "bug-report-tab") {
         renderSupportTickets();
     }
     closeMobileDrawer();
@@ -3482,18 +3484,23 @@ async function getAdminFeatureRequests() {
             .order("created_at", { ascending: false });
 
         if (!error && data) {
-            return data.map((request) => ({
+            featureRequestsCache = data
+                .filter((request) => !request.is_deleted)
+                .map((request) => ({
                 id: request.id,
                 customer_email: request.customer_email || "Unknown customer",
                 text: request.request_text || "",
-                created_at: request.created_at
+                created_at: request.created_at,
+                is_read_by_admin: request.is_read_by_admin !== false
             }));
+            return featureRequestsCache;
         }
 
         console.error("Unable to load cloud feature requests:", error);
     }
 
-    return getFeatureRequests();
+    featureRequestsCache = getFeatureRequests().filter((request) => !request.is_deleted);
+    return featureRequestsCache;
 }
 
 async function submitFeatureRequest() {
@@ -3508,15 +3515,26 @@ async function submitFeatureRequest() {
         id: `req-${Date.now()}`,
         customer_email: currentUser?.email || "local-customer",
         text,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        is_read_by_admin: false,
+        is_deleted: false
     };
 
     if (hasCloudConnection()) {
-        const { error } = await supabaseClient.from("feature_requests").insert({
+        const requestPayload = {
             user_id: currentUser.id,
             customer_email: currentUser.email,
-            request_text: text
-        });
+            request_text: text,
+            is_read_by_admin: false,
+            is_deleted: false
+        };
+        let { error } = await supabaseClient.from("feature_requests").insert(requestPayload);
+        if (error && (isMissingSchemaColumnError(error, "is_read_by_admin") || isMissingSchemaColumnError(error, "is_deleted"))) {
+            logSupabaseError("feature_requests insert missing inbox columns", error, requestPayload);
+            const fallbackPayload = withoutKeys(requestPayload, ["is_read_by_admin", "is_deleted"]);
+            const fallback = await supabaseClient.from("feature_requests").insert(fallbackPayload);
+            error = fallback.error;
+        }
 
         if (error) {
             console.error("Unable to submit cloud feature request:", error);
@@ -3531,6 +3549,7 @@ async function submitFeatureRequest() {
     const requests = getFeatureRequests();
     requests.push(request);
     saveFeatureRequests(requests);
+    updateUnreadBadges();
     textarea.value = "";
     alert("Feature request sent to the admin dashboard.");
 }
@@ -3549,15 +3568,26 @@ async function submitBetaFeedback() {
         id: `feedback-${Date.now()}`,
         customer_email: currentUser?.email || "local-customer",
         text: requestText,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        is_read_by_admin: false,
+        is_deleted: false
     };
 
     if (hasCloudConnection()) {
-        const { error } = await supabaseClient.from("feature_requests").insert({
+        const feedbackPayload = {
             user_id: currentUser.id,
             customer_email: currentUser.email,
-            request_text: requestText
-        });
+            request_text: requestText,
+            is_read_by_admin: false,
+            is_deleted: false
+        };
+        let { error } = await supabaseClient.from("feature_requests").insert(feedbackPayload);
+        if (error && (isMissingSchemaColumnError(error, "is_read_by_admin") || isMissingSchemaColumnError(error, "is_deleted"))) {
+            logSupabaseError("beta feedback insert missing inbox columns", error, feedbackPayload);
+            const fallbackPayload = withoutKeys(feedbackPayload, ["is_read_by_admin", "is_deleted"]);
+            const fallback = await supabaseClient.from("feature_requests").insert(fallbackPayload);
+            error = fallback.error;
+        }
 
         if (error) {
             logSupabaseError("beta feedback insert", error, request);
@@ -3572,6 +3602,7 @@ async function submitBetaFeedback() {
     const requests = getFeatureRequests();
     requests.push(request);
     saveFeatureRequests(requests);
+    updateUnreadBadges();
     textarea.value = "";
     createToast("Beta feedback sent. Thank you for testing Valora EM.");
 }
@@ -4414,7 +4445,7 @@ async function fetchSupportTickets() {
         : supabaseClient.from("tickets").select("*").order("created_at", { ascending: false });
     const { data: dbTickets, error: ticketsError } = await ticketsQuery;
     if (!ticketsError && dbTickets) {
-        supportTickets = dbTickets;
+        supportTickets = dbTickets.filter((ticket) => isAdminUser() ? !ticket.deleted_by_admin : !ticket.deleted_by_user);
     } else if (ticketsError) {
         logSupabaseError("tickets select", ticketsError);
     }
@@ -4431,14 +4462,118 @@ async function fetchSupportTickets() {
 }
 
 function getVisibleTickets() {
-    if (isAdminUser()) return supportTickets;
-    return supportTickets.filter((ticket) => ticket.user_id === currentUser.id || ticket.customer_email === currentUser.email);
+    const visible = isAdminUser()
+        ? supportTickets.filter((ticket) => !ticket.deleted_by_admin)
+        : supportTickets.filter((ticket) => !ticket.deleted_by_user && (ticket.user_id === currentUser.id || ticket.customer_email === currentUser.email));
+    return visible;
+}
+
+function isTicketUnread(ticket, adminMode = false) {
+    return adminMode ? ticket.is_read_by_admin === false : ticket.is_read_by_user === false;
+}
+
+function setUnreadBadge(id, count) {
+    document.querySelectorAll(`#${id}`).forEach((badge) => {
+        badge.innerText = count > 99 ? "99+" : String(count);
+        badge.style.display = count > 0 ? "inline-flex" : "none";
+    });
+}
+
+function updateUnreadBadges() {
+    const featureCount = isAdminUser()
+        ? featureRequestsCache.filter((request) => !request.is_deleted && request.is_read_by_admin === false).length
+        : 0;
+    const bugCount = getVisibleTickets().filter((ticket) => isTicketUnread(ticket, isAdminUser())).length;
+    setUnreadBadge("feature-requests-badge", featureCount);
+    setUnreadBadge("bug-report-badge", bugCount);
+}
+
+async function markFeatureRequestsRead(requestIds) {
+    if (!isAdminUser() || !requestIds.length) return;
+    featureRequestsCache = featureRequestsCache.map((request) => (
+        requestIds.includes(request.id) ? { ...request, is_read_by_admin: true } : request
+    ));
+    updateUnreadBadges();
+
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient
+            .from("feature_requests")
+            .update({ is_read_by_admin: true })
+            .in("id", requestIds);
+        if (error) logSupabaseError("feature_requests mark read", error, { requestIds });
+    } else {
+        saveFeatureRequests(featureRequestsCache);
+    }
+}
+
+async function markTicketRead(ticketId, adminMode = false) {
+    const ticket = supportTickets.find((item) => item.id === ticketId);
+    if (!ticket) return;
+    const updatePayload = adminMode ? { is_read_by_admin: true } : { is_read_by_user: true };
+    Object.assign(ticket, updatePayload);
+    updateUnreadBadges();
+
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient.from("tickets").update(updatePayload).eq("id", ticketId);
+        if (error) logSupabaseError("tickets mark read", error, { ticketId, updatePayload });
+    } else {
+        saveLocalData();
+    }
+}
+
+async function deleteSupportTicket(ticketId, adminMode = false) {
+    if (!ticketId) return;
+    if (!confirm("Delete this bug report from your inbox?")) return;
+    const updatePayload = adminMode
+        ? { deleted_by_admin: true, deleted_at: new Date().toISOString() }
+        : { deleted_by_user: true, deleted_at: new Date().toISOString() };
+
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient.from("tickets").update(updatePayload).eq("id", ticketId);
+        if (error) {
+            logSupabaseError("tickets soft delete", error, { ticketId, updatePayload });
+            alert(`Failed: ${error.message}`);
+            return;
+        }
+    }
+
+    supportTickets = supportTickets.map((ticket) => ticket.id === ticketId ? { ...ticket, ...updatePayload } : ticket);
+    if (activeTicketId === ticketId) activeTicketId = null;
+    if (activeAdminTicketId === ticketId) activeAdminTicketId = null;
+    saveLocalData();
+    adminMode ? renderAdminTickets() : renderSupportTickets();
+    updateUnreadBadges();
+}
+
+async function deleteFeatureRequest(requestId) {
+    if (!isAdminUser() || !requestId) return;
+    if (!confirm("Delete this feedback or feature request from the inbox?")) return;
+    const deletedAt = new Date().toISOString();
+
+    if (hasCloudConnection()) {
+        const { error } = await supabaseClient
+            .from("feature_requests")
+            .update({ is_deleted: true, deleted_at: deletedAt, is_read_by_admin: true })
+            .eq("id", requestId);
+        if (error) {
+            logSupabaseError("feature_requests soft delete", error, { requestId });
+            alert(`Failed: ${error.message}`);
+            return;
+        }
+    }
+
+    featureRequestsCache = featureRequestsCache.map((request) => (
+        request.id === requestId ? { ...request, is_deleted: true, deleted_at: deletedAt, is_read_by_admin: true } : request
+    ));
+    saveFeatureRequests(featureRequestsCache);
+    renderAdminFeatureInbox();
+    updateUnreadBadges();
 }
 
 function renderTicketList(containerId, adminMode = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    const tickets = adminMode ? supportTickets : getVisibleTickets();
+    const tickets = adminMode ? supportTickets.filter((ticket) => !ticket.deleted_by_admin) : getVisibleTickets();
     const selectedId = adminMode ? activeAdminTicketId : activeTicketId;
     if (!tickets.length) {
         container.innerHTML = '<div class="ticket-empty">No tickets yet.</div>';
@@ -4446,16 +4581,19 @@ function renderTicketList(containerId, adminMode = false) {
     }
 
     container.innerHTML = tickets.map((ticket) => `
-        <button class="ticket-list-item ${ticket.id === selectedId ? "active" : ""}" onclick="${adminMode ? "selectAdminTicket" : "selectTicket"}('${ticket.id}')">
-            <strong>${escapeHtml(ticket.subject)}</strong>
-            ${adminMode
-                ? `<span class="ticket-list-meta">
-                    <span>${escapeHtml(ticket.customer_email || "Unknown user")}</span>
-                    <span>${new Date(ticket.created_at).toLocaleString()}</span>
-                    <span class="ticket-status-badge ${ticket.status === "RESOLVED" ? "resolved" : ""}">${ticket.status}</span>
-                </span>`
-                : `<span>${new Date(ticket.created_at).toLocaleString()} - ${ticket.status}</span>`}
-        </button>
+        <div class="ticket-list-item ${ticket.id === selectedId ? "active" : ""} ${isTicketUnread(ticket, adminMode) ? "unread" : ""}">
+            <button class="ticket-list-main" type="button" onclick="${adminMode ? "selectAdminTicket" : "selectTicket"}('${ticket.id}')">
+                <strong>${escapeHtml(ticket.subject)}</strong>
+                ${adminMode
+                    ? `<span class="ticket-list-meta">
+                        <span>${escapeHtml(ticket.customer_email || "Unknown user")}</span>
+                        <span>${new Date(ticket.created_at).toLocaleString()}</span>
+                        <span class="ticket-status-badge ${ticket.status === "RESOLVED" ? "resolved" : ""}">${ticket.status}</span>
+                    </span>`
+                    : `<span>${new Date(ticket.created_at).toLocaleString()} - ${ticket.status}</span>`}
+            </button>
+            <button class="ticket-delete-btn" type="button" onclick="deleteSupportTicket('${ticket.id}', ${adminMode})" title="Delete ticket">Delete</button>
+        </div>
     `).join("");
 }
 
@@ -4506,7 +4644,11 @@ async function createSupportTicket() {
         customer_email: customerEmail,
         subject,
         status: "OPEN",
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        is_read_by_admin: false,
+        is_read_by_user: true,
+        deleted_by_admin: false,
+        deleted_by_user: false
     };
     const firstMessage = {
         id: `msg-${Date.now()}`,
@@ -4525,13 +4667,33 @@ async function createSupportTicket() {
             user_id: cloudUser.id,
             customer_email: customerEmail,
             subject,
-            status: "OPEN"
+            status: "OPEN",
+            is_read_by_admin: false,
+            is_read_by_user: true,
+            deleted_by_admin: false,
+            deleted_by_user: false
         };
-        const { data, error } = await supabaseClient
+        let { data, error } = await supabaseClient
             .from("tickets")
             .insert([ticketPayload])
             .select("id,user_id,customer_email,subject,status,created_at")
             .single();
+        if (error && (
+            isMissingSchemaColumnError(error, "is_read_by_admin") ||
+            isMissingSchemaColumnError(error, "is_read_by_user") ||
+            isMissingSchemaColumnError(error, "deleted_by_admin") ||
+            isMissingSchemaColumnError(error, "deleted_by_user")
+        )) {
+            logSupabaseError("tickets insert missing inbox columns", error, ticketPayload);
+            const fallbackPayload = withoutKeys(ticketPayload, ["is_read_by_admin", "is_read_by_user", "deleted_by_admin", "deleted_by_user"]);
+            const fallback = await supabaseClient
+                .from("tickets")
+                .insert([fallbackPayload])
+                .select("id,user_id,customer_email,subject,status,created_at")
+                .single();
+            data = fallback.data;
+            error = fallback.error;
+        }
         if (error) {
             logSupabaseError("tickets insert", error, ticketPayload);
             alert(`Failed: ${error.message}`);
@@ -4562,19 +4724,22 @@ async function createSupportTicket() {
     ticketMessages.push(firstMessage);
     activeTicketId = ticket.id;
     saveLocalData();
+    updateUnreadBadges();
     subjectInput.value = "";
     messageInput.value = "";
     renderSupportTickets();
     createToast("Ticket sent to Valora EM support.");
 }
 
-function selectTicket(id) {
+async function selectTicket(id) {
     activeTicketId = id;
+    await markTicketRead(id, false);
     renderSupportTickets();
 }
 
-function selectAdminTicket(id) {
+async function selectAdminTicket(id) {
     activeAdminTicketId = id;
+    await markTicketRead(id, true);
     renderAdminTickets();
 }
 
@@ -4618,8 +4783,18 @@ async function sendTicketMessage(adminMode = false) {
     }
 
     ticketMessages.push(messageRecord);
+    const ticket = supportTickets.find((item) => item.id === ticketId);
+    const readPayload = adminMode
+        ? { is_read_by_admin: true, is_read_by_user: false }
+        : { is_read_by_user: true, is_read_by_admin: false };
+    if (ticket) Object.assign(ticket, readPayload);
+    if (hasCloudConnection()) {
+        const { error: readError } = await supabaseClient.from("tickets").update(readPayload).eq("id", ticketId);
+        if (readError) logSupabaseError("tickets reply read-state update", readError, { ticketId, readPayload });
+    }
     input.value = "";
     saveLocalData();
+    updateUnreadBadges();
     adminMode ? renderAdminTickets() : renderSupportTickets();
 }
 
@@ -4628,8 +4803,15 @@ async function updateTicketStatus(status) {
     const ticket = supportTickets.find((item) => item.id === activeAdminTicketId);
     if (!ticket) return;
     ticket.status = status;
+    ticket.is_read_by_admin = true;
     if (hasCloudConnection()) {
-        const { error } = await supabaseClient.from("tickets").update({ status }).eq("id", activeAdminTicketId);
+        const updatePayload = { status, is_read_by_admin: true };
+        let { error } = await supabaseClient.from("tickets").update(updatePayload).eq("id", activeAdminTicketId);
+        if (error && isMissingSchemaColumnError(error, "is_read_by_admin")) {
+            logSupabaseError("tickets status update missing inbox column", error, updatePayload);
+            const fallback = await supabaseClient.from("tickets").update({ status }).eq("id", activeAdminTicketId);
+            error = fallback.error;
+        }
         if (error) {
             logSupabaseError("tickets status update", error, { id: activeAdminTicketId, status });
             alert(`Failed: ${error.message}`);
@@ -4644,16 +4826,21 @@ async function renderSupportTickets() {
     if (hasCloudConnection()) await fetchSupportTickets();
     const tickets = getVisibleTickets();
     if (!activeTicketId && tickets.length) activeTicketId = tickets[0].id;
+    if (activeTicketId) await markTicketRead(activeTicketId, false);
     renderTicketList("ticket-list", false);
     renderTicketThread(activeTicketId, "ticket-thread-messages", "ticket-reply");
+    updateUnreadBadges();
 }
 
 async function renderAdminTickets() {
     if (!isAdminUser()) return;
     if (hasCloudConnection()) await fetchSupportTickets();
-    if (!activeAdminTicketId && supportTickets.length) activeAdminTicketId = supportTickets[0].id;
+    const tickets = supportTickets.filter((ticket) => !ticket.deleted_by_admin);
+    if (!activeAdminTicketId && tickets.length) activeAdminTicketId = tickets[0].id;
+    if (activeAdminTicketId) await markTicketRead(activeAdminTicketId, true);
     renderTicketList("admin-ticket-list", true);
     renderTicketThread(activeAdminTicketId, "admin-ticket-thread-messages", "admin-ticket-reply", "admin-resolve-ticket-btn");
+    updateUnreadBadges();
 }
 
 // Fetch database records from Supabase
@@ -4699,6 +4886,8 @@ async function fetchCloudData() {
         }
 
         await fetchSupportTickets();
+        if (isAdminUser()) await getAdminFeatureRequests();
+        updateUnreadBadges();
     } catch (err) {
         console.error("Error fetching cloud data:", err);
     }
@@ -4714,6 +4903,8 @@ function loadLocalData() {
     savedItems = JSON.parse(localStorage.getItem(getLocalSavedItemsKey())) || [];
     supportTickets = JSON.parse(localStorage.getItem(getLocalTicketsKey())) || [];
     ticketMessages = JSON.parse(localStorage.getItem(getLocalTicketMessagesKey())) || [];
+    featureRequestsCache = getFeatureRequests().filter((request) => !request.is_deleted);
+    updateUnreadBadges();
 }
 
 // Save database records to LocalStorage
@@ -6410,17 +6601,24 @@ async function renderFeatureRequestsTable(tableSelector) {
         const requests = await getAdminFeatureRequests();
         requestsBody.innerHTML = "";
         if (requests.length === 0) {
-            requestsBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td></tr>';
+            requestsBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td></tr>';
         } else {
+            const unreadIds = [];
             requests.forEach((request) => {
+                if (request.is_read_by_admin === false) unreadIds.push(request.id);
                 const row = document.createElement("tr");
+                row.className = request.is_read_by_admin === false ? "feature-request-unread" : "";
                 row.innerHTML = `
                     <td>${new Date(request.created_at).toLocaleString()}</td>
-                    <td>${request.customer_email}</td>
-                    <td>${request.text}</td>
+                    <td>${escapeHtml(request.customer_email)}</td>
+                    <td>${escapeHtml(request.text)}</td>
+                    <td style="text-align: right;">
+                        <button class="feature-delete-btn" type="button" onclick="deleteFeatureRequest('${request.id}')">Delete</button>
+                    </td>
                 `;
                 requestsBody.appendChild(row);
             });
+            if (unreadIds.length) await markFeatureRequestsRead(unreadIds);
         }
     }
 }
@@ -6428,6 +6626,7 @@ async function renderFeatureRequestsTable(tableSelector) {
 async function renderAdminFeatureInbox() {
     if (!isAdminUser()) return;
     await renderFeatureRequestsTable("#feature-inbox-table tbody");
+    updateUnreadBadges();
 }
 
 // ==================== AUTOMATIC PAYMONGO CHECKOUT PROCESSOR ====================
@@ -6826,6 +7025,8 @@ Object.assign(window, {
     createSupportTicket,
     selectTicket,
     selectAdminTicket,
+    deleteSupportTicket,
+    deleteFeatureRequest,
     sendTicketMessage,
     updateTicketStatus,
     restartTutorial,

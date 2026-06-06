@@ -365,6 +365,21 @@ body {
     transition: var(--transition-speed);
 }
 
+.nav-unread-badge {
+    align-items: center;
+    background: #ef4444;
+    border-radius: 999px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    justify-content: center;
+    line-height: 1;
+    margin-left: auto;
+    min-width: 20px;
+    padding: 4px 6px;
+}
+
 /* Tab Layouts */
 .tab-content {
     display: none;
@@ -1024,11 +1039,15 @@ textarea:focus {
 }
 
 .ticket-list-item {
+    align-items: flex-start;
     width: 100%;
     border: 0;
     border-bottom: 1px solid var(--border-color);
     background: transparent;
     color: var(--text-main);
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
     padding: 12px;
     text-align: left;
     cursor: pointer;
@@ -1037,6 +1056,57 @@ textarea:focus {
 .ticket-list-item.active,
 .ticket-list-item:hover {
     background: var(--primary-glow);
+}
+
+.ticket-list-item.unread {
+    box-shadow: inset 3px 0 0 #ef4444;
+}
+
+.ticket-list-main {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0;
+    text-align: left;
+}
+
+.ticket-delete-btn,
+.feature-delete-btn {
+    align-items: center;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    border-radius: 10px;
+    color: #ef4444;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 800;
+    justify-content: center;
+    min-height: 32px;
+    min-width: 32px;
+    padding: 6px 9px;
+}
+
+.ticket-delete-btn:hover,
+.feature-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.feature-request-unread td:first-child::before {
+    background: #ef4444;
+    border-radius: 999px;
+    color: #fff;
+    content: "NEW";
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 800;
+    margin-right: 8px;
+    padding: 3px 6px;
 }
 
 .ticket-list-item span {

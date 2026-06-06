@@ -25,7 +25,7 @@
     <meta name="twitter:image" content="https://valora-m.vercel.app/assets/og-preview-banner.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=thumb-flow-v41">
+    <link rel="stylesheet" href="styles.css?v=inbox-badges-v44">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -241,6 +241,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.77 9.77 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
                         </svg>
                         Feature Requests
+                        <span class="nav-unread-badge" id="feature-requests-badge" style="display: none;">0</span>
                     </a>
                 </li>
                 <li class="nav-item" data-tab="bug-report-tab">
@@ -249,6 +250,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v3.75m0 3.75h.008v.008H12v-.008Zm-3.75-9.75h7.5m-9.75 3h12m-13.5 3h15m-12.75 6h10.5a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3H6.75a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3Z" />
                         </svg>
                         Bug Report
+                        <span class="nav-unread-badge" id="bug-report-badge" style="display: none;">0</span>
                     </a>
                 </li>
                 <li class="nav-item" data-tab="offline-tab">
@@ -1647,11 +1649,12 @@
                                     <th>Date</th>
                                     <th>Customer</th>
                                     <th>Request</th>
+                                    <th style="text-align: right;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td colspan="3" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td>
+                                    <td colspan="4" style="text-align: center; color: var(--text-muted);">No feature requests yet.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1910,50 +1913,22 @@
             </p>
 
             <div class="checkout-trust-strip" aria-label="Supported payment methods">
-                <span class="payment-brand-icon visa">VISA</span>
-                <span class="payment-brand-icon mastercard">MC</span>
                 <span class="payment-brand-icon gcash">GCash</span>
                 <span class="payment-brand-icon bank">QR Ph</span>
+                <span class="payment-brand-icon bank">Maya</span>
                 <span class="payment-brand-icon bank">Bank App</span>
             </div>
 
-            <div class="form-group">
-                <label>Choose Payment Method</label>
-                <div class="payment-options">
-                    <div class="payment-btn active" id="pay-gcash-opt" role="button" tabindex="0">
-                        <div class="payment-logo-gcash">GCash</div>
-                        <span style="font-size: 11px; margin-top: 4px;">Wallet / QR Ph</span>
-                    </div>
-                    <div class="payment-btn" id="pay-card-opt" role="button" tabindex="0">
-                        <div class="payment-logo-card">CARD</div>
-                        <span style="font-size: 11px; margin-top: 4px;">Debit / Credit Card</span>
-                    </div>
-                </div>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Choose your final payment method on the secure PayMongo page. Valora EM does not collect card or wallet details.</p>
+            <div class="checkout-summary-card">
+                <p>
+                    <strong>Selected Plan:</strong> <span id="payment-plan-name">Pro Unlimited Plan</span><br>
+                    <strong>Amount:</strong> <span id="payment-plan-amount">PHP 249.00</span>
+                </p>
             </div>
 
-            <!-- GCash Section -->
-            <div id="gcash-payment-details">
-                <div class="form-group" style="background-color: rgba(0, 92, 252, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(0, 92, 252, 0.2);">
-                    <p style="font-size: 13px; color: #60a5fa; line-height: 1.4;">
-                        <strong>Payment Method:</strong> Digital wallet or online banking<br>
-                        <strong>Selected Plan:</strong> <span id="payment-plan-name">Pro Unlimited Plan</span><br>
-                        <strong>Amount:</strong> <span id="payment-plan-amount">PHP 249.00</span>
-                    </p>
-                </div>
-                <p style="font-size: 12px; color: var(--text-medium); line-height: 1.5;">Click the button below to open PayMongo. After successful payment, Valora EM will activate your plan automatically.</p>
-            </div>
-
-            <!-- Card Section (Hidden by default) -->
-            <div id="card-payment-details" style="display: none;">
-                <div class="form-group" style="background-color: rgba(99, 102, 241, 0.06); padding: 15px; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.22);">
-                    <p style="font-size: 13px; color: var(--primary); line-height: 1.4;">
-                        <strong>Payment Method:</strong> Debit or credit card<br>
-                        <strong>Selected Plan:</strong> <span id="payment-card-plan-name">Pro Unlimited Plan</span><br>
-                        <strong>Amount:</strong> <span id="payment-card-plan-amount">PHP 249.00</span>
-                    </p>
-                </div>
-                <p style="font-size: 12px; color: var(--text-medium); line-height: 1.5;">Card details are entered only on PayMongo's secure checkout page.</p>
+            <div class="paymongo-secure-flow">
+                <strong>QR-first secure payment</strong>
+                <span>After clicking continue, the customer pays on PayMongo using QR Ph, GCash, Maya, or supported bank apps. Card payments, if available on PayMongo, are processed only on PayMongo's secure page.</span>
             </div>
 
             <label class="checkbox-row easypay-row" style="display: none;">
@@ -1961,10 +1936,10 @@
                 Enable Auto-Renewal for EasyPay. Leave unchecked for manual renewal only.
             </label>
             <div class="secure-payment-note">
-                <strong>Secure payment rule:</strong> Valora EM does not store card numbers, expiry dates, CVCs, or wallet credentials. Payments are processed on PayMongo.
+                <strong>Secure payment rule:</strong> Valora EM never asks for card numbers, expiry dates, CVCs, or wallet credentials inside this app. Payment details stay on PayMongo.
             </div>
 
-            <button class="btn btn-accent" id="submit-mock-payment-btn" style="width: 100%;">Pay Securely with PayMongo</button>
+            <button class="btn btn-accent" id="submit-mock-payment-btn" style="width: 100%;">Continue to QR Secure Checkout</button>
             <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">No refund policy: subscription payments are final once account access is activated, except where required by law or payment provider rules.</p>
 
             <!-- Loading overlay inside modal during processing -->
@@ -2008,7 +1983,7 @@
         }
     </style>
 
-    <script src="app.js?v=thumb-flow-v41"></script>
+    <script src="app.js?v=inbox-badges-v44"></script>
     <script src="auth-fallback.js"></script>
     <script src="pwa-install.js"></script>
     <script>
