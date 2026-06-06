@@ -200,8 +200,8 @@ const UI_TRANSLATIONS = {
             quickStart: "Quick start",
             newUserTitle: "New to Valora EM?",
             newUserBody: "Take the short tutorial or open the Learning Center to see how to set up your store, create invoices, print PDFs, and track profit.",
-            betaFeedback: "Beta feedback",
-            feedbackTitle: "Help improve Valora EM before launch",
+            feedback: "Feedback",
+            feedbackTitle: "Help improve Valora EM",
             feedbackBody: "Tell us what feels confusing, broken, or missing. Your message goes to the owner dashboard/feature inbox for review.",
             totalRevenue: "Total Revenue",
             totalPaid: "Total Paid",
@@ -302,7 +302,7 @@ const UI_TRANSLATIONS = {
             viewPlans: "View Plans"
         },
         placeholders: {
-            betaFeedback: "Example: The thermal print preview is hard to read on my phone.",
+            feedback: "Example: The thermal print preview is hard to read on my phone.",
             featureRequest: "Example: Please add invoice reminder emails, customer read receipts, or automatic monthly reports.",
             ticketSubject: "Subject",
             ticketMessage: "Details: what happened, what page you were on, and what device you used.",
@@ -340,8 +340,8 @@ const UI_TRANSLATIONS = {
             quickStart: "Mabilisang simula",
             newUserTitle: "Bago sa Valora EM?",
             newUserBody: "Simulan ang maikling tutorial o buksan ang Learning Center para matutunan ang store setup, invoice creation, PDF printing, at profit tracking.",
-            betaFeedback: "Beta feedback",
-            feedbackTitle: "Tulungan pagandahin ang Valora EM bago ilaunch",
+            feedback: "Feedback",
+            feedbackTitle: "Tulungan pagandahin ang Valora EM",
             feedbackBody: "Sabihin kung ano ang nakakalito, sira, o kulang. Mapupunta ang message sa owner dashboard/feature inbox.",
             totalRevenue: "Kabuuang Kita",
             totalPaid: "Nabayaran",
@@ -442,7 +442,7 @@ const UI_TRANSLATIONS = {
             viewPlans: "Tingnan ang Plans"
         },
         placeholders: {
-            betaFeedback: "Halimbawa: Mahirap basahin ang thermal print preview sa phone ko.",
+            feedback: "Halimbawa: Mahirap basahin ang thermal print preview sa phone ko.",
             featureRequest: "Halimbawa: Paki-add ang invoice reminder emails, customer read receipts, o automatic monthly reports.",
             ticketSubject: "Subject",
             ticketMessage: "Details: ano ang nangyari, anong page, at anong device ang ginamit mo.",
@@ -480,8 +480,8 @@ const UI_TRANSLATIONS = {
             quickStart: "Inicio rapido",
             newUserTitle: "Nuevo en Valora EM?",
             newUserBody: "Tome el tutorial corto o abra el Centro de aprendizaje para configurar su tienda, crear facturas, imprimir PDF y ver ganancias.",
-            betaFeedback: "Comentarios beta",
-            feedbackTitle: "Ayude a mejorar Valora EM antes del lanzamiento",
+            feedback: "Comentarios",
+            feedbackTitle: "Ayude a mejorar Valora EM",
             feedbackBody: "Cuente que resulta confuso, roto o faltante. Su mensaje ira al panel del propietario para revision.",
             totalRevenue: "Ingresos totales",
             totalPaid: "Total pagado",
@@ -581,7 +581,7 @@ const UI_TRANSLATIONS = {
             viewPlans: "Ver planes"
         },
         placeholders: {
-            betaFeedback: "Ejemplo: La vista termica es dificil de leer en mi telefono.",
+            feedback: "Ejemplo: La vista termica es dificil de leer en mi telefono.",
             featureRequest: "Ejemplo: Agreguen recordatorios por email, recibos leidos o reportes mensuales.",
             ticketSubject: "Asunto",
             ticketMessage: "Detalles: que paso, en que pagina estaba y que dispositivo uso.",
@@ -619,8 +619,8 @@ const UI_TRANSLATIONS = {
             quickStart: "Demarrage rapide",
             newUserTitle: "Nouveau sur Valora EM ?",
             newUserBody: "Lancez le court tutoriel ou ouvrez le centre d'apprentissage pour configurer votre boutique, creer des factures, imprimer des PDF et suivre le profit.",
-            betaFeedback: "Retour beta",
-            feedbackTitle: "Aidez a ameliorer Valora EM avant le lancement",
+            feedback: "Commentaires",
+            feedbackTitle: "Aidez a ameliorer Valora EM",
             feedbackBody: "Dites-nous ce qui est confus, casse ou manquant. Votre message sera envoye au tableau proprietaire.",
             totalRevenue: "Revenus totaux",
             totalPaid: "Total paye",
@@ -720,7 +720,7 @@ const UI_TRANSLATIONS = {
             viewPlans: "Voir les plans"
         },
         placeholders: {
-            betaFeedback: "Exemple : l'apercu thermique est difficile a lire sur mon telephone.",
+            feedback: "Exemple : l'apercu thermique est difficile a lire sur mon telephone.",
             featureRequest: "Exemple : ajoutez des rappels email, recus lus ou rapports mensuels.",
             ticketSubject: "Sujet",
             ticketMessage: "Details : ce qui s'est passe, la page et l'appareil utilise.",
@@ -758,8 +758,8 @@ const UI_TRANSLATIONS = {
             quickStart: "Schnellstart",
             newUserTitle: "Neu bei Valora EM?",
             newUserBody: "Starten Sie das kurze Tutorial oder offnen Sie das Lernzentrum, um Shop, Rechnungen, PDF-Druck und Gewinnverfolgung zu lernen.",
-            betaFeedback: "Beta Feedback",
-            feedbackTitle: "Helfen Sie, Valora EM vor dem Start zu verbessern",
+            feedback: "Feedback",
+            feedbackTitle: "Helfen Sie, Valora EM zu verbessern",
             feedbackBody: "Sagen Sie uns, was verwirrend, defekt oder fehlend ist. Ihre Nachricht geht an das Owner Dashboard.",
             totalRevenue: "Gesamtumsatz",
             totalPaid: "Bezahlt gesamt",
@@ -859,7 +859,7 @@ const UI_TRANSLATIONS = {
             viewPlans: "Plane ansehen"
         },
         placeholders: {
-            betaFeedback: "Beispiel: Die Thermodruck-Vorschau ist auf meinem Telefon schwer lesbar.",
+            feedback: "Beispiel: Die Thermodruck-Vorschau ist auf meinem Telefon schwer lesbar.",
             featureRequest: "Beispiel: Bitte Erinnerungs-E-Mails, Lesebestatigungen oder Monatsberichte hinzufugen.",
             ticketSubject: "Betreff",
             ticketMessage: "Details: Was ist passiert, welche Seite und welches Gerat wurde verwendet.",
@@ -897,8 +897,8 @@ const UI_TRANSLATIONS = {
             quickStart: "クイックスタート",
             newUserTitle: "Valora EM は初めてですか？",
             newUserBody: "短いチュートリアルまたは学習センターで、店舗設定、請求書作成、PDF印刷、利益確認を学べます。",
-            betaFeedback: "ベータフィードバック",
-            feedbackTitle: "正式公開前の Valora EM 改善にご協力ください",
+            feedback: "フィードバック",
+            feedbackTitle: "Valora EM の改善にご協力ください",
             feedbackBody: "わかりにくい点、不具合、不足している機能をお知らせください。メッセージはオーナーダッシュボードに届きます。",
             totalRevenue: "総収益",
             totalPaid: "支払済み合計",
@@ -998,7 +998,7 @@ const UI_TRANSLATIONS = {
             viewPlans: "プランを見る"
         },
         placeholders: {
-            betaFeedback: "例：スマホでサーマル印刷プレビューが読みにくいです。",
+            feedback: "例：スマホでサーマル印刷プレビューが読みにくいです。",
             featureRequest: "例：請求リマインダー、既読確認、月次レポートを追加してください。",
             ticketSubject: "件名",
             ticketMessage: "詳細：何が起きたか、どのページか、使用した端末を入力してください。",
@@ -1036,8 +1036,8 @@ const UI_TRANSLATIONS = {
             quickStart: "빠른 시작",
             newUserTitle: "Valora EM이 처음인가요?",
             newUserBody: "짧은 튜토리얼이나 학습 센터에서 매장 설정, 인보이스 작성, PDF 인쇄, 수익 추적 방법을 배울 수 있습니다.",
-            betaFeedback: "베타 피드백",
-            feedbackTitle: "출시 전 Valora EM 개선을 도와주세요",
+            feedback: "피드백",
+            feedbackTitle: "Valora EM 개선을 도와주세요",
             feedbackBody: "헷갈리거나 고장났거나 부족한 부분을 알려주세요. 메시지는 관리자 대시보드로 전달됩니다.",
             totalRevenue: "총수익",
             totalPaid: "결제 완료",
@@ -1137,7 +1137,7 @@ const UI_TRANSLATIONS = {
             viewPlans: "플랜 보기"
         },
         placeholders: {
-            betaFeedback: "예: 휴대폰에서 열전사 인쇄 미리보기가 읽기 어렵습니다.",
+            feedback: "예: 휴대폰에서 열전사 인쇄 미리보기가 읽기 어렵습니다.",
             featureRequest: "예: 인보이스 알림 이메일, 고객 읽음 확인, 월간 보고서를 추가해주세요.",
             ticketSubject: "제목",
             ticketMessage: "세부 정보: 무슨 일이 있었는지, 어떤 페이지였는지, 어떤 기기를 사용했는지 적어주세요.",
@@ -1175,8 +1175,8 @@ const UI_TRANSLATIONS = {
             quickStart: "快速开始",
             newUserTitle: "第一次使用 Valora EM？",
             newUserBody: "开始简短教程或打开学习中心，了解如何设置店铺、创建发票、打印 PDF 和跟踪利润。",
-            betaFeedback: "测试反馈",
-            feedbackTitle: "帮助我们在发布前改进 Valora EM",
+            feedback: "反馈",
+            feedbackTitle: "帮助我们改进 Valora EM",
             feedbackBody: "告诉我们哪些地方难懂、损坏或缺失。您的消息会发送到所有者仪表板。",
             totalRevenue: "总收入",
             totalPaid: "已付款总额",
@@ -1276,7 +1276,7 @@ const UI_TRANSLATIONS = {
             viewPlans: "查看计划"
         },
         placeholders: {
-            betaFeedback: "示例：手机上的热敏打印预览很难阅读。",
+            feedback: "示例：手机上的热敏打印预览很难阅读。",
             featureRequest: "示例：请添加发票提醒邮件、客户已读回执或每月报告。",
             ticketSubject: "主题",
             ticketMessage: "详细信息：发生了什么、在哪个页面、使用了什么设备。",
@@ -1317,10 +1317,10 @@ const UI_TEXT_BINDINGS = [
     { selector: "[data-tutorial-start]", key: "common.beginTutorial" },
     { selector: "[data-learning-go]", key: "common.openLearningCenter" },
     { selector: "#launch-notice-banner .btn", key: "common.viewPlans" },
-    { selector: ".beta-feedback-card .learning-kicker", key: "dashboard.betaFeedback" },
-    { selector: ".beta-feedback-card h3", key: "dashboard.feedbackTitle" },
-    { selector: ".beta-feedback-card p", key: "dashboard.feedbackBody" },
-    { selector: "#submit-beta-feedback-btn", key: "common.sendFeedback" },
+    { selector: ".feedback-card .learning-kicker", key: "dashboard.feedback" },
+    { selector: ".feedback-card h3", key: "dashboard.feedbackTitle" },
+    { selector: ".feedback-card p", key: "dashboard.feedbackBody" },
+    { selector: "#submit-feedback-btn", key: "common.sendFeedback" },
     { selector: ".metrics-grid .metric-card:nth-child(1) .metric-title", key: "dashboard.totalRevenue" },
     { selector: ".metrics-grid .metric-card:nth-child(2) .metric-title", key: "dashboard.totalPaid" },
     { selector: ".metrics-grid .metric-card:nth-child(3) .metric-title", key: "dashboard.unpaidBalance" },
@@ -1391,7 +1391,7 @@ const UI_TEXT_BINDINGS = [
 ];
 
 const UI_PLACEHOLDER_BINDINGS = [
-    { selector: "#beta-feedback-text", key: "placeholders.betaFeedback" },
+    { selector: "#feedback-text", key: "placeholders.feedback" },
     { selector: "#feature-request-text", key: "placeholders.featureRequest" },
     { selector: "#ticket-subject", key: "placeholders.ticketSubject" },
     { selector: "#ticket-message", key: "placeholders.ticketMessage" },
@@ -1550,13 +1550,13 @@ let whitelabelConfig = {
 };
 
 // ==================== INITIALIZATION ====================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     loadWhiteLabelSettings();
     enhancePricingFeatureIcons();
     initAppEventListeners();
     initSignaturePad();
-    initPasswordRecoveryFlow();
-    checkAuthSession();
+    await initPasswordRecoveryFlow();
+    await checkAuthSession();
     
     // Set default dates in invoice form
     const today = new Date().toISOString().split('T')[0];
@@ -1964,12 +1964,30 @@ function showPasswordResetForm() {
     if (loginForm) loginForm.style.display = "none";
     if (registerForm) registerForm.style.display = "none";
     if (resetForm) resetForm.style.display = "block";
-    if (toggleLogin) toggleLogin.style.display = "block";
+    if (toggleLogin) toggleLogin.style.display = "none";
     if (toggleRegister) toggleRegister.style.display = "none";
     if (toggleReset) toggleReset.style.display = "none";
     if (toggleResetBack) toggleResetBack.style.display = "block";
 
     configurePasswordResetForm();
+}
+
+function showLoginAuthForm() {
+    const loginForm = document.getElementById("login-form");
+    const registerForm = document.getElementById("register-form");
+    const resetForm = document.getElementById("reset-password-form");
+    const toggleLogin = document.getElementById("auth-toggle-login");
+    const toggleRegister = document.getElementById("auth-toggle-register");
+    const toggleReset = document.getElementById("auth-toggle-reset");
+    const toggleResetBack = document.getElementById("auth-toggle-reset-back");
+
+    if (loginForm) loginForm.style.display = "block";
+    if (registerForm) registerForm.style.display = "none";
+    if (resetForm) resetForm.style.display = "none";
+    if (toggleLogin) toggleLogin.style.display = "block";
+    if (toggleRegister) toggleRegister.style.display = "none";
+    if (toggleReset) toggleReset.style.display = "block";
+    if (toggleResetBack) toggleResetBack.style.display = "none";
 }
 
 function configurePasswordResetForm() {
@@ -1991,12 +2009,14 @@ function configurePasswordResetForm() {
         codeInput.style.display = "none";
         codeInput.required = false;
         codeInput.disabled = true;
+        sendButton.disabled = false;
         sendButton.innerText = "Send Reset Link";
         help.style.display = "block";
         help.innerText = isPasswordRecoverySession
             ? "Reset link verified. Type your new password, then click Save New Password."
             : "Click Send Reset Link, open the latest email from Supabase/Valora EM, then use the reset link before saving a new password.";
         submitButton.innerText = isPasswordRecoverySession ? "Save New Password" : "Save New Password After Opening Link";
+        submitButton.disabled = false;
         return;
     }
 
@@ -2714,7 +2734,7 @@ function renderLaunchNotification() {
     const daysLeft = Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86400000));
     const text = document.getElementById("launch-notice-text");
     if (text) {
-        text.innerText = `Beta accounts now have ${daysLeft} day${daysLeft === 1 ? "" : "s"} left in the launch trial. Upgrade manually before ${trialEnd.toLocaleDateString()} to keep premium access.`;
+        text.innerText = `Eligible accounts have ${daysLeft} day${daysLeft === 1 ? "" : "s"} left in the introductory trial. Upgrade manually before ${trialEnd.toLocaleDateString()} to keep premium access.`;
     }
     banner.style.display = "grid";
 }
@@ -3358,7 +3378,7 @@ async function recordPayment(plan, price, method, options = {}) {
         };
         let { error } = await supabaseClient.from("app_payments").insert(paymentPayload);
         if (error && (isMissingSchemaColumnError(error, "billing_mode") || isMissingSchemaColumnError(error, "auto_renewal_enabled"))) {
-            logSupabaseError("app_payments insert missing beta billing columns", error, paymentPayload);
+            logSupabaseError("app_payments insert missing optional billing columns", error, paymentPayload);
             const fallbackPayload = withoutKeys(paymentPayload, ["billing_mode", "auto_renewal_enabled"]);
             const fallback = await supabaseClient.from("app_payments").insert(fallbackPayload);
             error = fallback.error;
@@ -3459,16 +3479,16 @@ async function submitFeatureRequest() {
     alert("Feature request sent to the admin dashboard.");
 }
 
-async function submitBetaFeedback() {
-    const textarea = document.getElementById("beta-feedback-text");
+async function submitFeedback() {
+    const textarea = document.getElementById("feedback-text");
     if (!textarea) return;
     const text = textarea.value.trim();
     if (!text) {
-        createToast("Please type your beta feedback first.", true);
+        createToast("Please type your feedback first.", true);
         return;
     }
 
-    const requestText = `[Beta Feedback] ${text}`;
+    const requestText = `[Feedback] ${text}`;
     const request = {
         id: `feedback-${Date.now()}`,
         customer_email: currentUser?.email || "local-customer",
@@ -3488,19 +3508,19 @@ async function submitBetaFeedback() {
         };
         let { error } = await supabaseClient.from("feature_requests").insert(feedbackPayload);
         if (error && (isMissingSchemaColumnError(error, "is_read_by_admin") || isMissingSchemaColumnError(error, "is_deleted"))) {
-            logSupabaseError("beta feedback insert missing inbox columns", error, feedbackPayload);
+            logSupabaseError("feedback insert missing inbox columns", error, feedbackPayload);
             const fallbackPayload = withoutKeys(feedbackPayload, ["is_read_by_admin", "is_deleted"]);
             const fallback = await supabaseClient.from("feature_requests").insert(fallbackPayload);
             error = fallback.error;
         }
 
         if (error) {
-            logSupabaseError("beta feedback insert", error, request);
+            logSupabaseError("feedback insert", error, request);
             createToast(`Feedback could not sync to Supabase: ${error.message}`, true);
             return;
         }
     } else if (isCloudActive) {
-        createToast("You are offline. Please reconnect before sending beta feedback.", true);
+        createToast("You are offline. Please reconnect before sending feedback.", true);
         return;
     }
 
@@ -3509,7 +3529,7 @@ async function submitBetaFeedback() {
     saveFeatureRequests(requests);
     updateUnreadBadges();
     textarea.value = "";
-    createToast("Beta feedback sent. Thank you for testing Valora EM.");
+    createToast("Feedback sent. Thank you for helping improve Valora EM.");
 }
 
 function handleDocumentPhotos(event) {
@@ -5088,13 +5108,38 @@ function initAppEventListeners() {
         setResetCodeStatus(AUTH_UNAVAILABLE_MESSAGE, true);
     });
 
+    // Password reset navigation
+    document.querySelectorAll(".reset-auth-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+            const resetForm = document.getElementById("reset-password-form");
+            const resetIsOpen = resetForm && resetForm.style.display !== "none";
+
+            if (resetIsOpen) {
+                showLoginAuthForm();
+                return;
+            }
+
+            const loginEmail = document.getElementById("login-email")?.value.trim();
+            const resetEmail = document.getElementById("reset-email");
+            if (resetEmail && loginEmail) resetEmail.value = loginEmail;
+            showPasswordResetForm();
+        });
+    });
+
     // Auth Toggles
     document.querySelectorAll(".toggle-auth-btn").forEach(btn => {
         btn.addEventListener("click", () => {
             const loginForm = document.getElementById("login-form");
             const registerForm = document.getElementById("register-form");
+            const resetForm = document.getElementById("reset-password-form");
             const toggleLogin = document.getElementById("auth-toggle-login");
             const toggleRegister = document.getElementById("auth-toggle-register");
+            const toggleReset = document.getElementById("auth-toggle-reset");
+            const toggleResetBack = document.getElementById("auth-toggle-reset-back");
+
+            if (resetForm) resetForm.style.display = "none";
+            if (toggleReset) toggleReset.style.display = "block";
+            if (toggleResetBack) toggleResetBack.style.display = "none";
             
             if (loginForm.style.display === "none") {
                 loginForm.style.display = "block";
@@ -5516,7 +5561,7 @@ function initAppEventListeners() {
     document.getElementById("save-admin-payment-settings-btn").addEventListener("click", savePaymentSettings);
     document.getElementById("admin-activate-plan-btn")?.addEventListener("click", activateVerifiedUserPlan);
     document.getElementById("submit-feature-request-btn").addEventListener("click", submitFeatureRequest);
-    document.getElementById("submit-beta-feedback-btn").addEventListener("click", submitBetaFeedback);
+    document.getElementById("submit-feedback-btn").addEventListener("click", submitFeedback);
     document.getElementById("save-appearance-settings-btn").addEventListener("click", saveAppearanceSettings);
     document.getElementById("open-account-delete-modal-btn").addEventListener("click", showAccountDeleteModal);
     document.getElementById("close-account-delete-modal-btn").addEventListener("click", hideAccountDeleteModal);
@@ -6926,7 +6971,7 @@ Object.assign(window, {
     configurePasswordResetForm,
     showPasswordResetForm,
     submitFeatureRequest,
-    submitBetaFeedback,
+    submitFeedback,
     removeDocumentPhoto,
     saveInvoiceAsPdf,
     printInvoiceDocument,

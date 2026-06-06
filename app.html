@@ -25,7 +25,7 @@
     <meta name="twitter:image" content="https://valora-m.vercel.app/assets/og-preview-banner.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=launch-security-v47">
+    <link rel="stylesheet" href="styles.css?v=production-auth-v48">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -117,8 +117,8 @@
             <div class="auth-toggle">
                 <p id="auth-toggle-login">Don't have an account? <span class="toggle-auth-btn">Sign Up</span></p>
                 <p id="auth-toggle-register" style="display: none;">Already have an account? <span class="toggle-auth-btn">Sign In</span></p>
-                <p id="auth-toggle-reset" style="margin-top: 8px;">Forgot your password? <span class="reset-auth-btn">Reset Password</span></p>
-                <p id="auth-toggle-reset-back" style="display: none; margin-top: 8px;">Remembered your password? <span class="reset-auth-btn">Back to Sign In</span></p>
+                <p id="auth-toggle-reset" style="margin-top: 8px;">Forgot your password? <button type="button" class="auth-link-button reset-auth-btn">Reset Password</button></p>
+                <p id="auth-toggle-reset-back" style="display: none; margin-top: 8px;">Remembered your password? <button type="button" class="auth-link-button reset-auth-btn">Back to Sign In</button></p>
             </div>
         </div>
     </div>
@@ -342,20 +342,20 @@
                     <div>
                         <span class="learning-kicker">Official launch</span>
                         <h3>Valora EM is now live</h3>
-                        <p id="launch-notice-text">Beta accounts have a 7-day active trial. Upgrade manually before the countdown ends to keep premium access.</p>
+                        <p id="launch-notice-text">Eligible accounts have a 7-day introductory trial. Upgrade manually before the countdown ends to keep premium access.</p>
                     </div>
                     <button class="btn btn-accent btn-sm" type="button" onclick="switchTab('billing-tab')">View Plans</button>
                 </div>
 
-                <div class="panel-card beta-feedback-card">
+                <div class="panel-card feedback-card">
                     <div>
-                        <span class="learning-kicker">Beta feedback</span>
-                        <h3>Help improve Valora EM before launch</h3>
+                        <span class="learning-kicker">Feedback</span>
+                        <h3>Help improve Valora EM</h3>
                         <p>Tell us what feels confusing, broken, or missing. Your message goes to the owner dashboard/feature inbox for review.</p>
                     </div>
-                    <div class="beta-feedback-form">
-                        <textarea id="beta-feedback-text" rows="3" placeholder="Example: The thermal print preview is hard to read on my phone."></textarea>
-                        <button class="btn btn-primary" id="submit-beta-feedback-btn" type="button">Send Feedback</button>
+                    <div class="feedback-form">
+                        <textarea id="feedback-text" rows="3" placeholder="Example: The thermal print preview is hard to read on my phone."></textarea>
+                        <button class="btn btn-primary" id="submit-feedback-btn" type="button">Send Feedback</button>
                     </div>
                 </div>
 
@@ -1983,7 +1983,7 @@
         }
     </style>
 
-    <script src="app.js?v=launch-security-v47"></script>
+    <script src="app.js?v=production-auth-v48"></script>
     <script src="pwa-install.js"></script>
     <script>
         if ("serviceWorker" in navigator) {

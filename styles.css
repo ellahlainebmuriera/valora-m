@@ -662,14 +662,31 @@ body {
     color: var(--text-muted);
 }
 
-.auth-toggle span {
+.auth-toggle span,
+.auth-link-button {
     color: var(--primary);
     cursor: pointer;
     font-weight: 600;
 }
 
-.auth-toggle span:hover {
+.auth-toggle span:hover,
+.auth-link-button:hover {
     text-decoration: underline;
+}
+
+.auth-link-button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    display: inline;
+    font: inherit;
+    padding: 0;
+}
+
+.auth-link-button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
 }
 
 /* Forms & Inputs */
@@ -838,7 +855,7 @@ textarea:focus {
     cursor: pointer;
 }
 
-.beta-feedback-card,
+.feedback-card,
 .launch-notice-banner {
     display: grid;
     grid-template-columns: minmax(0, 0.85fr) minmax(260px, 1fr);
@@ -858,21 +875,21 @@ textarea:focus {
     box-shadow: var(--card-shadow);
 }
 
-.beta-feedback-card h3,
+.feedback-card h3,
 .launch-notice-banner h3 {
     font-family: var(--font-title);
     font-size: 18px;
     margin: 4px 0 6px;
 }
 
-.beta-feedback-card p,
+.feedback-card p,
 .launch-notice-banner p {
     color: var(--text-medium);
     font-size: 13px;
     line-height: 1.5;
 }
 
-.beta-feedback-form {
+.feedback-form {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 12px;
@@ -1257,8 +1274,8 @@ textarea:focus {
     .ticket-create-grid,
     .ticket-workspace,
     .ticket-reply-row,
-    .beta-feedback-card,
-    .beta-feedback-form,
+    .feedback-card,
+    .feedback-form,
     .launch-notice-banner {
         grid-template-columns: 1fr;
     }
@@ -3310,7 +3327,7 @@ textarea:focus {
         filter: grayscale(100%) contrast(200%) !important;
     }
 }
-/* Temporarily hide auth options that need paid/reliable email or provider setup before launch. */
+/* Hide auth options until their external providers are configured. */
 .launch-disabled {
     display: none !important;
 }
