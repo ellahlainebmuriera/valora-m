@@ -252,7 +252,7 @@ const UI_TRANSLATIONS = {
             noCardStorage: "No local card storage",
             noCardStorageBody: "Valora EM does not store card numbers, expiry dates, CVCs, or wallet credentials.",
             manualRenewal: "Manual renewal by default",
-            manualRenewalBody: "Paid plans do not auto-charge unless the user explicitly opts into EasyPay auto-renewal at checkout."
+            manualRenewalBody: "Paid plans do not charge automatically. Renew securely through the Subscription page before access expires."
         },
         featureRequests: {
             title: "Feature Requests",
@@ -396,7 +396,7 @@ const UI_TRANSLATIONS = {
             noCardStorage: "Walang local card storage",
             noCardStorageBody: "Hindi nagse-save ang Valora EM ng card numbers, expiry dates, CVCs, o wallet credentials.",
             manualRenewal: "Manual renewal by default",
-            manualRenewalBody: "Hindi automatic ang charge ng paid plans maliban kung pinili ng user ang EasyPay auto-renewal sa checkout."
+            manualRenewalBody: "Hindi automatic ang charge ng paid plans. Mag-renew nang secure sa Subscription page bago mag-expire ang access."
         },
         featureRequests: {
             title: "Feature Requests",
@@ -540,7 +540,7 @@ const UI_TRANSLATIONS = {
             noCardStorage: "Sin almacenamiento local de tarjetas",
             noCardStorageBody: "Valora EM no guarda numeros de tarjeta, fechas de vencimiento, CVC ni credenciales de billetera.",
             manualRenewal: "Renovacion manual por defecto",
-            manualRenewalBody: "Los planes pagados no cobran automaticamente salvo que el usuario active EasyPay en el checkout."
+            manualRenewalBody: "Los planes pagados no se cobran automaticamente. Renueve de forma segura desde la pagina de Suscripcion antes de que expire el acceso."
         },
         featureRequests: {
             title: "Solicitudes de funciones",
@@ -683,7 +683,7 @@ const UI_TRANSLATIONS = {
             noCardStorage: "Aucun stockage local de carte",
             noCardStorageBody: "Valora EM ne stocke pas les numeros de carte, dates d'expiration, CVC ou identifiants de portefeuille.",
             manualRenewal: "Renouvellement manuel par defaut",
-            manualRenewalBody: "Les plans payants ne debitent pas automatiquement sauf si EasyPay est active au paiement."
+            manualRenewalBody: "Les plans payants ne sont pas renouveles automatiquement. Renouvelez en toute securite depuis la page Abonnement avant l'expiration."
         },
         featureRequests: {
             title: "Demandes de fonctions",
@@ -826,7 +826,7 @@ const UI_TRANSLATIONS = {
             noCardStorage: "Keine lokale Kartenspeicherung",
             noCardStorageBody: "Valora EM speichert keine Kartennummern, Ablaufdaten, CVCs oder Wallet-Zugangsdaten.",
             manualRenewal: "Manuelle Verlangerung standardmassig",
-            manualRenewalBody: "Bezahlte Plane belasten nicht automatisch, ausser EasyPay wird beim Checkout aktiviert."
+            manualRenewalBody: "Bezahlte Plane werden nicht automatisch belastet. Verlangern Sie sicher uber die Abonnementseite, bevor der Zugang ablauft."
         },
         featureRequests: {
             title: "Funktionswunsche",
@@ -969,7 +969,7 @@ const UI_TRANSLATIONS = {
             noCardStorage: "カード情報をローカル保存しません",
             noCardStorageBody: "Valora EM はカード番号、有効期限、CVC、ウォレット認証情報を保存しません。",
             manualRenewal: "標準は手動更新",
-            manualRenewalBody: "EasyPay 自動更新を明示的に選択しない限り、有料プランは自動課金されません。"
+            manualRenewalBody: "有料プランは自動課金されません。利用期限が切れる前にサブスクリプションページから安全に更新してください。"
         },
         featureRequests: {
             title: "機能リクエスト",
@@ -1112,7 +1112,7 @@ const UI_TRANSLATIONS = {
             noCardStorage: "카드 정보 로컬 저장 없음",
             noCardStorageBody: "Valora EM은 카드 번호, 만료일, CVC, 지갑 인증 정보를 저장하지 않습니다.",
             manualRenewal: "기본은 수동 갱신",
-            manualRenewalBody: "사용자가 결제 시 EasyPay 자동 갱신을 선택하지 않으면 유료 플랜은 자동 청구되지 않습니다."
+            manualRenewalBody: "유료 플랜은 자동 청구되지 않습니다. 이용 기간이 만료되기 전에 구독 페이지에서 안전하게 갱신하세요."
         },
         featureRequests: {
             title: "기능 요청",
@@ -1255,7 +1255,7 @@ const UI_TRANSLATIONS = {
             noCardStorage: "不在本地保存银行卡信息",
             noCardStorageBody: "Valora EM 不保存卡号、有效期、CVC 或钱包凭证。",
             manualRenewal: "默认手动续费",
-            manualRenewalBody: "除非用户在结账时明确启用 EasyPay 自动续费，否则付费计划不会自动扣款。"
+            manualRenewalBody: "付费计划不会自动扣款。请在访问权限到期前通过订阅页面安全续费。"
         },
         featureRequests: {
             title: "功能请求",
@@ -1568,15 +1568,6 @@ let thermalEcoModeEnabled = false;
 let billingCycle = "monthly";
 let tutorialStepIndex = 0;
 let tutorialIntroActive = false;
-let paymentSettings = {
-    paymongoPublicKey: "",
-    paymongoSecretKey: "",
-    stripePublishableKey: "",
-    stripeSecretKey: "",
-    cardCheckoutUrl: "",
-    gcashNumber: "0917-888-8888",
-    payoutAccount: ""
-};
 
 // Default White-Label Settings (Naka-save sa LocalStorage para sa developer branding)
 let whitelabelConfig = {
@@ -1751,6 +1742,21 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+}
+
+const SAFE_RASTER_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+
+function isSafeRasterImageFile(file) {
+    if (!file) return false;
+    if (SAFE_RASTER_IMAGE_TYPES.has(String(file.type || "").toLowerCase())) return true;
+    return /\.(png|jpe?g|webp)$/i.test(String(file.name || ""));
+}
+
+function getSafeImageSource(value) {
+    const source = String(value || "").trim();
+    if (/^data:image\/(?:png|jpeg|webp);base64,/i.test(source)) return source;
+    if (/^https:\/\//i.test(source)) return source;
+    return "";
 }
 
 function createToast(message, isError = false) {
@@ -1930,7 +1936,7 @@ async function getAuthenticatedCloudUser() {
     const { data, error } = await supabaseClient.auth.getUser();
     if (error || !data?.user) {
         logSupabaseError("auth.getUser", error || { message: "No authenticated Supabase user session." });
-        alert(`Failed: ${error?.message || "No authenticated user session. Please sign out and sign in again."}`);
+        createToast("Your session could not be verified. Please sign out and sign in again.", true);
         return null;
     }
     currentUser = data.user;
@@ -1948,7 +1954,7 @@ async function ensureCloudUserProfile(user) {
 
     if (lookupError) {
         logSupabaseError("profiles lookup before ticket insert", lookupError, { user_id: user.id });
-        alert(`Failed: ${lookupError.message}`);
+        createToast("Your account profile could not be prepared. Please try signing in again.", true);
         return false;
     }
 
@@ -1968,7 +1974,7 @@ async function ensureCloudUserProfile(user) {
 
     if (insertError) {
         logSupabaseError("profiles insert before ticket insert", insertError, profilePayload);
-        alert(`Failed: ${insertError.message}`);
+        createToast("Your account profile could not be prepared. Please contact support.", true);
         return false;
     }
 
@@ -3047,19 +3053,19 @@ function renderLogoAccessUI() {
     const logoFile = document.getElementById("store-logo-file");
     const settingsLogo = document.getElementById("settings-logo-preview");
     const previewLogo = document.getElementById("preview-logo-box");
-    const logoUrl = allowed ? currentProfile.logo_url : "";
+    const logoUrl = allowed ? getSafeImageSource(currentProfile.logo_url) : "";
 
     if (uploadGroup) uploadGroup.classList.toggle("feature-locked", !allowed);
     if (lockedNote) lockedNote.style.display = allowed ? "none" : "block";
     if (logoFile) logoFile.disabled = !allowed;
 
     if (settingsLogo) {
-        settingsLogo.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="Store logo">` : "<span>LOGO</span>";
+        settingsLogo.innerHTML = logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="Store logo">` : "<span>LOGO</span>";
     }
 
     if (previewLogo) {
         previewLogo.style.display = allowed ? "flex" : "none";
-        previewLogo.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="Store logo">` : "<span>LOGO</span>";
+        previewLogo.innerHTML = logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="Store logo">` : "<span>LOGO</span>";
     }
 }
 
@@ -3312,33 +3318,6 @@ async function addBusinessProfile() {
     applyActiveBusinessProfileToForms();
 }
 
-function loadPaymentSettings() {
-    const saved = localStorage.getItem("valoraem_payment_settings");
-    paymentSettings = saved ? { ...paymentSettings, ...JSON.parse(saved) } : paymentSettings;
-}
-
-function savePaymentSettings() {
-    paymentSettings = {
-        paymongoPublicKey: document.getElementById("admin-paymongo-public").value.trim(),
-        paymongoSecretKey: "",
-        stripePublishableKey: document.getElementById("admin-stripe-public").value.trim(),
-        stripeSecretKey: "",
-        cardCheckoutUrl: document.getElementById("admin-card-checkout-url").value.trim(),
-        gcashNumber: document.getElementById("admin-gcash-number").value.trim(),
-        payoutAccount: document.getElementById("admin-payout-account").value.trim()
-    };
-    localStorage.setItem("valoraem_payment_settings", JSON.stringify(paymentSettings));
-    alert("Admin payment settings saved. Secret keys must stay in PayMongo/Supabase backend settings, not in this browser app.");
-}
-
-function getLocalPaymentRecords() {
-    return JSON.parse(localStorage.getItem("valoraem_payment_records")) || [];
-}
-
-function savePaymentRecords(records) {
-    localStorage.setItem("valoraem_payment_records", JSON.stringify(records));
-}
-
 function getPlanActivationAmount(planName) {
     return PLAN_PROMO_PRICES[getPlanCanonicalName(planName)] || 0;
 }
@@ -3390,7 +3369,7 @@ async function activateVerifiedUserPlan() {
         if (errorText.toLowerCase().includes("admin_activate_user_plan")) {
             createToast("Admin activation is not installed yet. Run SUPABASE_ADMIN_ACTIVATION.sql in Supabase SQL Editor first.", true);
         } else {
-            createToast(`Activation failed: ${error.message}`, true);
+            createToast("Plan activation failed. Verify the payment reference and try again.", true);
         }
         return;
     }
@@ -3405,68 +3384,27 @@ async function activateVerifiedUserPlan() {
 }
 
 async function getPaymentRecords() {
-    if (isCloudActive) {
-        const query = isAdminUser()
-            ? supabaseClient.from("app_payments").select("*").order("created_at", { ascending: false })
-            : supabaseClient.from("app_payments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false });
-        const { data, error } = await query;
-        if (!error && data) {
-            return data.map((record) => ({
-                id: record.id,
-                plan: record.plan,
-                price: Number(record.amount) || 0,
-                method: record.method,
-                billing_mode: record.billing_mode || "Manual Renewal",
-                auto_renewal_enabled: !!record.auto_renewal_enabled,
-                customer_email: record.customer_email,
-                created_at: record.created_at,
-                status: record.status || "paid"
-            }));
-        }
-        console.error("Unable to load app payments:", error);
+    if (!hasCloudConnection() || !currentUser?.id) return [];
+
+    const query = isAdminUser()
+        ? supabaseClient.from("app_payments").select("*").order("created_at", { ascending: false })
+        : supabaseClient.from("app_payments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false });
+    const { data, error } = await query;
+    if (error) {
+        logSupabaseError("app_payments select", error);
+        return [];
     }
-    return getLocalPaymentRecords();
-}
-
-async function recordPayment(plan, price, method, options = {}) {
-    const billingMode = options.autoRenewalEnabled ? "EasyPay Auto-Renewal" : "Manual Renewal";
-    const record = {
-        id: `pay-${Date.now()}`,
-        plan,
-        price: Number(price) || 0,
-        method,
-        billing_mode: billingMode,
-        auto_renewal_enabled: !!options.autoRenewalEnabled,
-        customer_email: currentUser?.email || "local-customer",
-        created_at: new Date().toISOString()
-    };
-
-    if (hasCloudConnection()) {
-        const paymentPayload = {
-            user_id: currentUser.id,
-            customer_email: currentUser.email,
-            plan,
-            method,
-            amount: Number(price) || 0,
-            status: "paid",
-            billing_mode: billingMode,
-            auto_renewal_enabled: !!options.autoRenewalEnabled
-        };
-        let { error } = await supabaseClient.from("app_payments").insert(paymentPayload);
-        if (error && (isMissingSchemaColumnError(error, "billing_mode") || isMissingSchemaColumnError(error, "auto_renewal_enabled"))) {
-            logSupabaseError("app_payments insert missing optional billing columns", error, paymentPayload);
-            const fallbackPayload = withoutKeys(paymentPayload, ["billing_mode", "auto_renewal_enabled"]);
-            const fallback = await supabaseClient.from("app_payments").insert(fallbackPayload);
-            error = fallback.error;
-        }
-        if (error) {
-            console.error("Unable to save cloud payment record:", error);
-        }
-    }
-
-    const records = getLocalPaymentRecords();
-    records.push(record);
-    savePaymentRecords(records);
+    return (data || []).map((record) => ({
+        id: record.id,
+        plan: record.plan,
+        price: Number(record.amount) || 0,
+        method: record.method,
+        billing_mode: record.billing_mode || "Manual Renewal",
+        auto_renewal_enabled: !!record.auto_renewal_enabled,
+        customer_email: record.customer_email,
+        created_at: record.created_at,
+        status: record.status || "paid"
+    }));
 }
 
 function getFeatureRequests() {
@@ -3609,8 +3547,16 @@ async function submitFeedback() {
 }
 
 function handleDocumentPhotos(event) {
-    const files = Array.from(event.target.files || []).filter((file) => file.type.startsWith("image/")).slice(0, 4);
-    if (!files.length) return;
+    const selectedFiles = Array.from(event.target.files || []).slice(0, 4);
+    const files = selectedFiles.filter(isSafeRasterImageFile);
+    if (!files.length) {
+        createToast("Upload PNG, JPG, or WebP photos only.", true);
+        resetDocumentPhotoInput();
+        return;
+    }
+    if (files.length !== selectedFiles.length) {
+        createToast("Some files were skipped. Only PNG, JPG, and WebP images are allowed.", true);
+    }
     currentDocumentPhotos = [];
 
     let loaded = 0;
@@ -3624,7 +3570,8 @@ function handleDocumentPhotos(event) {
 
         const reader = new FileReader();
         reader.onload = (loadEvent) => {
-            currentDocumentPhotos.push(loadEvent.target.result);
+            const safeSource = getSafeImageSource(loadEvent.target.result);
+            if (safeSource) currentDocumentPhotos.push(safeSource);
             loaded += 1;
             if (loaded === files.length || currentDocumentPhotos.length === files.length) {
                 renderDocumentPhotos();
@@ -3649,6 +3596,7 @@ function renderDocumentPhotos() {
     const container = document.getElementById("preview-photo-container");
     if (!container) return;
 
+    currentDocumentPhotos = currentDocumentPhotos.map(getSafeImageSource).filter(Boolean);
     if (!currentDocumentPhotos.length) {
         container.style.display = "none";
         container.innerHTML = "";
@@ -3659,7 +3607,7 @@ function renderDocumentPhotos() {
     container.innerHTML = currentDocumentPhotos
         .map((src, index) => `
             <div class="invoice-photo-preview-item invoice-attachment-wrapper">
-                <img src="${src}" alt="Attached document photo">
+                <img src="${escapeHtml(src)}" alt="Attached document photo">
                 <button class="invoice-photo-remove-btn" type="button" onclick="removeDocumentPhoto(${index})" aria-label="Remove attached photo">&times;</button>
             </div>
         `)
@@ -3744,8 +3692,9 @@ function buildCleanInvoiceExportElement() {
 
     const taxAmount = subtotal * (taxRate / 100);
     const grandTotal = subtotal + taxAmount + shipping - discount;
-    const logoHtml = currentProfile.logo_url
-        ? `<img src="${escapeHtml(currentProfile.logo_url)}" alt="Store logo">`
+    const safeLogoUrl = getSafeImageSource(currentProfile.logo_url);
+    const logoHtml = safeLogoUrl
+        ? `<img src="${escapeHtml(safeLogoUrl)}" alt="Store logo">`
         : `<span>LOGO</span>`;
     const storeDetails = [
         currentProfile.address ? escapeHtml(currentProfile.address) : "",
@@ -4269,8 +4218,8 @@ async function handleLogoFile(file) {
         return;
     }
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-        alert("Please upload an image file.");
+    if (!isSafeRasterImageFile(file)) {
+        alert("Please upload a PNG, JPG, or WebP image.");
         return;
     }
     if (file.size > 2 * 1024 * 1024) {
@@ -4281,7 +4230,12 @@ async function handleLogoFile(file) {
     const reader = new FileReader();
     reader.onload = async (event) => {
         const previousLogo = currentProfile.logo_url || "";
-        currentProfile.logo_url = event.target.result;
+        const safeLogoSource = getSafeImageSource(event.target.result);
+        if (!safeLogoSource) {
+            createToast("That logo file could not be read safely.", true);
+            return;
+        }
+        currentProfile.logo_url = safeLogoSource;
         renderLogoAccessUI();
 
         if (isCloudActive) {
@@ -4373,11 +4327,12 @@ function renderSavedItemsUI() {
 
     items.forEach((item) => {
         const row = document.createElement("tr");
+        const safeItemId = escapeHtml(String(item.id || ""));
         row.innerHTML = `
             <td>${escapeHtml(item.name)}</td>
-            <td>${currentProfile.currency_symbol}${Number(item.unit_price || 0).toFixed(2)}</td>
+            <td>${escapeHtml(formatCurrency(Number(item.unit_price) || 0))}</td>
             <td style="text-align: right;">
-                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteCatalogItem('${item.id}')">Delete</button>
+                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteCatalogItem('${safeItemId}')">Delete</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -4630,21 +4585,26 @@ function renderTicketList(containerId, adminMode = false) {
         return;
     }
 
-    container.innerHTML = tickets.map((ticket) => `
+    container.innerHTML = tickets.map((ticket) => {
+        const safeTicketId = escapeHtml(String(ticket.id || ""));
+        const safeCreatedAt = escapeHtml(ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "Unknown date");
+        const safeStatus = escapeHtml(String(ticket.status || "OPEN"));
+        return `
         <div class="ticket-list-item ${ticket.id === selectedId ? "active" : ""} ${ticketHasUnreadMessages(ticket.id, adminMode) ? "unread" : ""}">
-            <button class="ticket-list-main" type="button" onclick="${adminMode ? "selectAdminTicket" : "selectTicket"}('${ticket.id}')">
-                <strong>${escapeHtml(ticket.subject)}</strong>
+            <button class="ticket-list-main" type="button" onclick="${adminMode ? "selectAdminTicket" : "selectTicket"}('${safeTicketId}')">
+                <strong>${escapeHtml(ticket.subject || "Support request")}</strong>
                 ${adminMode
                     ? `<span class="ticket-list-meta">
                         <span>${escapeHtml(ticket.customer_email || "Unknown user")}</span>
-                        <span>${new Date(ticket.created_at).toLocaleString()}</span>
-                        <span class="ticket-status-badge ${ticket.status === "RESOLVED" ? "resolved" : ""}">${ticket.status}</span>
+                        <span>${safeCreatedAt}</span>
+                        <span class="ticket-status-badge ${ticket.status === "RESOLVED" ? "resolved" : ""}">${safeStatus}</span>
                     </span>`
-                    : `<span>${new Date(ticket.created_at).toLocaleString()} - ${ticket.status}</span>`}
+                    : `<span>${safeCreatedAt} - ${safeStatus}</span>`}
             </button>
-            <button class="ticket-delete-btn" type="button" onclick="deleteSupportTicket('${ticket.id}', ${adminMode})" title="Delete ticket">Delete</button>
+            <button class="ticket-delete-btn" type="button" onclick="deleteSupportTicket('${safeTicketId}', ${adminMode})" title="Delete ticket">Delete</button>
         </div>
-    `).join("");
+    `;
+    }).join("");
 }
 
 function renderTicketThread(ticketId, threadId, replyBoxId, statusButtonId = null) {
@@ -4748,7 +4708,7 @@ async function createSupportTicket() {
         }
         if (error) {
             logSupabaseError("tickets insert", error, ticketPayload);
-            alert(`Failed: ${error.message}`);
+            createToast("The support ticket could not be sent. Please try again shortly.", true);
             return;
         }
         Object.assign(ticket, data);
@@ -4782,7 +4742,7 @@ async function createSupportTicket() {
         }
         if (messageError) {
             logSupabaseError("ticket_messages insert", messageError, messagePayload);
-            alert(`Ticket created, but message failed: ${messageError.message}`);
+            createToast("The ticket was created, but its message could not be saved. Please try again.", true);
             return;
         }
         Object.assign(firstMessage, savedMessage);
@@ -4858,7 +4818,7 @@ async function sendTicketMessage(adminMode = false) {
         }
         if (error) {
             logSupabaseError("ticket_messages reply insert", error, replyPayload);
-            alert(`Failed: ${error.message}`);
+            createToast("Your reply could not be sent. Please try again shortly.", true);
             return;
         }
     }
@@ -4886,7 +4846,7 @@ async function updateTicketStatus(status) {
         }
         if (error) {
             logSupabaseError("tickets status update", error, { id: activeAdminTicketId, status });
-            alert(`Failed: ${error.message}`);
+            createToast("The ticket status could not be updated.", true);
             return;
         }
     }
@@ -5424,8 +5384,10 @@ function initAppEventListeners() {
                 last_business_info_updated_at: currentProfile.last_business_info_updated_at
             };
             const { error } = await updateCloudProfileSettings(profilePayload);
-            if (error) alert("Error updating settings: " + error.message);
-            else {
+            if (error) {
+                logSupabaseError("profile settings update", error, profilePayload);
+                createToast("Your business settings could not be saved. Please try again.", true);
+            } else {
                 await persistActiveBusinessProfile();
                 alert("Store details saved successfully!");
             }
@@ -5621,9 +5583,7 @@ function initAppEventListeners() {
             document.getElementById("payment-modal").dataset.billingCycle = cycle;
             document.getElementById("payment-plan-name").innerText = plan;
             document.getElementById("payment-plan-amount").innerText = `PHP ${Number(price).toLocaleString("en-PH")}.00 ${cycle === "yearly" ? "/ Year" : "/ Month"}`;
-            const easyPayCheckbox = document.getElementById("enable-easypay-checkbox");
-            if (easyPayCheckbox) easyPayCheckbox.checked = false;
-            document.getElementById("submit-mock-payment-btn").innerText = `Continue to QR Secure Checkout - PHP ${Number(price).toLocaleString("en-PH")}.00`;
+            document.getElementById("submit-payment-btn").innerText = `Continue to QR Secure Checkout - PHP ${Number(price).toLocaleString("en-PH")}.00`;
             document.getElementById("payment-modal").style.display = "flex";
         });
     });
@@ -5632,9 +5592,7 @@ function initAppEventListeners() {
     });
 
     // Create tracked PayMongo Hosted Checkout.
-    document.getElementById("submit-mock-payment-btn").addEventListener("click", processMockPaymentUpgrade);
-
-    document.getElementById("save-admin-payment-settings-btn").addEventListener("click", savePaymentSettings);
+    document.getElementById("submit-payment-btn").addEventListener("click", startPayMongoCheckout);
     document.getElementById("admin-activate-plan-btn")?.addEventListener("click", activateVerifiedUserPlan);
     document.getElementById("submit-feature-request-btn").addEventListener("click", submitFeatureRequest);
     document.getElementById("submit-feedback-btn").addEventListener("click", submitFeedback);
@@ -5651,10 +5609,18 @@ function initAppEventListeners() {
 function populateClientDropdown() {
     const select = document.getElementById("inv-client-select");
     const currentVal = select.value;
-    
-    select.innerHTML = '<option value="">-- Select Client --</option>';
-    clients.forEach(c => {
-        select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+
+    select.replaceChildren();
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "-- Select Client --";
+    select.appendChild(placeholder);
+
+    clients.forEach((client) => {
+        const option = document.createElement("option");
+        option.value = String(client.id || "");
+        option.textContent = String(client.name || "Unnamed client");
+        select.appendChild(option);
     });
     
     select.value = currentVal;
@@ -5666,7 +5632,11 @@ function renderClientsTable() {
     const query = document.getElementById("client-search-input").value.toLowerCase();
     
     tbody.innerHTML = "";
-    const filtered = clients.filter(c => c.name.toLowerCase().includes(query) || (c.email && c.email.toLowerCase().includes(query)));
+    const filtered = clients.filter((client) => {
+        const name = String(client.name || "").toLowerCase();
+        const email = String(client.email || "").toLowerCase();
+        return name.includes(query) || email.includes(query);
+    });
     
     if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No clients found.</td></tr>';
@@ -5675,14 +5645,20 @@ function renderClientsTable() {
     
     filtered.forEach(c => {
         const row = document.createElement("tr");
+        const safeId = escapeHtml(String(c.id || ""));
+        const safeName = escapeHtml(String(c.name || "Unnamed client"));
+        const safeEmail = c.email
+            ? escapeHtml(String(c.email))
+            : '<span style="color: var(--text-muted);">No email</span>';
+        const safePhone = escapeHtml(String(c.phone || ""));
         row.innerHTML = `
-            <td><strong>${c.name}</strong></td>
+            <td><strong>${safeName}</strong></td>
             <td>
-                <div>${c.email || '<span style="color: var(--text-muted);">No email</span>'}</div>
-                <div style="font-size: 12px; color: var(--text-muted);">${c.phone || ''}</div>
+                <div>${safeEmail}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${safePhone}</div>
             </td>
             <td style="text-align: right;">
-                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteClient('${c.id}')">Delete</button>
+                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteClient('${safeId}')">Delete</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -5696,7 +5672,8 @@ async function deleteClient(id) {
     if (isCloudActive) {
         const { error } = await supabaseClient.from("clients").delete().eq("id", id);
         if (error) {
-            alert("Error: " + error.message);
+            logSupabaseError("clients delete", error, { id });
+            createToast("The client could not be deleted. It may still be linked to an existing document.", true);
             return;
         }
         clients = clients.filter(c => c.id !== id);
@@ -5790,7 +5767,7 @@ async function saveExpenseToDatabase(event) {
         const { data, error } = await insertCloudExpenseRecord(expenseData);
         if (error) {
             logSupabaseError("expenses insert", error, expenseData);
-            alert(`Failed: ${error.message}`);
+            createToast("The expense could not be saved. Please try again.", true);
             return;
         }
         if (data && data[0]) expenses.unshift(data[0]);
@@ -5862,7 +5839,7 @@ async function deleteExpense(id) {
         const { error } = await supabaseClient.from("expenses").delete().eq("id", id);
         if (error) {
             logSupabaseError("expenses delete", error, { id });
-            alert(`Failed: ${error.message}`);
+            createToast("The expense could not be deleted. Please try again.", true);
             return;
         }
     }
@@ -5943,15 +5920,17 @@ function updateInvoicePreview() {
     previewBody.innerHTML = "";
     
     currentInvoiceItems.forEach(item => {
-        const rowTotal = item.quantity * item.unit_price;
+        const quantity = Number(item.quantity) || 0;
+        const unitPrice = Number(item.unit_price) || 0;
+        const rowTotal = quantity * unitPrice;
         subtotal += rowTotal;
         
         const row = document.createElement("tr");
         row.innerHTML = `
-            <td><strong>${item.description || "Description"}</strong></td>
-            <td style="text-align: center;">${item.quantity}</td>
-            <td style="text-align: right;">${currentProfile.currency_symbol}${item.unit_price.toFixed(2)}</td>
-            <td style="text-align: right; font-weight: 600;">${currentProfile.currency_symbol}${rowTotal.toFixed(2)}</td>
+            <td><strong>${escapeHtml(item.description || "Description")}</strong></td>
+            <td style="text-align: center;">${escapeHtml(quantity)}</td>
+            <td style="text-align: right;">${escapeHtml(formatCurrency(unitPrice))}</td>
+            <td style="text-align: right; font-weight: 600;">${escapeHtml(formatCurrency(rowTotal))}</td>
         `;
         previewBody.appendChild(row);
     });
@@ -5974,11 +5953,13 @@ function updateInvoicePreview() {
     
     // Load store physical configuration settings to preview
     document.getElementById("preview-store-name").innerText = currentProfile.company_name;
-    document.getElementById("preview-store-details").innerHTML = `
-        ${currentProfile.address ? currentProfile.address + '<br>' : ''}
-        ${currentProfile.phone ? 'Phone: ' + currentProfile.phone + ' | ' : ''}
-        ${currentProfile.email ? 'Email: ' + currentProfile.email : ''}
-    `;
+    const storeDetails = [];
+    if (currentProfile.address) storeDetails.push(escapeHtml(currentProfile.address));
+    const contactDetails = [];
+    if (currentProfile.phone) contactDetails.push(`Phone: ${escapeHtml(currentProfile.phone)}`);
+    if (currentProfile.email) contactDetails.push(`Email: ${escapeHtml(currentProfile.email)}`);
+    if (contactDetails.length) storeDetails.push(contactDetails.join(" | "));
+    document.getElementById("preview-store-details").innerHTML = storeDetails.join("<br>");
 }
 
 // Reset creator form state
@@ -6169,7 +6150,8 @@ async function saveInvoiceToDatabase() {
                         showInvoiceLimitUpgradeModal();
                         return;
                     }
-                    alert("Error saving: " + error.message);
+                    logSupabaseError("invoice update", error, invoiceData);
+                    createToast("The document could not be saved to the cloud. Please try again.", true);
                     return;
                 }
                 invResultId = activeEditingInvoiceId;
@@ -6183,7 +6165,8 @@ async function saveInvoiceToDatabase() {
                         showInvoiceLimitUpgradeModal();
                         return;
                     }
-                    alert("Error saving: " + error.message);
+                    logSupabaseError("invoice insert", error, invoiceData);
+                    createToast("The document could not be saved to the cloud. Please try again.", true);
                     return;
                 }
                 invResultId = data[0].id;
@@ -6200,14 +6183,16 @@ async function saveInvoiceToDatabase() {
             
             const { error: itemsErr } = await supabaseClient.from("invoice_items").insert(dbItems);
             if (itemsErr) {
-                alert("Error writing invoice items: " + itemsErr.message);
+                logSupabaseError("invoice items insert", itemsErr, { invoice_id: invResultId });
+                createToast("The document was created, but its line items could not be saved. Please contact support.", true);
                 return;
             }
             
             await fetchCloudData();
         } catch (error) {
             if (!isNetworkSaveError(error)) {
-                alert("Error saving: " + (error.message || error));
+                console.error("Unexpected invoice save failure:", error);
+                createToast("The document could not be saved. Please try again.", true);
                 return;
             }
 
@@ -6255,7 +6240,14 @@ function renderInvoicesTable() {
     
     filtered.forEach(inv => {
         const client = clients.find(c => c.id == inv.client_id);
-        const clientName = client ? client.name : '<span style="color: var(--text-muted);">Walk-in</span>';
+        const clientName = client
+            ? escapeHtml(String(client.name || "Unnamed client"))
+            : '<span style="color: var(--text-muted);">Walk-in</span>';
+        const safeInvoiceId = escapeHtml(String(inv.id || ""));
+        const safeInvoiceNumber = escapeHtml(String(inv.invoice_number || ""));
+        const safeIssueDate = escapeHtml(String(inv.issue_date || ""));
+        const safeStatus = escapeHtml(String(inv.status || "Draft"));
+        const safeType = escapeHtml(String(inv.type || "invoice"));
         
         let statusClass = "badge-draft";
         if (inv.status === "Paid") statusClass = "badge-paid";
@@ -6264,15 +6256,15 @@ function renderInvoicesTable() {
         
         const row = document.createElement("tr");
         row.innerHTML = `
-            <td><strong>${inv.invoice_number}</strong></td>
+            <td><strong>${safeInvoiceNumber}</strong></td>
             <td>${clientName}</td>
-            <td>${inv.issue_date}</td>
-            <td><span class="badge ${statusClass}">${inv.status}</span></td>
-            <td><span style="text-transform: capitalize;">${inv.type}</span></td>
-            <td style="font-weight: 700;">${currentProfile.currency_symbol}${parseFloat(inv.total).toFixed(2)}</td>
+            <td>${safeIssueDate}</td>
+            <td><span class="badge ${statusClass}">${safeStatus}</span></td>
+            <td><span style="text-transform: capitalize;">${safeType}</span></td>
+            <td style="font-weight: 700;">${escapeHtml(formatCurrency(Number(inv.total) || 0))}</td>
             <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-                <button class="btn btn-sm btn-secondary" onclick="editInvoice('${inv.id}')">View/Edit</button>
-                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteInvoice('${inv.id}')">Trash</button>
+                <button class="btn btn-sm btn-secondary" onclick="editInvoice('${safeInvoiceId}')">View/Edit</button>
+                <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteInvoice('${safeInvoiceId}')">Trash</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -6358,7 +6350,8 @@ async function deleteInvoice(id) {
             .update({ is_deleted: true, deleted_at: deletedAt })
             .eq("id", id);
         if (error) {
-            alert("Error: " + error.message);
+            logSupabaseError("invoice soft delete", error, { id });
+            createToast("The invoice could not be moved to Trash Bin.", true);
             return;
         }
         invoices = invoices.map(i => i.id === id ? { ...i, is_deleted: true, deleted_at: deletedAt } : i);
@@ -6379,7 +6372,8 @@ async function restoreInvoice(id) {
             .update({ is_deleted: false, deleted_at: null })
             .eq("id", id);
         if (error) {
-            alert("Error: " + error.message);
+            logSupabaseError("invoice restore", error, { id });
+            createToast("The invoice could not be restored.", true);
             return;
         }
     }
@@ -6405,7 +6399,8 @@ async function permanentlyDeleteInvoice(id) {
         await supabaseClient.from("invoice_items").delete().eq("invoice_id", id);
         const { error } = await supabaseClient.from("invoices").delete().eq("id", id);
         if (error) {
-            alert("Error: " + error.message);
+            logSupabaseError("invoice permanent delete", error, { id });
+            createToast("The invoice could not be permanently deleted.", true);
             return;
         }
     }
@@ -6430,18 +6425,23 @@ function renderTrashBin() {
 
     deleted.forEach((inv) => {
         const client = clients.find(c => c.id == inv.client_id);
-        const clientName = client ? client.name : '<span style="color: var(--text-muted);">Walk-in</span>';
+        const clientName = client
+            ? escapeHtml(String(client.name || "Unnamed client"))
+            : '<span style="color: var(--text-muted);">Walk-in</span>';
+        const safeInvoiceId = escapeHtml(String(inv.id || ""));
+        const safeInvoiceNumber = escapeHtml(String(inv.invoice_number || ""));
+        const safeDeletedAt = escapeHtml(inv.deleted_at ? new Date(inv.deleted_at).toLocaleString() : "Recently deleted");
         const canPermanentlyDelete = String(inv.status || "").toLowerCase() === "draft";
         const row = document.createElement("tr");
         row.innerHTML = `
-            <td><strong>${inv.invoice_number}</strong></td>
+            <td><strong>${safeInvoiceNumber}</strong></td>
             <td>${clientName}</td>
-            <td>${inv.deleted_at ? new Date(inv.deleted_at).toLocaleString() : "Recently deleted"}</td>
-            <td style="font-weight: 700;">${currentProfile.currency_symbol}${parseFloat(inv.total).toFixed(2)}</td>
+            <td>${safeDeletedAt}</td>
+            <td style="font-weight: 700;">${escapeHtml(formatCurrency(Number(inv.total) || 0))}</td>
             <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-                <button class="btn btn-sm btn-secondary" onclick="restoreInvoice('${inv.id}')">Recover</button>
+                <button class="btn btn-sm btn-secondary" onclick="restoreInvoice('${safeInvoiceId}')">Recover</button>
                 ${canPermanentlyDelete
-                    ? `<button class="btn btn-sm btn-secondary btn-danger" onclick="permanentlyDeleteInvoice('${inv.id}')">Delete Draft Forever</button>`
+                    ? `<button class="btn btn-sm btn-secondary btn-danger" onclick="permanentlyDeleteInvoice('${safeInvoiceId}')">Delete Draft Forever</button>`
                     : '<span class="badge badge-draft">Record retained</span>'}
             </td>
         `;
@@ -6492,7 +6492,14 @@ function renderDashboard() {
     
     limit.forEach(inv => {
         const client = clients.find(c => c.id == inv.client_id);
-        const clientName = client ? client.name : '<span style="color: var(--text-muted);">Walk-in</span>';
+        const clientName = client
+            ? escapeHtml(String(client.name || "Unnamed client"))
+            : '<span style="color: var(--text-muted);">Walk-in</span>';
+        const safeInvoiceId = escapeHtml(String(inv.id || ""));
+        const safeInvoiceNumber = escapeHtml(String(inv.invoice_number || ""));
+        const safeIssueDate = escapeHtml(String(inv.issue_date || ""));
+        const safeStatus = escapeHtml(String(inv.status || "Draft"));
+        const safeType = escapeHtml(String(inv.type || "invoice"));
         
         let statusClass = "badge-draft";
         if (inv.status === "Paid") statusClass = "badge-paid";
@@ -6501,14 +6508,14 @@ function renderDashboard() {
         
         const row = document.createElement("tr");
         row.innerHTML = `
-            <td><strong>${inv.invoice_number}</strong></td>
+            <td><strong>${safeInvoiceNumber}</strong></td>
             <td>${clientName}</td>
-            <td>${inv.issue_date}</td>
-            <td><span class="badge ${statusClass}">${inv.status}</span></td>
-            <td><span style="text-transform: capitalize;">${inv.type}</span></td>
-            <td style="font-weight: 700;">${currentProfile.currency_symbol}${parseFloat(inv.total).toFixed(2)}</td>
+            <td>${safeIssueDate}</td>
+            <td><span class="badge ${statusClass}">${safeStatus}</span></td>
+            <td><span style="text-transform: capitalize;">${safeType}</span></td>
+            <td style="font-weight: 700;">${escapeHtml(formatCurrency(Number(inv.total) || 0))}</td>
             <td style="text-align: right;">
-                <button class="icon-action danger" onclick="deleteInvoice('${inv.id}')" title="Move to Trash">&#128465;</button>
+                <button class="icon-action danger" onclick="deleteInvoice('${safeInvoiceId}')" title="Move to Trash">&#128465;</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -6591,8 +6598,6 @@ function updateBillingTabUI() {
 async function renderAdminDashboard() {
     if (!isAdminUser()) return;
 
-    loadPaymentSettings();
-
     const records = await getPaymentRecords();
     const totalRevenue = records.reduce((sum, record) => sum + (Number(record.price) || 0), 0);
     const monthlyRevenue = records
@@ -6604,14 +6609,6 @@ async function renderAdminDashboard() {
     document.getElementById("admin-payment-count").innerText = records.length;
     document.getElementById("admin-customer-count").innerText = new Set(records.map((record) => record.customer_email)).size;
 
-    document.getElementById("admin-paymongo-public").value = paymentSettings.paymongoPublicKey || "";
-    document.getElementById("admin-paymongo-secret").value = "";
-    document.getElementById("admin-stripe-public").value = paymentSettings.stripePublishableKey || "";
-    document.getElementById("admin-stripe-secret").value = "";
-    document.getElementById("admin-card-checkout-url").value = paymentSettings.cardCheckoutUrl || "";
-    document.getElementById("admin-gcash-number").value = paymentSettings.gcashNumber || "";
-    document.getElementById("admin-payout-account").value = paymentSettings.payoutAccount || "";
-
     const tbody = document.querySelector("#admin-payments-table tbody");
     tbody.innerHTML = "";
     if (records.length === 0) {
@@ -6619,11 +6616,16 @@ async function renderAdminDashboard() {
     } else {
         records.slice().reverse().forEach((record) => {
             const row = document.createElement("tr");
+            const safeDate = escapeHtml(record.created_at ? new Date(record.created_at).toLocaleString() : "Unknown date");
+            const safeEmail = escapeHtml(String(record.customer_email || ""));
+            const safePlan = escapeHtml(String(record.plan || ""));
+            const safeMethod = escapeHtml(String(record.method || ""));
+            const safeBillingMode = escapeHtml(String(record.billing_mode || "Manual Renewal"));
             row.innerHTML = `
-                <td>${new Date(record.created_at).toLocaleString()}</td>
-                <td>${record.customer_email}</td>
-                <td>${record.plan}</td>
-                <td>${record.method}<br><span style="color: var(--text-muted); font-size: 11px;">${record.billing_mode || "Manual Renewal"}</span></td>
+                <td>${safeDate}</td>
+                <td>${safeEmail}</td>
+                <td>${safePlan}</td>
+                <td>${safeMethod}<br><span style="color: var(--text-muted); font-size: 11px;">${safeBillingMode}</span></td>
                 <td style="font-weight: 700;">PHP ${(Number(record.price) || 0).toFixed(2)}</td>
             `;
             tbody.appendChild(row);
@@ -6666,7 +6668,7 @@ async function renderAdminFeatureInbox() {
 }
 
 // ==================== AUTOMATIC PAYMONGO CHECKOUT PROCESSOR ====================
-async function processMockPaymentUpgrade() {
+async function startPayMongoCheckout() {
     const paymentModal = document.getElementById("payment-modal");
     const plan = paymentModal?.dataset.plan || "Pro Unlimited Plan";
     const billingCycle = paymentModal?.dataset.billingCycle || "monthly";
@@ -6728,20 +6730,67 @@ async function processMockPaymentUpgrade() {
     }
 }
 
-function handlePaymentReturnNotice() {
+async function refreshSubscriptionAfterPayment(reference) {
+    if (!reference || !hasCloudConnection() || !currentUser?.id) return false;
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+        const { data: order, error: orderError } = await supabaseClient
+            .from("payment_orders")
+            .select("status, plan, expires_at")
+            .eq("paymongo_reference_number", reference)
+            .eq("user_id", currentUser.id)
+            .maybeSingle();
+
+        if (orderError) {
+            logSupabaseError("payment confirmation refresh", orderError, { reference });
+            return false;
+        }
+
+        if (order?.status === "paid") {
+            const { data: profile, error: profileError } = await supabaseClient
+                .from("profiles")
+                .select("*")
+                .eq("id", currentUser.id)
+                .single();
+
+            if (profileError || !profile) {
+                logSupabaseError("paid profile refresh", profileError, { reference });
+                return false;
+            }
+
+            currentProfile = profile;
+            localStorage.removeItem("valoraem_pending_payment");
+            updateUserTierUI();
+            updateBillingTabUI();
+            createToast(`${getPlanCanonicalName(profile.plan)} is now active. Thank you for subscribing.`);
+            return true;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+
+    return false;
+}
+
+async function handlePaymentReturnNotice() {
     if (!window.location?.search) return;
     const params = new URLSearchParams(window.location.search);
     const paymentStatus = params.get("payment");
+    const reference = params.get("reference") || "";
     if (!paymentStatus) return;
-
-    if (paymentStatus === "success") {
-        createToast("Payment completed. Your plan will activate automatically once PayMongo confirms it.");
-    } else if (paymentStatus === "cancelled") {
-        createToast("Checkout was cancelled. You can choose a plan again anytime.", true);
-    }
 
     if (window.history?.replaceState) {
         window.history.replaceState({}, document.title, `${window.location.origin}${window.location.pathname}`);
+    }
+
+    if (paymentStatus === "success") {
+        createToast("Payment completed. Waiting for PayMongo confirmation...");
+        const activated = await refreshSubscriptionAfterPayment(reference);
+        if (!activated) {
+            createToast("Payment is still being confirmed. Your plan will activate automatically shortly.");
+        }
+    } else if (paymentStatus === "cancelled") {
+        createToast("Checkout was cancelled. You can choose a plan again anytime.", true);
     }
 }
 
@@ -7042,7 +7091,6 @@ Object.assign(window, {
     renderAdminDashboard,
     renderAdminFeatureInbox,
     renderTrashBin,
-    savePaymentSettings,
     activateVerifiedUserPlan,
     sendPasswordResetCode,
     configurePasswordResetForm,
@@ -7050,6 +7098,7 @@ Object.assign(window, {
     sendCurrentUserPasswordResetLink,
     submitFeatureRequest,
     submitFeedback,
+    startPayMongoCheckout,
     removeDocumentPhoto,
     saveInvoiceAsPdf,
     printInvoiceDocument,

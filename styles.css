@@ -3363,3 +3363,19 @@ textarea:focus {
 .launch-disabled {
     display: none !important;
 }
+
+.payment-security-checklist {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.payment-security-checklist > div {
+    padding: 11px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-medium);
+    font-size: 13px;
+    line-height: 1.45;
+}

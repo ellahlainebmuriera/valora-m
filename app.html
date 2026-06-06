@@ -25,9 +25,9 @@
     <meta name="twitter:image" content="https://valora-m.vercel.app/assets/og-preview-banner.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=account-security-v49">
+    <link rel="stylesheet" href="styles.css?v=launch-audit-v51">
     <!-- Supabase JS Client library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4"></script>
 </head>
 <body>
 
@@ -662,7 +662,7 @@
                                 <label for="document-photo-file">Attach Photos (optional)</label>
                                 <div class="drop-zone" id="document-photo-drop-zone">
                                     <span>Drop photos here or click to choose</span>
-                                    <input type="file" id="document-photo-file" accept="image/*" multiple>
+                                    <input type="file" id="document-photo-file" accept="image/png,image/jpeg,image/webp" multiple>
                                 </div>
                             </div>
                         </div>
@@ -1092,7 +1092,7 @@
                                     <span>LOGO</span>
                                 </div>
                                 <div>
-                                    <input type="file" id="store-logo-file" accept="image/*" style="display: none;">
+                                    <input type="file" id="store-logo-file" accept="image/png,image/jpeg,image/webp" style="display: none;">
                                     <button class="btn btn-secondary btn-sm" type="button" onclick="document.getElementById('store-logo-file').click()">Select Logo Image</button>
                                     <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Supports JPEG/PNG. Max size 2MB.</p>
                                 </div>
@@ -1371,7 +1371,7 @@
                             </div>
                             <div>
                                 <strong>Manual renewal by default</strong>
-                                <p style="color: var(--text-muted); font-size: 14px;">Paid plans do not auto-charge unless the user explicitly opts into EasyPay auto-renewal at checkout.</p>
+                                <p style="color: var(--text-muted); font-size: 14px;">Paid plans are valid for the selected billing period and do not charge automatically. Renew securely through your Subscription page.</p>
                             </div>
                         </div>
                     </div>
@@ -1528,40 +1528,16 @@
 
                 <div class="admin-layout">
                     <div class="panel-card">
-                        <div class="panel-title">Payment Gateway Settings</div>
-                        <div class="form-group">
-                            <label for="admin-paymongo-public">PayMongo Public Key</label>
-                            <input type="text" id="admin-paymongo-public" placeholder="pk_test_...">
+                        <div class="panel-title">Live Payment System</div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
+                            PayMongo credentials are stored only in encrypted Supabase Edge Function secrets. They are intentionally not shown or editable inside this browser dashboard.
+                        </p>
+                        <div class="payment-security-checklist">
+                            <div><strong>Checkout:</strong> PayMongo hosted QR Ph / GCash page</div>
+                            <div><strong>Activation:</strong> Signed PayMongo webhook confirmation</div>
+                            <div><strong>Renewal:</strong> Manual monthly renewal</div>
+                            <div><strong>Card or wallet data:</strong> Never stored by Valora EM</div>
                         </div>
-                        <div class="form-group">
-                            <label for="admin-paymongo-secret">PayMongo Secret Key</label>
-                            <input type="password" id="admin-paymongo-secret" placeholder="Store secret keys in Supabase Edge Function secrets only" disabled>
-                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">For safety, do not enter live secret keys in the browser app.</p>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-stripe-public">Stripe Publishable Key</label>
-                            <input type="text" id="admin-stripe-public" placeholder="pk_live_...">
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-stripe-secret">Stripe Secret Key</label>
-                            <input type="password" id="admin-stripe-secret" placeholder="Store secret keys in backend secrets only" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin-card-checkout-url">Live Card Checkout URL</label>
-                            <input type="url" id="admin-card-checkout-url" placeholder="https://paymongo.page/l/your-payment-page">
-                            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Paste your PayMongo Payment Page, PayMongo Payment Link, or Stripe Payment Link here for live card checkout.</p>
-                        </div>
-                        <div class="form-group row">
-                            <div class="form-group">
-                                <label for="admin-gcash-number">Fallback GCash Number</label>
-                                <input type="text" id="admin-gcash-number" placeholder="0917XXXXXXX">
-                            </div>
-                            <div class="form-group">
-                                <label for="admin-payout-account">BPI Payout Account</label>
-                                <input type="text" id="admin-payout-account" placeholder="BPI account name and number">
-                            </div>
-                        </div>
-                        <button class="btn btn-primary" id="save-admin-payment-settings-btn" style="width: 100%;">Save Admin Payment Settings</button>
                     </div>
 
                     <div class="panel-card">
@@ -1941,15 +1917,11 @@
                 <span>After clicking continue, the customer pays on PayMongo using QR Ph, GCash, Maya, or supported bank apps. Card payments, if available on PayMongo, are processed only on PayMongo's secure page.</span>
             </div>
 
-            <label class="checkbox-row easypay-row" style="display: none;">
-                <input type="checkbox" id="enable-easypay-checkbox">
-                Enable Auto-Renewal for EasyPay. Leave unchecked for manual renewal only.
-            </label>
             <div class="secure-payment-note">
                 <strong>Secure payment rule:</strong> Valora EM never asks for card numbers, expiry dates, CVCs, or wallet credentials inside this app. Payment details stay on PayMongo.
             </div>
 
-            <button class="btn btn-accent" id="submit-mock-payment-btn" style="width: 100%;">Continue to QR Secure Checkout</button>
+            <button class="btn btn-accent" id="submit-payment-btn" style="width: 100%;">Continue to QR Secure Checkout</button>
             <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">No refund policy: subscription payments are final once account access is activated, except where required by law or payment provider rules.</p>
 
             <!-- Loading overlay inside modal during processing -->
@@ -1993,15 +1965,15 @@
         }
     </style>
 
-    <script src="app.js?v=account-security-v49"></script>
+    <script src="app.js?v=launch-audit-v51"></script>
     <script src="pwa-install.js"></script>
     <script>
         if ("serviceWorker" in navigator) {
             let refreshingForServiceWorker = false;
             navigator.serviceWorker.addEventListener("controllerchange", () => {
-                if (refreshingForServiceWorker || sessionStorage.getItem("valora-sw-refreshed-v41")) return;
+                if (refreshingForServiceWorker || sessionStorage.getItem("valora-sw-refreshed-v51")) return;
                 refreshingForServiceWorker = true;
-                sessionStorage.setItem("valora-sw-refreshed-v41", "1");
+                sessionStorage.setItem("valora-sw-refreshed-v51", "1");
                 window.location.reload();
             });
 

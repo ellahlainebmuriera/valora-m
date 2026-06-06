@@ -1,0 +1,8 @@
+# Keep unrelated local projects out of the Valora EM repository.
+nuvora-app/
+
+# Local/editor files.
+.DS_Store
+Thumbs.db
+*.log
+

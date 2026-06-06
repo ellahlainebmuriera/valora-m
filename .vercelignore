@@ -1,6 +1,8 @@
-# Keep the separate NuVora/finance tracker prototype out of the Valora EM deployment.
-finance-tracker.html
-finance-tracker.css
-finance-tracker.js
-assets/finance-planner-accent.png
+# Internal source and setup files must not be published as static assets.
+nuvora-app/
+supabase/
+*.sql
+*.txt
+netlify.toml
+official-website.html
 

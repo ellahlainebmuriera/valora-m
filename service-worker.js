@@ -1,10 +1,9 @@
-const CACHE_NAME = "valora-em-v49";
+const CACHE_NAME = "valora-em-v51";
 const APP_ASSETS = [
   "/",
   "/app",
   "/refund-policy",
   "/index.html",
-  "/official-website.html",
   "/refund-policy.html",
   "/app.html",
   "/styles.css",
