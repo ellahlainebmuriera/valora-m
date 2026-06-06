@@ -240,6 +240,10 @@ const UI_TRANSLATIONS = {
         account: {
             title: "Account & Privacy",
             subtitle: "Manage privacy, deletion requests, and account-level data controls.",
+            passwordTitle: "Password Security",
+            passwordHelp: "Send a secure password reset link to the email address of your currently signed-in account.",
+            passwordButton: "Send Password Reset Link",
+            passwordSent: "Password reset link sent. Open the latest email to choose a new password.",
             deleteTitle: "Delete Account / Data",
             deleteWarning: "After 7 days, your data will be permanently wiped. There is NO WAY to restore your account, even our admin/dev team cannot recover it.",
             deleteHelp: "Use the button below to open the deletion modal. You can choose the default 7-day grace period or explicitly request immediate permanent deletion.",
@@ -380,6 +384,10 @@ const UI_TRANSLATIONS = {
         account: {
             title: "Account at Privacy",
             subtitle: "I-manage ang privacy, deletion requests, at account-level data controls.",
+            passwordTitle: "Password Security",
+            passwordHelp: "Magpadala ng secure password reset link sa email ng kasalukuyang naka-sign in na account.",
+            passwordButton: "Ipadala ang Password Reset Link",
+            passwordSent: "Naipadala ang password reset link. Buksan ang pinakabagong email para gumawa ng bagong password.",
             deleteTitle: "Delete Account / Data",
             deleteWarning: "Pagkalipas ng 7 araw, permanenteng mabubura ang data mo. WALA nang paraan para ma-restore ito, kahit admin/dev team.",
             deleteHelp: "Gamitin ang button sa ibaba para buksan ang deletion modal. Pwede kang pumili ng 7-day grace period o immediate permanent deletion.",
@@ -520,6 +528,10 @@ const UI_TRANSLATIONS = {
         account: {
             title: "Cuenta y privacidad",
             subtitle: "Administre privacidad, solicitudes de eliminacion y controles de datos de la cuenta.",
+            passwordTitle: "Seguridad de contrasena",
+            passwordHelp: "Envie un enlace seguro para restablecer la contrasena al correo de la cuenta actual.",
+            passwordButton: "Enviar enlace de restablecimiento",
+            passwordSent: "Enlace enviado. Abra el correo mas reciente para elegir una nueva contrasena.",
             deleteTitle: "Eliminar cuenta / datos",
             deleteWarning: "Despues de 7 dias, sus datos se borraran permanentemente. NO hay forma de restaurar su cuenta, ni siquiera por el equipo admin/dev.",
             deleteHelp: "Use el boton de abajo para abrir el modal de eliminacion. Puede elegir el periodo de gracia de 7 dias o eliminacion permanente inmediata.",
@@ -659,6 +671,10 @@ const UI_TRANSLATIONS = {
         account: {
             title: "Compte et confidentialite",
             subtitle: "Gerez la confidentialite, les demandes de suppression et les controles de donnees.",
+            passwordTitle: "Securite du mot de passe",
+            passwordHelp: "Envoyez un lien securise de reinitialisation a l'adresse e-mail du compte connecte.",
+            passwordButton: "Envoyer le lien de reinitialisation",
+            passwordSent: "Lien envoye. Ouvrez le dernier e-mail pour choisir un nouveau mot de passe.",
             deleteTitle: "Supprimer le compte / les donnees",
             deleteWarning: "Apres 7 jours, vos donnees seront supprimees definitivement. Il n'y a AUCUN moyen de restaurer le compte, meme pour l'equipe admin/dev.",
             deleteHelp: "Utilisez le bouton ci-dessous pour ouvrir la suppression. Choisissez 7 jours de delai ou suppression permanente immediate.",
@@ -798,6 +814,10 @@ const UI_TRANSLATIONS = {
         account: {
             title: "Konto und Datenschutz",
             subtitle: "Verwalten Sie Datenschutz, Loschanfragen und Kontodaten.",
+            passwordTitle: "Passwortsicherheit",
+            passwordHelp: "Senden Sie einen sicheren Link zum Zurucksetzen an die E-Mail-Adresse des angemeldeten Kontos.",
+            passwordButton: "Link zum Zurucksetzen senden",
+            passwordSent: "Link gesendet. Offnen Sie die neueste E-Mail, um ein neues Passwort festzulegen.",
             deleteTitle: "Konto / Daten loschen",
             deleteWarning: "Nach 7 Tagen werden Ihre Daten dauerhaft geloscht. Es gibt KEINE Moglichkeit zur Wiederherstellung, auch nicht durch Admin/Dev-Team.",
             deleteHelp: "Offnen Sie unten den Loschdialog. Wahlen Sie 7 Tage Schonfrist oder sofortige dauerhafte Loschung.",
@@ -937,6 +957,10 @@ const UI_TRANSLATIONS = {
         account: {
             title: "アカウントとプライバシー",
             subtitle: "プライバシー、削除依頼、アカウントデータ設定を管理します。",
+            passwordTitle: "パスワードセキュリティ",
+            passwordHelp: "現在サインインしているアカウントのメールアドレスに安全なリセットリンクを送信します。",
+            passwordButton: "リセットリンクを送信",
+            passwordSent: "リセットリンクを送信しました。最新のメールから新しいパスワードを設定してください。",
             deleteTitle: "アカウント / データ削除",
             deleteWarning: "7日後、データは完全に削除されます。管理者や開発チームでも復元できません。",
             deleteHelp: "下のボタンで削除画面を開きます。7日間の猶予または即時完全削除を選べます。",
@@ -1076,6 +1100,10 @@ const UI_TRANSLATIONS = {
         account: {
             title: "계정 및 개인정보",
             subtitle: "개인정보, 삭제 요청, 계정 데이터 설정을 관리하세요.",
+            passwordTitle: "비밀번호 보안",
+            passwordHelp: "현재 로그인한 계정의 이메일 주소로 안전한 비밀번호 재설정 링크를 보냅니다.",
+            passwordButton: "재설정 링크 보내기",
+            passwordSent: "재설정 링크를 보냈습니다. 최신 이메일에서 새 비밀번호를 설정하세요.",
             deleteTitle: "계정 / 데이터 삭제",
             deleteWarning: "7일 후 데이터가 영구 삭제됩니다. 관리자나 개발팀도 복구할 수 없습니다.",
             deleteHelp: "아래 버튼으로 삭제 모달을 열고 7일 유예 기간 또는 즉시 영구 삭제를 선택하세요.",
@@ -1215,6 +1243,10 @@ const UI_TRANSLATIONS = {
         account: {
             title: "账户与隐私",
             subtitle: "管理隐私、删除请求和账户级数据控制。",
+            passwordTitle: "密码安全",
+            passwordHelp: "向当前登录账户的电子邮件地址发送安全的密码重置链接。",
+            passwordButton: "发送密码重置链接",
+            passwordSent: "重置链接已发送。请打开最新邮件设置新密码。",
             deleteTitle: "删除账户 / 数据",
             deleteWarning: "7天后，您的数据将被永久删除。即使管理员或开发团队也无法恢复。",
             deleteHelp: "点击下方按钮打开删除窗口。您可以选择默认7天宽限期或立即永久删除。",
@@ -1350,6 +1382,9 @@ const UI_TEXT_BINDINGS = [
     { selector: "#save-appearance-settings-btn", key: "appearance.save" },
     { selector: "#account-tab .tab-title-container h1", key: "account.title" },
     { selector: "#account-tab .tab-title-container p", key: "account.subtitle" },
+    { selector: "#account-tab .account-security-card .panel-title", key: "account.passwordTitle" },
+    { selector: "#account-tab .account-security-help", key: "account.passwordHelp" },
+    { selector: "#account-send-reset-link-btn", key: "account.passwordButton" },
     { selector: "#account-tab .danger-zone-card .panel-title", key: "account.deleteTitle" },
     { selector: "#account-tab .danger-warning-box", key: "account.deleteWarning" },
     { selector: "#account-tab .danger-zone-card > p", key: "account.deleteHelp" },
@@ -2109,6 +2144,45 @@ async function sendPasswordResetCode() {
     setResetCodeStatus(AUTH_UNAVAILABLE_MESSAGE, true);
 }
 
+function setAccountResetStatus(message, isError = false) {
+    const status = document.getElementById("account-reset-status");
+    if (!status) return;
+    status.innerText = message;
+    status.style.display = "block";
+    status.style.color = isError ? "var(--danger)" : "var(--accent)";
+}
+
+async function sendCurrentUserPasswordResetLink() {
+    const button = document.getElementById("account-send-reset-link-btn");
+    const email = currentUser?.email || currentProfile?.email || "";
+
+    if (!hasCloudConnection() || !supabaseClient?.auth?.resetPasswordForEmail || !email) {
+        setAccountResetStatus(AUTH_UNAVAILABLE_MESSAGE, true);
+        return;
+    }
+
+    if (button) {
+        button.disabled = true;
+        button.innerText = "Sending...";
+    }
+
+    try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/app`
+        });
+        if (error) {
+            setAccountResetStatus(`Could not send reset email: ${error.message}`, true);
+            return;
+        }
+        setAccountResetStatus(getUiText("account.passwordSent"));
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.innerText = getUiText("account.passwordButton");
+        }
+    }
+}
+
 const receiptTranslations = {
     en: {
         date: "Date",
@@ -2809,6 +2883,8 @@ async function setupAuthenticatedUser(user) {
     // Update application-wide profile displays
     document.getElementById("user-display-email").innerText = currentProfile.email || currentUser.email;
     document.getElementById("user-avatar-char").innerText = (currentProfile.company_name || "M").charAt(0).toUpperCase();
+    const accountSecurityEmail = document.getElementById("account-security-email");
+    if (accountSecurityEmail) accountSecurityEmail.innerText = currentUser.email || currentProfile.email || "";
     
     // Populate form fields
     document.getElementById("store-name").value = currentProfile.company_name;
@@ -5563,6 +5639,7 @@ function initAppEventListeners() {
     document.getElementById("submit-feature-request-btn").addEventListener("click", submitFeatureRequest);
     document.getElementById("submit-feedback-btn").addEventListener("click", submitFeedback);
     document.getElementById("save-appearance-settings-btn").addEventListener("click", saveAppearanceSettings);
+    document.getElementById("account-send-reset-link-btn").addEventListener("click", sendCurrentUserPasswordResetLink);
     document.getElementById("open-account-delete-modal-btn").addEventListener("click", showAccountDeleteModal);
     document.getElementById("close-account-delete-modal-btn").addEventListener("click", hideAccountDeleteModal);
     document.getElementById("confirm-account-delete-btn").addEventListener("click", submitAccountDeletionRequest);
@@ -6970,6 +7047,7 @@ Object.assign(window, {
     sendPasswordResetCode,
     configurePasswordResetForm,
     showPasswordResetForm,
+    sendCurrentUserPasswordResetLink,
     submitFeatureRequest,
     submitFeedback,
     removeDocumentPhoto,

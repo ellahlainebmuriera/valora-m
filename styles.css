@@ -830,6 +830,38 @@ textarea:focus {
     align-items: start;
 }
 
+.account-security-card {
+    margin-bottom: 24px;
+}
+
+.account-security-help {
+    color: var(--text-medium);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.account-security-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: space-between;
+}
+
+#account-security-email {
+    color: var(--text-muted);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.account-reset-status {
+    color: var(--accent);
+    display: none;
+    font-size: 13px;
+    margin-top: 14px;
+}
+
 .appearance-layout {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }

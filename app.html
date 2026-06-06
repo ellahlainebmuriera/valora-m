@@ -25,7 +25,7 @@
     <meta name="twitter:image" content="https://valora-m.vercel.app/assets/og-preview-banner.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=production-auth-v48">
+    <link rel="stylesheet" href="styles.css?v=account-security-v49">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1342,6 +1342,16 @@
                     </div>
                 </div>
 
+                <div class="panel-card account-security-card">
+                    <div class="panel-title">Password Security</div>
+                    <p class="account-security-help">Send a secure password reset link to the email address of your currently signed-in account.</p>
+                    <div class="account-security-actions">
+                        <span id="account-security-email"></span>
+                        <button class="btn btn-primary" id="account-send-reset-link-btn" type="button">Send Password Reset Link</button>
+                    </div>
+                    <p id="account-reset-status" class="account-reset-status" role="status" aria-live="polite"></p>
+                </div>
+
                 <div class="account-privacy-layout">
                     <div class="panel-card danger-zone-card">
                         <div class="panel-title">Delete Account / Data</div>
@@ -1983,7 +1993,7 @@
         }
     </style>
 
-    <script src="app.js?v=production-auth-v48"></script>
+    <script src="app.js?v=account-security-v49"></script>
     <script src="pwa-install.js"></script>
     <script>
         if ("serviceWorker" in navigator) {
