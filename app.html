@@ -25,7 +25,7 @@
     <meta name="twitter:image" content="https://valora-m.vercel.app/assets/og-preview-banner.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=report-delete-v46">
+    <link rel="stylesheet" href="styles.css?v=launch-security-v47">
     <!-- Supabase JS Client library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -73,7 +73,7 @@
                     <input type="text" id="reset-code" required placeholder="Enter code from your email">
                     <button type="button" class="btn btn-secondary btn-sm" id="send-reset-code-btn">Send Reset Code</button>
                     <p id="reset-code-status" style="font-size: 12px; color: var(--accent); display: none;"></p>
-                    <p id="reset-code-note" style="font-size: 11px; color: var(--text-muted);">Live email codes require Supabase Auth or another email/OTP provider. In local preview, use code 123456.</p>
+                    <p id="reset-code-note" style="font-size: 11px; color: var(--text-muted);">Use the latest secure password reset email sent by Valora EM.</p>
                 </div>
                 <p id="reset-link-help" style="display: none; font-size: 12px; color: var(--text-muted); line-height: 1.5;"></p>
                 <div class="form-group" id="reset-new-password-group">
@@ -1983,8 +1983,7 @@
         }
     </style>
 
-    <script src="app.js?v=report-delete-v46"></script>
-    <script src="auth-fallback.js"></script>
+    <script src="app.js?v=launch-security-v47"></script>
     <script src="pwa-install.js"></script>
     <script>
         if ("serviceWorker" in navigator) {

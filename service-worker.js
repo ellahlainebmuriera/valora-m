@@ -1,4 +1,4 @@
-const CACHE_NAME = "valora-em-v46";
+const CACHE_NAME = "valora-em-v47";
 const APP_ASSETS = [
   "/",
   "/app",
@@ -9,7 +9,6 @@ const APP_ASSETS = [
   "/app.html",
   "/styles.css",
   "/app.js",
-  "/auth-fallback.js",
   "/pwa-install.js",
   "/manifest.json",
   "/manifest.webmanifest",

@@ -46,11 +46,28 @@ CREATE POLICY "Users can view their own profile."
 
 CREATE POLICY "Users can update their own profile." 
     ON public.profiles FOR UPDATE 
-    USING (auth.uid() = id);
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can insert their own profile." 
     ON public.profiles FOR INSERT 
-    WITH CHECK (auth.uid() = id);
+    WITH CHECK (
+        auth.uid() = id
+        AND COALESCE(is_pro, FALSE) = FALSE
+        AND COALESCE(plan, 'Standard Free Plan') = 'Standard Free Plan'
+        AND COALESCE(auto_renewal_enabled, FALSE) = FALSE
+        AND subscription_expires_at IS NULL
+    );
+
+REVOKE UPDATE ON TABLE public.profiles FROM anon, authenticated;
+GRANT UPDATE (
+    updated_at, company_name, email, phone, address, logo_url, currency,
+    currency_symbol, default_tax_rate, invoice_theme_color, invoice_text_color,
+    preferred_language, document_language, app_interface_language,
+    custom_language_name, print_layout, app_appearance, saved_signature_data_url,
+    save_signature_permission, last_business_info_updated_at, is_deleted,
+    deletion_requested_at, hard_delete_after, deletion_type
+) ON public.profiles TO authenticated;
 
 -- 2. Clients Table (List of customers for each shop)
 CREATE TABLE public.clients (
@@ -124,10 +141,22 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS deletion_type TEXT;
 -- Enable RLS for Invoices
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can CRUD their own invoices." 
-    ON public.invoices FOR ALL 
-    USING (auth.uid() = user_id) 
+CREATE POLICY "Users can view their own invoices."
+    ON public.invoices FOR SELECT TO authenticated
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own invoices."
+    ON public.invoices FOR INSERT TO authenticated
     WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own invoices."
+    ON public.invoices FOR UPDATE TO authenticated
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own draft invoices."
+    ON public.invoices FOR DELETE TO authenticated
+    USING (auth.uid() = user_id AND LOWER(COALESCE(status, '')) = 'draft');
 
 -- 4. Invoice Items Table (Line items inside invoices)
 CREATE TABLE public.invoice_items (
@@ -199,10 +228,6 @@ ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS billing_mode TEXT DEFAU
 ALTER TABLE public.app_payments ADD COLUMN IF NOT EXISTS auto_renewal_enabled BOOLEAN DEFAULT FALSE;
 
 ALTER TABLE public.app_payments ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can create their own payment records."
-    ON public.app_payments FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can view their own payment records."
     ON public.app_payments FOR SELECT

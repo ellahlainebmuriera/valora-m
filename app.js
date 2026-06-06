@@ -1,34 +1,30 @@
 /**
  * Valora EM - Main Application Controller
- * Handles UI routing, dynamic calculations, Supabase Cloud synchronization,
- * LocalStorage data fallbacks, and the mock Payment / White-label systems.
+ * Handles UI routing, calculations, Supabase synchronization, offline document
+ * caching, PayMongo checkout, and owner administration.
  */
 
 // ==================== DATABASE CONFIGURATION ====================
-// TODO: Replace these with your own Supabase API credentials when cloud SaaS setup is ready.
 const SUPABASE_URL = "https://bdpcrsonguvxxuxnhpyy.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_4XOjRb8SC2Cw3vlKx5xukw_9OWGBA-_";
-const DEFAULT_USER_EMAIL = "testaccount@valoraem.com";
-const DEFAULT_TEST_PASSWORD = "ValoraEM181920!!@";
-const DEFAULT_TEST_COMPANY = "Valora EM Test Store";
 const ADMIN_EMAIL = "ellahlaine.b.muriera@gmail.com";
-const ADMIN_PASSWORD = "ValoraEMAdmin181920!!@";
+const AUTH_UNAVAILABLE_MESSAGE = "Secure sign-in is temporarily unavailable. Please try again shortly.";
 
 let supabaseClient = null;
 let isCloudActive = false;
 let isPasswordRecoverySession = false;
 
-// Initialize Supabase. Kapag wala pang credentials, mag-fo-fallback sa LocalStorage automatically.
+// Authentication fails closed if Supabase is unavailable.
 try {
     if (SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY") {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         isCloudActive = true;
-        console.log("🚀 Supabase Cloud Database Connected!");
+        console.log("Supabase Cloud Database Connected.");
     } else {
-        console.log("ℹ️ Demo Mode: Using LocalStorage Database Fallback.");
+        console.warn("Supabase credentials are not configured.");
     }
 } catch (err) {
-    console.error("Supabase connection failed. Falling back to LocalStorage.", err);
+    console.error("Supabase connection failed.", err);
 }
 window.valoraemIsCloudActive = isCloudActive;
 window.valoraemSupabaseClient = supabaseClient;
@@ -1555,7 +1551,6 @@ let whitelabelConfig = {
 
 // ==================== INITIALIZATION ====================
 document.addEventListener("DOMContentLoaded", () => {
-    seedTestAccount();
     loadWhiteLabelSettings();
     enhancePricingFeatureIcons();
     initAppEventListeners();
@@ -1574,38 +1569,19 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("inv-duedate").value = nextMonth.toISOString().split('T')[0];
 });
 
-function getLocalAccount(email) {
-    const saved = localStorage.getItem(`valoraem_account_${email}`);
-    return saved ? JSON.parse(saved) : null;
-}
-
-function saveLocalAccount(account) {
-    localStorage.setItem(`valoraem_account_${account.email}`, JSON.stringify(account));
-}
-
-function createLocalSession(email) {
-    const mockUser = {
-        email,
-        id: `mock-${email.replace(/[^a-zA-Z0-9]/g, '')}`,
-        role: email === ADMIN_EMAIL ? "admin" : "customer"
-    };
-    localStorage.setItem("valoraem_mock_user", JSON.stringify(mockUser));
-    return mockUser;
-}
-
 function isAdminUser() {
     return currentUser && currentUser.email === ADMIN_EMAIL;
 }
 
 function hasBusinessUnlimited() {
-    return isAdminUser() || getPlanCanonicalName(currentProfile.plan) === "Business Unlimited";
+    return isAdminUser() || getPlanCanonicalName(getCurrentPlanName()) === "Business Unlimited";
 }
 
 function getCurrentPlanName() {
     if (isAdminUser()) return "Business Unlimited";
-    const canonicalPlan = getPlanCanonicalName(currentProfile.plan);
-    if (canonicalPlan !== "Standard Free Plan") return canonicalPlan;
-    return currentProfile.is_pro ? "Pro Unlimited Plan" : "Standard Free Plan";
+    return hasValidPaidEntitlement(currentProfile)
+        ? getPlanCanonicalName(currentProfile.plan)
+        : "Standard Free Plan";
 }
 
 function getPlanKey(planName) {
@@ -1629,9 +1605,23 @@ function isFreeOrStarterPlan() {
     return !isAdminUser() && (planName === "Standard Free Plan" || planName === "Starter Plan");
 }
 
+function hasValidPaidEntitlement(profile = currentProfile) {
+    const planName = getPlanCanonicalName(profile?.plan);
+    if (profile?.is_pro !== true || planName === "Standard Free Plan") return false;
+
+    const expiry = profile?.subscription_expires_at
+        ? new Date(profile.subscription_expires_at)
+        : null;
+
+    return Boolean(
+        expiry &&
+        !Number.isNaN(expiry.getTime()) &&
+        expiry.getTime() > Date.now()
+    );
+}
+
 function hasPaidSubscriptionAccess() {
-    const planName = getPlanCanonicalName(getCurrentPlanName());
-    return isAdminUser() || currentProfile.is_pro === true || planName !== "Standard Free Plan";
+    return isAdminUser() || hasValidPaidEntitlement(currentProfile);
 }
 
 function hasUnlimitedInvoiceAccess() {
@@ -1797,9 +1787,6 @@ async function updateCloudProfileSettings(payload) {
         "last_business_info_updated_at",
         "document_language",
         "app_interface_language",
-        "auto_renewal_enabled",
-        "billing_status",
-        "subscription_expires_at",
         "is_deleted",
         "deletion_requested_at",
         "hard_delete_after",
@@ -1936,8 +1923,8 @@ async function ensureCloudUserProfile(user) {
         id: user.id,
         email: user.email || currentProfile.email || "",
         company_name: currentProfile.company_name || "My Business",
-        is_pro: !!currentProfile.is_pro,
-        plan: currentProfile.plan || "Standard Free Plan"
+        is_pro: false,
+        plan: "Standard Free Plan"
     };
 
     const { error: insertError } = await supabaseClient
@@ -2014,14 +2001,17 @@ function configurePasswordResetForm() {
     }
 
     codeGroup.style.display = "block";
-    if (codeLabel) codeLabel.innerText = "Email Verification Code";
-    if (codeNote) codeNote.innerText = "Live email codes require Supabase Auth or another email/OTP provider. In local preview, use code 123456.";
-    codeInput.style.display = "block";
-    codeInput.required = true;
-    codeInput.disabled = false;
-    sendButton.innerText = "Send Reset Code";
-    help.style.display = "none";
-    submitButton.innerText = "Reset Password";
+    if (codeLabel) codeLabel.innerText = "Password Reset";
+    if (codeNote) codeNote.innerText = AUTH_UNAVAILABLE_MESSAGE;
+    codeInput.style.display = "none";
+    codeInput.required = false;
+    codeInput.disabled = true;
+    sendButton.innerText = "Email Service Unavailable";
+    sendButton.disabled = true;
+    help.style.display = "block";
+    help.innerText = "Valora EM does not use local preview passwords or bypass codes.";
+    submitButton.innerText = "Reset Unavailable";
+    submitButton.disabled = true;
     if (emailInput && !emailInput.value) emailInput.placeholder = "name@store.com";
 }
 
@@ -2096,10 +2086,7 @@ async function sendPasswordResetCode() {
         return;
     }
 
-    localStorage.setItem(`valoraem_reset_code_${email}`, "123456");
-    const codeInput = document.getElementById("reset-code");
-    if (codeInput) codeInput.value = "123456";
-    setResetCodeStatus("Reset code sent for local preview. Use code 123456.");
+    setResetCodeStatus(AUTH_UNAVAILABLE_MESSAGE, true);
 }
 
 const receiptTranslations = {
@@ -2184,114 +2171,6 @@ function getReceiptText(key) {
     return source[key] || receiptTranslations.default[key] || key;
 }
 
-function seedTestAccount() {
-    saveLocalAccount({
-        email: ADMIN_EMAIL,
-        password: ADMIN_PASSWORD,
-        company_name: "Valora EM Admin"
-    });
-
-    if (!localStorage.getItem(`valoraem_profile_${ADMIN_EMAIL}`)) {
-        localStorage.setItem(`valoraem_profile_${ADMIN_EMAIL}`, JSON.stringify({
-            email: ADMIN_EMAIL,
-            company_name: "Valora EM Admin",
-            phone: "",
-            address: "",
-            logo_url: "",
-            currency: "PHP",
-            currency_symbol: getCurrencySymbol("PHP"),
-            default_tax_rate: 12.0,
-            is_pro: true,
-            invoice_count: 0,
-            invoice_theme_color: "#0d9488",
-            invoice_text_color: "#1e293b",
-            preferred_language: "en",
-            document_language: "en",
-            app_interface_language: "en",
-            custom_language_name: "",
-            print_layout: "pdf",
-            app_appearance: "dark",
-            saved_signature_data_url: "",
-            save_signature_permission: false,
-            plan: "Business Unlimited",
-            auto_renewal_enabled: false,
-            billing_status: "manual"
-        }));
-    }
-
-    saveLocalAccount({
-        email: DEFAULT_USER_EMAIL,
-        password: DEFAULT_TEST_PASSWORD,
-        company_name: DEFAULT_TEST_COMPANY
-    });
-
-    if (!localStorage.getItem(`valoraem_profile_${DEFAULT_USER_EMAIL}`)) {
-        localStorage.setItem(`valoraem_profile_${DEFAULT_USER_EMAIL}`, JSON.stringify({
-            email: DEFAULT_USER_EMAIL,
-            company_name: DEFAULT_TEST_COMPANY,
-            phone: "0917-123-4567",
-            address: "Manila, Philippines",
-            logo_url: "",
-            currency: "PHP",
-            currency_symbol: getCurrencySymbol("PHP"),
-            default_tax_rate: 12.0,
-            is_pro: true,
-            invoice_count: 1,
-            invoice_theme_color: "#0d9488",
-            invoice_text_color: "#1e293b",
-            preferred_language: "en",
-            document_language: "en",
-            app_interface_language: "en",
-            custom_language_name: "",
-            print_layout: "pdf",
-            app_appearance: "dark",
-            saved_signature_data_url: "",
-            save_signature_permission: false,
-            auto_renewal_enabled: false,
-            billing_status: "manual"
-        }));
-    }
-
-    if (!localStorage.getItem("valoraem_payment_settings")) {
-        localStorage.setItem("valoraem_payment_settings", JSON.stringify(paymentSettings));
-    }
-
-    const sampleClient = {
-        id: "client-demo-001",
-        name: "Sample Customer",
-        email: "customer@example.com",
-        phone: "0917-555-0101",
-        address: "Quezon City, Philippines"
-    };
-
-    if (!localStorage.getItem(`valoraem_clients_${DEFAULT_USER_EMAIL}`)) {
-        localStorage.setItem(`valoraem_clients_${DEFAULT_USER_EMAIL}`, JSON.stringify([sampleClient]));
-    }
-
-    if (!localStorage.getItem(`valoraem_invoices_${DEFAULT_USER_EMAIL}`)) {
-        localStorage.setItem(`valoraem_invoices_${DEFAULT_USER_EMAIL}`, JSON.stringify([{
-        id: "inv-demo-001",
-        invoice_number: "INV-0001",
-        client_id: sampleClient.id,
-        type: "invoice",
-        status: "Unpaid",
-        issue_date: new Date().toISOString().split("T")[0],
-        due_date: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
-        tax_rate: 12,
-        discount: 0,
-        notes: "Sample invoice only. You can edit or delete this.",
-        subtotal: 1500,
-        tax_amount: 180,
-        total: 1680,
-        signature_data_url: null,
-        items: [
-            { id: "item-demo-001", description: "Sample Product", quantity: 2, unit_price: 500 },
-            { id: "item-demo-002", description: "Delivery Fee", quantity: 1, unit_price: 500 }
-        ]
-        }]));
-    }
-}
-
 // Load the developer branding variables
 function loadWhiteLabelSettings() {
     const saved = localStorage.getItem("valoraem_whitelabel") || localStorage.getItem("billflow_whitelabel");
@@ -2350,13 +2229,8 @@ async function checkAuthSession() {
             showAuthScreen();
         }
     } else {
-        // Localstorage mock authentication session check
-        const savedSession = localStorage.getItem("valoraem_mock_user");
-        if (savedSession) {
-            setupAuthenticatedUser(JSON.parse(savedSession));
-        } else {
-            showAuthScreen();
-        }
+        showAuthScreen();
+        createToast(AUTH_UNAVAILABLE_MESSAGE, "error");
     }
 }
 
@@ -2856,7 +2730,22 @@ async function logoutCurrentUser() {
 
 // Setup User Profile and Details
 async function setupAuthenticatedUser(user) {
-    currentUser = user;
+    if (!isCloudActive || !supabaseClient?.auth || !user?.id) {
+        showAuthScreen();
+        createToast(AUTH_UNAVAILABLE_MESSAGE, "error");
+        return;
+    }
+
+    const { data: verifiedAuth, error: verifiedAuthError } = await supabaseClient.auth.getUser();
+    const verifiedUser = verifiedAuth?.user;
+    if (verifiedAuthError || !verifiedUser?.id || verifiedUser.id !== user.id) {
+        console.error("Rejected unverified application session.", verifiedAuthError);
+        showAuthScreen();
+        createToast("Your session could not be verified. Please sign in again.", "error");
+        return;
+    }
+
+    currentUser = verifiedUser;
     
     if (isCloudActive) {
         // Fetch profile details from Supabase cloud database
@@ -2869,7 +2758,7 @@ async function setupAuthenticatedUser(user) {
             // Auto create missing profile row
             const newProfile = {
                 id: user.id,
-                email: user.email,
+                email: verifiedUser.email,
                 company_name: "My Business",
                 is_pro: false
             };
@@ -2881,13 +2770,18 @@ async function setupAuthenticatedUser(user) {
         } else {
             currentProfile = profile;
         }
+
+        if (!isAdminUser() && currentProfile.is_pro && !hasValidPaidEntitlement(currentProfile)) {
+            currentProfile = {
+                ...currentProfile,
+                is_pro: false,
+                plan: "Standard Free Plan",
+                billing_status: "expired"
+            };
+        }
         
         // Fetch clients & invoices
         await fetchCloudData();
-    } else {
-        // Fetch profile details from local storage
-        currentProfile = getLocalStorageProfile(user.email);
-        loadLocalData();
     }
 
     ensureBusinessProfiles();
@@ -4290,11 +4184,20 @@ async function handleLogoFile(file) {
 
     const reader = new FileReader();
     reader.onload = async (event) => {
+        const previousLogo = currentProfile.logo_url || "";
         currentProfile.logo_url = event.target.result;
         renderLogoAccessUI();
 
         if (isCloudActive) {
-            await supabaseClient.from("profiles").update({ logo_url: currentProfile.logo_url }).eq("id", currentUser.id);
+            const { error } = await supabaseClient
+                .from("profiles")
+                .update({ logo_url: currentProfile.logo_url })
+                .eq("id", currentUser.id);
+            if (error) {
+                currentProfile.logo_url = previousLogo;
+                renderLogoAccessUI();
+                createToast(error.message || "Logo upload could not be saved.", "error");
+            }
         } else {
             saveLocalStorageProfile();
         }
@@ -5088,7 +4991,7 @@ function initAppEventListeners() {
         button.addEventListener("click", async () => {
             const provider = button.dataset.provider;
             if (!isCloudActive) {
-                alert("Supabase is not connected yet. Please add your Supabase URL and anon key in app.js first.");
+                createToast(AUTH_UNAVAILABLE_MESSAGE, "error");
                 return;
             }
 
@@ -5096,7 +4999,7 @@ function initAppEventListeners() {
                 const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: "google",
                     options: {
-                        redirectTo: `${window.location.origin}/app.html`
+                        redirectTo: `${window.location.origin}/app`
                     }
                 });
                 if (error) {
@@ -5182,28 +5085,7 @@ function initAppEventListeners() {
             return;
         }
 
-        if (!email) {
-            setResetCodeStatus("Please enter your email first.", true);
-            return;
-        }
-
-        if (!code) {
-            setResetCodeStatus("Please enter the reset code.", true);
-            return;
-        }
-
-        const expectedCode = localStorage.getItem(`valoraem_reset_code_${email}`) || "123456";
-        if (code !== expectedCode) {
-            setResetCodeStatus("Invalid reset code. Local preview code is 123456.", true);
-            return;
-        }
-        const localAccount = getLocalAccount(email);
-        if (!localAccount) {
-            setResetCodeStatus("No account exists for this email. Please sign up first.", true);
-            return;
-        }
-        saveLocalAccount({ ...localAccount, password });
-        setResetCodeStatus("Password updated. You can now sign in with your new password.");
+        setResetCodeStatus(AUTH_UNAVAILABLE_MESSAGE, true);
     });
 
     // Auth Toggles
@@ -5242,21 +5124,7 @@ function initAppEventListeners() {
                 setupAuthenticatedUser(data.user);
             }
         } else {
-            // Local account login for static hosted mode.
-            const localAccount = getLocalAccount(email);
-            if (!localAccount) {
-                alert("No account exists for this email. Please sign up first.");
-                return;
-            }
-            if (password.length < 6) {
-                alert("Password must be at least 6 characters.");
-                return;
-            }
-            if (localAccount.password !== password) {
-                alert("Incorrect email or password.");
-                return;
-            }
-            setupAuthenticatedUser(createLocalSession(email));
+            createToast(AUTH_UNAVAILABLE_MESSAGE, "error");
         }
     });
 
@@ -5286,53 +5154,8 @@ function initAppEventListeners() {
                 document.getElementById("auth-toggle-register").style.display = "none";
             }
         } else {
-            // Mock Register
-            if (!company) {
-                alert("Please enter a store or company name.");
-                return;
-            }
-            if (password.length < 6) {
-                alert("Password must be at least 6 characters.");
-                return;
-            }
-            saveLocalAccount({ email, password, company_name: company });
-            const newProfile = {
-                email: email,
-                company_name: company,
-                phone: document.getElementById("register-phone").value.trim(),
-                is_pro: false,
-                currency: "PHP",
-                currency_symbol: getCurrencySymbol("PHP"),
-                default_tax_rate: 12.0,
-                app_appearance: "dark",
-                preferred_language: "en",
-                document_language: "en",
-                app_interface_language: "en",
-                auto_renewal_enabled: false,
-                billing_status: "manual",
-                print_layout: "pdf"
-            };
-            localStorage.setItem(`valoraem_profile_${email}`, JSON.stringify(newProfile));
-            alert("Account created. Confirmation email will be sent automatically after live email integration is connected.");
-            setupAuthenticatedUser(createLocalSession(email));
+            createToast(AUTH_UNAVAILABLE_MESSAGE, "error");
             return;
-            if (password.length >= 6) {
-                const mockUser = { email, id: `mock-${email.replace(/[^a-zA-Z0-9]/g, '')}` };
-                // Initialize default profile
-                const newProfile = {
-                    email: email,
-                    company_name: company,
-                    is_pro: false,
-                    currency: "PHP",
-                    currency_symbol: "₱",
-                    default_tax_rate: 12.0
-                };
-                localStorage.setItem(`valoraem_profile_${email}`, JSON.stringify(newProfile));
-                localStorage.setItem("valoraem_mock_user", JSON.stringify(mockUser));
-                setupAuthenticatedUser(mockUser);
-            } else {
-                alert("Password must be at least 6 characters.");
-            }
         }
     });
 
@@ -6220,6 +6043,10 @@ async function saveInvoiceToDatabase() {
                 // Update
                 const { error } = await saveCloudInvoiceRecord(invoiceData);
                 if (error) {
+                    if (String(error.message || "").includes("Weekly free document limit reached")) {
+                        showInvoiceLimitUpgradeModal();
+                        return;
+                    }
                     alert("Error saving: " + error.message);
                     return;
                 }
@@ -6230,6 +6057,10 @@ async function saveInvoiceToDatabase() {
                 // Insert
                 const { data, error } = await saveCloudInvoiceRecord(invoiceData);
                 if (error) {
+                    if (String(error.message || "").includes("Weekly free document limit reached")) {
+                        showInvoiceLimitUpgradeModal();
+                        return;
+                    }
                     alert("Error saving: " + error.message);
                     return;
                 }
@@ -6439,6 +6270,13 @@ async function restoreInvoice(id) {
 }
 
 async function permanentlyDeleteInvoice(id) {
+    const invoice = invoices.find((item) => item.id === id);
+    if (!invoice) return;
+    if (String(invoice.status || "").toLowerCase() !== "draft") {
+        createToast("Issued documents are retained for audit history. Recover the document or create a Credit Note instead.", "error");
+        return;
+    }
+
     if (!confirm("Permanently delete this invoice? This cannot be undone.")) return;
 
     if (isCloudActive) {
@@ -6471,6 +6309,7 @@ function renderTrashBin() {
     deleted.forEach((inv) => {
         const client = clients.find(c => c.id == inv.client_id);
         const clientName = client ? client.name : '<span style="color: var(--text-muted);">Walk-in</span>';
+        const canPermanentlyDelete = String(inv.status || "").toLowerCase() === "draft";
         const row = document.createElement("tr");
         row.innerHTML = `
             <td><strong>${inv.invoice_number}</strong></td>
@@ -6479,7 +6318,9 @@ function renderTrashBin() {
             <td style="font-weight: 700;">${currentProfile.currency_symbol}${parseFloat(inv.total).toFixed(2)}</td>
             <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
                 <button class="btn btn-sm btn-secondary" onclick="restoreInvoice('${inv.id}')">Recover</button>
-                <button class="btn btn-sm btn-secondary btn-danger" onclick="permanentlyDeleteInvoice('${inv.id}')">Delete Forever</button>
+                ${canPermanentlyDelete
+                    ? `<button class="btn btn-sm btn-secondary btn-danger" onclick="permanentlyDeleteInvoice('${inv.id}')">Delete Draft Forever</button>`
+                    : '<span class="badge badge-draft">Record retained</span>'}
             </td>
         `;
         tbody.appendChild(row);
