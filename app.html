@@ -25,9 +25,9 @@
     <meta name="twitter:image" content="https://valora-m.vercel.app/assets/og-preview-banner.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/valora-em-logo-192.png">
     <link rel="apple-touch-icon" href="/icons/valora-em-logo-192.png">
-    <link rel="stylesheet" href="styles.css?v=launch-audit-v51">
+    <link rel="stylesheet" href="styles.css?v=launch-audit-v52">
     <!-- Supabase JS Client library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -1965,15 +1965,15 @@
         }
     </style>
 
-    <script src="app.js?v=launch-audit-v51"></script>
+    <script src="app.js?v=launch-audit-v52"></script>
     <script src="pwa-install.js"></script>
     <script>
         if ("serviceWorker" in navigator) {
             let refreshingForServiceWorker = false;
             navigator.serviceWorker.addEventListener("controllerchange", () => {
-                if (refreshingForServiceWorker || sessionStorage.getItem("valora-sw-refreshed-v51")) return;
+                if (refreshingForServiceWorker || sessionStorage.getItem("valora-sw-refreshed-v52")) return;
                 refreshingForServiceWorker = true;
-                sessionStorage.setItem("valora-sw-refreshed-v51", "1");
+                sessionStorage.setItem("valora-sw-refreshed-v52", "1");
                 window.location.reload();
             });
 
