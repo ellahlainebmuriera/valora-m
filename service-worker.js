@@ -1,4 +1,4 @@
-const CACHE_NAME = "valora-em-v52";
+const CACHE_NAME = "valora-em-v54";
 const APP_ASSETS = [
   "/",
   "/app",
@@ -7,6 +7,7 @@ const APP_ASSETS = [
   "/refund-policy.html",
   "/app.html",
   "/styles.css",
+  "/vendor/supabase.js",
   "/app.js",
   "/pwa-install.js",
   "/manifest.json",

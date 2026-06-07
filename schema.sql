@@ -118,6 +118,9 @@ CREATE TABLE public.invoices (
     printed_name TEXT,
     request_client_signature BOOLEAN DEFAULT FALSE,
     photo_data_urls JSONB DEFAULT '[]'::jsonb,
+    source_estimate_id UUID REFERENCES public.invoices(id) ON DELETE SET NULL,
+    converted_invoice_id UUID REFERENCES public.invoices(id) ON DELETE SET NULL,
+    converted_at TIMESTAMP WITH TIME ZONE,
     is_deleted BOOLEAN DEFAULT FALSE,
     deleted_at TIMESTAMP WITH TIME ZONE
 );
@@ -126,6 +129,12 @@ CREATE TABLE public.invoices (
 ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS business_profile_id TEXT;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS source_estimate_id UUID REFERENCES public.invoices(id) ON DELETE SET NULL;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS converted_invoice_id UUID REFERENCES public.invoices(id) ON DELETE SET NULL;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS converted_at TIMESTAMP WITH TIME ZONE;
+CREATE UNIQUE INDEX IF NOT EXISTS invoices_one_conversion_per_estimate
+    ON public.invoices (source_estimate_id)
+    WHERE source_estimate_id IS NOT NULL;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS billing_cycle TEXT DEFAULT 'monthly';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_business_info_updated_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS document_language TEXT DEFAULT 'en';

@@ -5962,22 +5962,23 @@ function updateInvoicePreview() {
     document.getElementById("preview-store-details").innerHTML = storeDetails.join("<br>");
 }
 
+function getNextInvoiceNumber() {
+    const maxNum = invoices.reduce((max, invoice) => {
+        const matches = String(invoice.invoice_number || "").match(/\d+/);
+        if (!matches) return max;
+        const number = Number.parseInt(matches[0], 10);
+        return Number.isFinite(number) && number > max ? number : max;
+    }, 0);
+
+    return `INV-${String(maxNum + 1).padStart(4, "0")}`;
+}
+
 // Reset creator form state
 function resetCreatorForm() {
     activeEditingInvoiceId = null;
     currentInvoiceItems = [];
     
-    // Generate next invoice number
-    const maxNum = invoices.reduce((max, inv) => {
-        const matches = inv.invoice_number.match(/\d+/);
-        if (matches) {
-            const num = parseInt(matches[0]);
-            return num > max ? num : max;
-        }
-        return max;
-    }, 0);
-    
-    document.getElementById("inv-number").value = `INV-${String(maxNum + 1).padStart(4, '0')}`;
+    document.getElementById("inv-number").value = getNextInvoiceNumber();
     document.getElementById("inv-type").value = "invoice";
     document.getElementById("inv-status").value = "Unpaid";
     document.getElementById("inv-client-select").value = "";
@@ -6021,6 +6022,240 @@ function resetCreatorForm() {
     document.getElementById("preview-client-address").innerText = "";
     
     addNewLineItem("Product Sale / Professional Service", 1, 1000);
+}
+
+function getConvertedInvoiceForEstimate(estimate) {
+    if (!estimate) return null;
+
+    if (estimate.converted_invoice_id) {
+        const linkedInvoice = invoices.find((invoice) => String(invoice.id) === String(estimate.converted_invoice_id));
+        if (linkedInvoice) return linkedInvoice;
+    }
+
+    return invoices.find((invoice) => String(invoice.source_estimate_id || "") === String(estimate.id)) || null;
+}
+
+async function getEstimateItems(estimate) {
+    if (!estimate) return [];
+    if (Array.isArray(estimate.items) && estimate.items.length) {
+        return estimate.items.map((item) => ({
+            description: item.description,
+            quantity: Number(item.quantity) || 0,
+            unit_price: Number(item.unit_price) || 0
+        }));
+    }
+
+    if (!hasCloudConnection()) return [];
+
+    const { data, error } = await supabaseClient
+        .from("invoice_items")
+        .select("description, quantity, unit_price")
+        .eq("invoice_id", estimate.id)
+        .order("id", { ascending: true });
+
+    if (error) {
+        logSupabaseError("estimate items fetch for conversion", error, { estimate_id: estimate.id });
+        throw new Error("The estimate line items could not be loaded.");
+    }
+
+    return (data || []).map((item) => ({
+        description: item.description,
+        quantity: Number(item.quantity) || 0,
+        unit_price: Number(item.unit_price) || 0
+    }));
+}
+
+async function openConvertedInvoice(estimateId) {
+    const estimate = invoices.find((invoice) => String(invoice.id) === String(estimateId));
+    if (!estimate) {
+        createToast("The source estimate could not be found.", true);
+        return;
+    }
+
+    let convertedInvoice = getConvertedInvoiceForEstimate(estimate);
+    if (!convertedInvoice && hasCloudConnection()) {
+        const { data, error } = await supabaseClient
+            .from("invoices")
+            .select("*")
+            .eq("source_estimate_id", estimate.id)
+            .maybeSingle();
+
+        if (error) {
+            logSupabaseError("converted invoice lookup", error, { estimate_id: estimate.id });
+            createToast("The converted invoice could not be opened.", true);
+            return;
+        }
+        convertedInvoice = data;
+        if (convertedInvoice && !invoices.some((invoice) => invoice.id === convertedInvoice.id)) {
+            invoices.push(convertedInvoice);
+        }
+    }
+
+    if (!convertedInvoice) {
+        createToast("No converted invoice is linked to this estimate.", true);
+        return;
+    }
+
+    await editInvoice(convertedInvoice.id);
+}
+
+const estimatesBeingConverted = new Set();
+
+async function convertEstimateToInvoice(estimateId) {
+    const estimate = invoices.find((invoice) => String(invoice.id) === String(estimateId));
+    if (!estimate || String(estimate.type || "").toLowerCase() !== "estimate") {
+        createToast("Only estimates can be converted to invoices.", true);
+        return;
+    }
+
+    const existingInvoice = getConvertedInvoiceForEstimate(estimate);
+    if (existingInvoice) {
+        createToast("This estimate has already been converted. Opening the invoice instead.");
+        await editInvoice(existingInvoice.id);
+        return;
+    }
+
+    if (estimatesBeingConverted.has(String(estimate.id))) return;
+    if (!confirm(`Convert estimate ${estimate.invoice_number} to a new invoice? The estimate will remain in your history.`)) {
+        return;
+    }
+
+    if (isFreeInvoiceLimitReached()) {
+        showInvoiceLimitUpgradeModal();
+        return;
+    }
+
+    estimatesBeingConverted.add(String(estimate.id));
+    let createdInvoiceId = null;
+
+    try {
+        const estimateItems = await getEstimateItems(estimate);
+        if (!estimateItems.length) {
+            createToast("This estimate has no line items to convert.", true);
+            return;
+        }
+
+        const now = new Date();
+        const newInvoice = {
+            invoice_number: getNextInvoiceNumber(),
+            client_id: estimate.client_id || null,
+            issue_date: now.toISOString().split("T")[0],
+            due_date: estimate.due_date || null,
+            type: "invoice",
+            status: "Draft",
+            tax_rate: Number(estimate.tax_rate) || 0,
+            discount: Number(estimate.discount) || 0,
+            shipping: Number(estimate.shipping) || 0,
+            notes: estimate.notes || "",
+            subtotal: Number(estimate.subtotal) || 0,
+            tax_amount: Number(estimate.tax_amount) || 0,
+            total: Number(estimate.total) || 0,
+            signature_data_url: estimate.signature_data_url || null,
+            printed_name: estimate.printed_name || "",
+            request_client_signature: !!estimate.request_client_signature,
+            photo_data_urls: Array.isArray(estimate.photo_data_urls) ? estimate.photo_data_urls : [],
+            business_profile_id: estimate.business_profile_id || activeBusinessProfileId || null,
+            source_estimate_id: estimate.id,
+            is_deleted: false,
+            deleted_at: null
+        };
+
+        if (isCloudActive) {
+            if (!hasCloudConnection()) {
+                createToast("Connect to the internet before converting an estimate so duplicate conversion can be prevented safely.", true);
+                return;
+            }
+
+            const { data: createdRows, error: createError } = await supabaseClient
+                .from("invoices")
+                .insert([{ ...newInvoice, user_id: currentUser.id }])
+                .select();
+
+            if (createError) {
+                if (createError.code === "23505") {
+                    await fetchCloudData();
+                    createToast("This estimate was already converted. Opening the existing invoice.");
+                    await openConvertedInvoice(estimate.id);
+                    return;
+                }
+                if (isMissingSchemaColumnError(createError, "source_estimate_id")) {
+                    createToast("Estimate conversion setup is not installed yet. Run SUPABASE_ESTIMATE_TO_INVOICE.sql once.", true);
+                    return;
+                }
+                if (String(createError.message || "").includes("Weekly free document limit reached")) {
+                    showInvoiceLimitUpgradeModal();
+                    return;
+                }
+                logSupabaseError("estimate conversion invoice insert", createError, newInvoice);
+                createToast("The estimate could not be converted. No new invoice was created.", true);
+                return;
+            }
+
+            createdInvoiceId = createdRows?.[0]?.id;
+            if (!createdInvoiceId) throw new Error("The new invoice ID was not returned.");
+
+            const itemPayload = estimateItems.map((item) => ({
+                invoice_id: createdInvoiceId,
+                description: item.description,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total: item.quantity * item.unit_price
+            }));
+            const { error: itemError } = await supabaseClient.from("invoice_items").insert(itemPayload);
+            if (itemError) {
+                await supabaseClient.from("invoices").delete().eq("id", createdInvoiceId);
+                createdInvoiceId = null;
+                logSupabaseError("estimate conversion item insert", itemError, { estimate_id: estimate.id });
+                createToast("The line items could not be copied, so the conversion was cancelled safely.", true);
+                return;
+            }
+
+            const { error: finalizeError } = await supabaseClient
+                .from("invoices")
+                .update({ status: "Unpaid" })
+                .eq("id", createdInvoiceId);
+            if (finalizeError) {
+                logSupabaseError("converted invoice status finalize", finalizeError, { invoice_id: createdInvoiceId });
+            }
+
+            const { error: linkError } = await supabaseClient
+                .from("invoices")
+                .update({
+                    converted_invoice_id: createdInvoiceId,
+                    converted_at: new Date().toISOString()
+                })
+                .eq("id", estimate.id);
+            if (linkError) {
+                logSupabaseError("source estimate conversion link", linkError, {
+                    estimate_id: estimate.id,
+                    invoice_id: createdInvoiceId
+                });
+            }
+
+            await fetchCloudData();
+        } else {
+            createdInvoiceId = `inv-${Date.now()}`;
+            const localInvoice = {
+                ...newInvoice,
+                id: createdInvoiceId,
+                status: "Unpaid",
+                created_at: new Date().toISOString(),
+                items: estimateItems.map((item, index) => ({ ...item, id: `${createdInvoiceId}-item-${index + 1}` }))
+            };
+            invoices.push(localInvoice);
+            estimate.converted_invoice_id = createdInvoiceId;
+            estimate.converted_at = new Date().toISOString();
+            saveLocalData();
+        }
+
+        createToast(`Estimate converted successfully to ${newInvoice.invoice_number}.`);
+        await editInvoice(createdInvoiceId);
+    } catch (error) {
+        console.error("Estimate conversion failed:", error);
+        createToast(error?.message || "The estimate could not be converted. Please try again.", true);
+    } finally {
+        estimatesBeingConverted.delete(String(estimate.id));
+    }
 }
 
 function isNetworkSaveError(error) {
@@ -6248,6 +6483,13 @@ function renderInvoicesTable() {
         const safeIssueDate = escapeHtml(String(inv.issue_date || ""));
         const safeStatus = escapeHtml(String(inv.status || "Draft"));
         const safeType = escapeHtml(String(inv.type || "invoice"));
+        const isEstimate = String(inv.type || "").toLowerCase() === "estimate";
+        const convertedInvoice = isEstimate ? getConvertedInvoiceForEstimate(inv) : null;
+        const conversionAction = isEstimate
+            ? (convertedInvoice
+                ? `<button class="btn btn-sm btn-secondary" onclick="openConvertedInvoice('${safeInvoiceId}')">Open Invoice</button>`
+                : `<button class="btn btn-sm btn-accent" onclick="convertEstimateToInvoice('${safeInvoiceId}')">Convert to Invoice</button>`)
+            : "";
         
         let statusClass = "badge-draft";
         if (inv.status === "Paid") statusClass = "badge-paid";
@@ -6262,7 +6504,8 @@ function renderInvoicesTable() {
             <td><span class="badge ${statusClass}">${safeStatus}</span></td>
             <td><span style="text-transform: capitalize;">${safeType}</span></td>
             <td style="font-weight: 700;">${escapeHtml(formatCurrency(Number(inv.total) || 0))}</td>
-            <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+            <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
+                ${conversionAction}
                 <button class="btn btn-sm btn-secondary" onclick="editInvoice('${safeInvoiceId}')">View/Edit</button>
                 <button class="btn btn-sm btn-secondary btn-danger" onclick="deleteInvoice('${safeInvoiceId}')">Trash</button>
             </td>
@@ -7087,6 +7330,8 @@ Object.assign(window, {
     deleteExpense,
     restoreInvoice,
     permanentlyDeleteInvoice,
+    convertEstimateToInvoice,
+    openConvertedInvoice,
     setupAuthenticatedUser,
     renderAdminDashboard,
     renderAdminFeatureInbox,
